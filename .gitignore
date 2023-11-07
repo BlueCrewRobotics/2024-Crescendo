@@ -1,0 +1,4 @@
+.gradle
+.wpilib
+bin
+build
