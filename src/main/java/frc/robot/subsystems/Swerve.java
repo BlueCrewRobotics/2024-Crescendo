@@ -41,7 +41,7 @@ public class Swerve extends SubsystemBase {
         Timer.delay(1.0);
         resetModulesToAbsolute();
 
-        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getYaw(), getModulePositions());
+        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getSwerveYaw(), getModulePositions());
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
@@ -50,8 +50,8 @@ public class Swerve extends SubsystemBase {
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                                     translation.getX(), 
                                     translation.getY(), 
-                                    rotation, 
-                                    getYaw()
+                                    rotation,
+                                    getSwerveYaw()
                                 )
                                 : new ChassisSpeeds(
                                     translation.getX(), 
@@ -79,7 +79,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void resetOdometry(Pose2d pose) {
-        swerveOdometry.resetPosition(getYaw(), getModulePositions(), pose);
+        swerveOdometry.resetPosition(getSwerveYaw(), getModulePositions(), pose);
     }
 
     public SwerveModuleState[] getModuleStates(){
@@ -102,8 +102,12 @@ public class Swerve extends SubsystemBase {
         gyro.reset();
     }
 
-    public Rotation2d getYaw() {
+    public Rotation2d getSwerveYaw() {
         return (Constants.Swerve.invertGyro) ? Rotation2d.fromDegrees(360 - gyro.getYaw()) : Rotation2d.fromDegrees(gyro.getYaw());
+    }
+
+    public float getGyroYaw() {
+        return gyro.getYaw();
     }
 
     public void resetModulesToAbsolute(){
@@ -114,7 +118,7 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        swerveOdometry.update(getYaw(), getModulePositions());  
+        swerveOdometry.update(getSwerveYaw(), getModulePositions());
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
