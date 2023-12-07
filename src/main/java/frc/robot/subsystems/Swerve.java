@@ -29,10 +29,10 @@ public class Swerve extends SubsystemBase {
         gyro.reset();
 
         mSwerveMods = new SwerveModule[] {
-            new SwerveModule(0, Constants.Swerve.Mod0.constants),
-            new SwerveModule(1, Constants.Swerve.Mod1.constants),
-            new SwerveModule(2, Constants.Swerve.Mod2.constants),
-            new SwerveModule(3, Constants.Swerve.Mod3.constants)
+            new SwerveModule(0, Constants.Swerve.Mod0.constants, Constants.Swerve.Mod0.drivePIDF),
+            new SwerveModule(1, Constants.Swerve.Mod1.constants, Constants.Swerve.Mod1.drivePIDF),
+            new SwerveModule(2, Constants.Swerve.Mod2.constants, Constants.Swerve.Mod2.drivePIDF),
+            new SwerveModule(3, Constants.Swerve.Mod3.constants, Constants.Swerve.Mod3.drivePIDF)
         };
 
         /* By pausing init for a second before setting module offsets, we avoid a bug with inverting motors.
@@ -108,6 +108,10 @@ public class Swerve extends SubsystemBase {
 
     public float getGyroYaw() {
         return gyro.getYaw();
+    }
+
+    public float getGyroYawSpeed() {
+        return gyro.getRawGyroZ();
     }
 
     public void resetModulesToAbsolute(){

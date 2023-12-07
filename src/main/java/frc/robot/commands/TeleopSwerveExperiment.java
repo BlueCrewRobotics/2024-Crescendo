@@ -24,31 +24,33 @@ public class TeleopSwerveExperiment extends CommandBase {
         double translationVal = MathUtil.applyDeadband(-driverController.getLeftY(), Constants.stickDeadband);
         double strafeVal = MathUtil.applyDeadband(-driverController.getLeftX(), Constants.stickDeadband);
         double rotationVal = 0.0;
+        double angleBuffer = 5.0;
+        double rotationSpeed = 0.3;
 
         // Rotate with D-Pad
         if (driverController.povUp().getAsBoolean()) {
-            if (swerve.getGyroYaw() <= -0.5f) {
-                rotationVal = -0.2;
-            } else if (swerve.getGyroYaw() >= 0.5f) {
-                rotationVal = 0.2;
+            if (swerve.getGyroYaw() <= -0.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw() >= 0.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
             }
         } else if (driverController.povRight().getAsBoolean()) {
-            if (swerve.getGyroYaw() >= -90.0f && swerve.getGyroYaw() <= 89.5f) {
-                rotationVal = -0.2;
-            } else if (swerve.getGyroYaw() < -90.0f || swerve.getGyroYaw() >= 90.5f) {
-                rotationVal = 0.2;
+            if (swerve.getGyroYaw() >= -90.0 && swerve.getGyroYaw() <= 90.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw() < -90.0 || swerve.getGyroYaw() >= 90.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
             }
         } else if (driverController.povDown().getAsBoolean()) {
-            if (swerve.getGyroYaw() <= 179.5f && swerve.getGyroYaw() >= 0.0f) {
-                rotationVal = -0.2;
-            } else if (swerve.getGyroYaw() >= -179.5f && swerve.getGyroYaw() < 0.0f) {
-                rotationVal = 0.2;
+            if (swerve.getGyroYaw() <= 180.0 - angleBuffer && swerve.getGyroYaw() >= 0.0) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw() >= -180 + angleBuffer && swerve.getGyroYaw() < 0.0) {
+                rotationVal = rotationSpeed;
             }
         } else if (driverController.povLeft().getAsBoolean()) {
-            if (swerve.getGyroYaw() >= 90.0f || swerve.getGyroYaw() <= -90.5f) {
-                rotationVal = -0.2f;
-            } else if (swerve.getGyroYaw() < 90.0f && swerve.getGyroYaw() >= -89.5f) {
-                rotationVal = 0.2f;
+            if (swerve.getGyroYaw() >= 90.0 || swerve.getGyroYaw() <= -90.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw() < 90.0 && swerve.getGyroYaw() >= -90.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
             }
         }
         // Rotate with joystick
