@@ -19,15 +19,18 @@ public class SwerveModule {
     private Rotation2d angleOffset;
     private Rotation2d lastAngle;
 
+    private double[] drivePIDFVals;
+
     private TalonFX mAngleMotor;
     private TalonFX mDriveMotor;
     private CANCoder angleEncoder;
 
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
-    public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
+    public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants, double[] drivePIDFVals){
         this.moduleNumber = moduleNumber;
         this.angleOffset = moduleConstants.angleOffset;
+        this.drivePIDFVals = drivePIDFVals;
         
         /* Angle Encoder Config */
         angleEncoder = new CANCoder(moduleConstants.cancoderID);
@@ -100,6 +103,10 @@ public class SwerveModule {
         mDriveMotor.configAllSettings(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.setInverted(Constants.Swerve.driveMotorInvert);
         mDriveMotor.setNeutralMode(Constants.Swerve.driveNeutralMode);
+        mDriveMotor.config_kP(0, drivePIDFVals[0]);
+        mDriveMotor.config_kI(0, drivePIDFVals[1]);
+        mDriveMotor.config_kD(0, drivePIDFVals[2]);
+        mDriveMotor.config_kF(0, drivePIDFVals[3]);
         mDriveMotor.setSelectedSensorPosition(0);
     }
 

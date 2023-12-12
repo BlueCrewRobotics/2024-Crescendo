@@ -28,14 +28,21 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+//        s_Swerve.setDefaultCommand(
+//            new TeleopSwerve(
+//                s_Swerve,
+//                () -> -driverController.getLeftY(),
+//                () -> -driverController.getLeftX(),
+//                () -> -driverController.getRightX(),
+//                () -> driverController.leftBumper().getAsBoolean()
+//            )
+//        );
+
         s_Swerve.setDefaultCommand(
-            new TeleopSwerve(
-                s_Swerve, 
-                () -> -driverController.getLeftY(),
-                () -> -driverController.getLeftX(),
-                () -> -driverController.getRightX(),
-                () -> driverController.leftBumper().getAsBoolean()
-            )
+                new TeleopSwerveExperiment(
+                        s_Swerve,
+                        driverController
+                )
         );
 
         // Configure the button bindings
@@ -51,6 +58,9 @@ public class RobotContainer {
     private void configureButtonBindings() {
         /* Driver Buttons */
         driverController.y().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+
+        driverController.a().onTrue(new CmdCalculateMaxRotationSpeed(s_Swerve));
+        driverController.b().onTrue(new CmdCalculateMaxTranslationSpeed(s_Swerve));
     }
 
     /**
