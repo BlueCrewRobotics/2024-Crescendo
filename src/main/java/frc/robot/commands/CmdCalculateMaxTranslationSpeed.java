@@ -29,13 +29,25 @@ public class CmdCalculateMaxTranslationSpeed extends CommandBase {
     @Override
     public void execute() {
         swerve.drive(
-                new Translation2d(9.0, 0.0),
+                new Translation2d(5.2, 0.0),
                 0.0,
                 true,
                 true
         );
-        if(timer.hasElapsed(10)) {
+        if(timer.hasElapsed(2)) {
+            System.out.println("Module 0: " + swerve.getModuleStates()[0].speedMetersPerSecond);
+            System.out.println("Module 1: " + swerve.getModuleStates()[1].speedMetersPerSecond);
+            System.out.println("Module 2: " + swerve.getModuleStates()[2].speedMetersPerSecond);
+            System.out.println("Module 3: " + swerve.getModuleStates()[3].speedMetersPerSecond);
+        }
+        if (timer.hasElapsed(6)) {
             isFinished = true;
+            swerve.drive(
+                    new Translation2d(0.0, 0.0),
+                    0.0,
+                    true,
+                    true
+            );
         }
     }
 

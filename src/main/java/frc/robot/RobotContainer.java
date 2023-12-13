@@ -58,9 +58,9 @@ public class RobotContainer {
     private void configureButtonBindings() {
         /* Driver Buttons */
         driverController.y().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+        driverController.x().onTrue(new InstantCommand(s_Swerve::xLockWheels));
 
-        driverController.a().onTrue(new CmdCalculateMaxRotationSpeed(s_Swerve));
-        driverController.b().onTrue(new CmdCalculateMaxTranslationSpeed(s_Swerve));
+        driverController.a().whileTrue(new CmdPrintWheelSpeeds(s_Swerve));
     }
 
     /**
