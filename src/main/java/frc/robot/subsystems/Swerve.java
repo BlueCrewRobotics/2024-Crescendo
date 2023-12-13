@@ -29,10 +29,10 @@ public class Swerve extends SubsystemBase {
         gyro.reset();
 
         mSwerveMods = new SwerveModule[] {
-            new SwerveModule(0, Constants.Swerve.Mod0.constants, Constants.Swerve.Mod0.drivePIDF),
-            new SwerveModule(1, Constants.Swerve.Mod1.constants, Constants.Swerve.Mod1.drivePIDF),
-            new SwerveModule(2, Constants.Swerve.Mod2.constants, Constants.Swerve.Mod2.drivePIDF),
-            new SwerveModule(3, Constants.Swerve.Mod3.constants, Constants.Swerve.Mod3.drivePIDF)
+            new SwerveModule(0, Constants.Swerve.Mod0.constants),
+            new SwerveModule(1, Constants.Swerve.Mod1.constants),
+            new SwerveModule(2, Constants.Swerve.Mod2.constants),
+            new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
         /* By pausing init for a second before setting module offsets, we avoid a bug with inverting motors.
@@ -61,6 +61,9 @@ public class Swerve extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
         for(SwerveModule mod : mSwerveMods){
+            if(mod.moduleNumber == 2) {
+                swerveModuleStates[2].speedMetersPerSecond -= 0.05 * (swerveModuleStates[2].speedMetersPerSecond/Constants.Swerve.maxSpeed);
+            }
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }    
@@ -72,7 +75,22 @@ public class Swerve extends SubsystemBase {
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
         }
-    }    
+    }
+
+    public void xLockWheels() {
+        if(getModuleStates()[0].speedMetersPerSecond < 0.1) {
+            System.out.println("Trying to set module states");
+            SwerveModuleState[] desiredStates = {
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(45)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(45))
+            };
+            for(SwerveModule mod : mSwerveMods){
+                mod.forceSetAngle (desiredStates[mod.moduleNumber]);
+            }
+        }
+    }
 
     public Pose2d getPose() {
         return swerveOdometry.getPoseMeters();
