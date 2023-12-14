@@ -61,9 +61,6 @@ public class Swerve extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
         for(SwerveModule mod : mSwerveMods){
-            if(mod.moduleNumber == 2) {
-                swerveModuleStates[2].speedMetersPerSecond -= 0.05 * (swerveModuleStates[2].speedMetersPerSecond/Constants.Swerve.maxSpeed);
-            }
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }    
