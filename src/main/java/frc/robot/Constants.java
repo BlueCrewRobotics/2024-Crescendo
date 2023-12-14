@@ -65,6 +65,11 @@ public final class Constants {
         public static final double angleKD = chosenModule.angleKD;
         public static final double angleKF = chosenModule.angleKF;
 
+        /* Drive Motor PID Values */
+        public static final double driveKP = 0.05;
+        public static final double driveKI = 0.0;
+        public static final double driveKD = 0.0;
+        public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values 
          * Divide SYSID values by 12 to convert from volts to percent output for CTRE */

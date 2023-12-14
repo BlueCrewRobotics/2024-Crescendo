@@ -37,7 +37,10 @@ public final class CTREConfigs {
             Constants.Swerve.drivePeakCurrentLimit, 
             Constants.Swerve.drivePeakCurrentDuration);
 
-
+        swerveDriveFXConfig.slot0.kP = Constants.Swerve.driveKP;
+        swerveDriveFXConfig.slot0.kI = Constants.Swerve.driveKI;
+        swerveDriveFXConfig.slot0.kD = Constants.Swerve.driveKD;
+        swerveDriveFXConfig.slot0.kF = Constants.Swerve.driveKF;
         swerveDriveFXConfig.supplyCurrLimit = driveSupplyLimit;
         swerveDriveFXConfig.openloopRamp = Constants.Swerve.openLoopRamp;
         swerveDriveFXConfig.closedloopRamp = Constants.Swerve.closedLoopRamp;
