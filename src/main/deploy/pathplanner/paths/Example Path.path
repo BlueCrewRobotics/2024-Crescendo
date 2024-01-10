@@ -1,0 +1,100 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 0.864500254000508,
+        "y": 6.7993734654135976
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.0881417746168827,
+        "y": 6.788777199221066
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.865976631953264,
+        "y": 6.7993734654135976
+      },
+      "prevControl": {
+        "x": 1.7756405265119446,
+        "y": 6.796122647630357
+      },
+      "nextControl": {
+        "x": 2.2059186351706037,
+        "y": 6.811606553213107
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.8310983405300143,
+        "y": 6.7993734654135976
+      },
+      "prevControl": {
+        "x": 2.435332105664211,
+        "y": 6.799115019896706
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [
+    {
+      "name": "New Event Marker",
+      "waypointRelativePos": 0.0,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "marker1"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "New Event Marker",
+      "waypointRelativePos": 1.0,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "marker2"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "TestingStuffs",
+  "previewStartingState": null,
+  "useDefaultConstraints": false
+}
