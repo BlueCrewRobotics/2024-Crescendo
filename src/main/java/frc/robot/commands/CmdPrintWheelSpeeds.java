@@ -1,9 +1,9 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Swerve;
 
-public class CmdPrintWheelSpeeds extends CommandBase {
+public class CmdPrintWheelSpeeds extends Command {
 
     private Swerve swerve;
 
