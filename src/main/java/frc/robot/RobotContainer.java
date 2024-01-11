@@ -49,7 +49,7 @@ public class RobotContainer {
 
 
         // Auto Chooser
-        autoChooser = AutoBuilder.buildAutoChooser("New Auto");
+        autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Mode", autoChooser);
     }
 
@@ -71,6 +71,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An ExampleCommand will run in autonomous
-        return new exampleAuto(s_Swerve);
+        return autoChooser.getSelected();
     }
 }
