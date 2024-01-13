@@ -3,9 +3,13 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
 
@@ -20,6 +24,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 public class Swerve extends SubsystemBase {
     public SwerveDriveOdometry swerveOdometry;
@@ -65,6 +72,12 @@ public class Swerve extends SubsystemBase {
         );
 
         PathPlannerLogging.setLogActivePathCallback((poses) -> field.getObject("path").setPoses(poses));
+
+        // Logging callback for the active path, this is sent as a list of poses
+        PathPlannerLogging.setLogActivePathCallback((poses) -> {
+            // Do whatever you want with the poses here
+            field.getObject("path").setPoses(poses);
+        });
 
         SmartDashboard.putData("Field", field);
     }
@@ -171,6 +184,64 @@ public class Swerve extends SubsystemBase {
         for(SwerveModule mod : mSwerveMods){
             mod.resetToAbsolute();
         }
+    }
+
+    // Drive command for teleop
+    public void teleopDriveSwerve(DoubleSupplier translationSup, DoubleSupplier strafeSup,
+                                  DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
+        /* Get Values, Deadband*/
+        double translationVal = MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.stickDeadband);
+        double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
+        double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
+
+        drive(new Translation2d(translationVal, strafeVal).times(Constants.Swerve.maxSpeed),
+                rotationVal * Constants.Swerve.maxAngularVelocity,
+                !robotCentricSup.getAsBoolean(),
+                true);
+    }
+
+    public double rotationPercentageFromTargetAngle(double targetAngle) {
+        double headingError = (targetAngle - getGyroYaw().getDegrees() % 360);
+
+        if(headingError > 180) {
+            headingError = -180 + (headingError % 180);
+        } else if(headingError < -180) {
+            headingError = 180 + (headingError % 180);
+        }
+
+        return headingError/360;
+    }
+
+    // **** Commands ****
+
+    public Command teleopDriveSwerveAndRotateToDPadCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
+            DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
+        CommandXboxController driverController = new CommandXboxController(0);
+        int targetAngle;
+        boolean isFinished = false;
+
+        if(driverController.povUp().getAsBoolean()) {
+            targetAngle = 0;
+        } else if(driverController.povRight().getAsBoolean()) {
+            targetAngle = 90;
+        } else if(driverController.povDown().getAsBoolean()) {
+            targetAngle = 180;
+        } else if(driverController.povLeft().getAsBoolean()) {
+            targetAngle = -90;
+        } else {
+            targetAngle = 0;
+            isFinished = true;
+        }
+
+
+        boolean finalIsFinished = isFinished;
+        return new FunctionalCommand(
+                null,
+                () -> teleopDriveSwerve(translationSup, strafeSup, () -> rotationPercentageFromTargetAngle(targetAngle), robotCentricSup),
+                null,
+                () -> (finalIsFinished || rotationSup.getAsDouble() > 0.1),
+                this
+        );
     }
 
     @Override
