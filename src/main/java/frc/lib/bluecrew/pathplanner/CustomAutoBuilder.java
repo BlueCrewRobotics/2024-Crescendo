@@ -15,8 +15,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
 
@@ -27,7 +25,7 @@ public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
         }
 
         SendableChooser<Command> chooser = new SendableChooser<>();
-        List<String> autoNames = getAllAutoNamesInFolder(pathplannerFolderName);
+        List<String> autoNames = getAllAutoNamesInPPFolder(pathplannerFolderName);
 
         PathPlannerAuto defaultOption = null;
         List<PathPlannerAuto> options = new ArrayList<>();
@@ -53,12 +51,16 @@ public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
         return chooser;
     }
 
+    public static SendableChooser<Command> buildAutoChooserFromAutosInPPFolder(String pathplannerFolderName) {
+        return buildAutoChooserFromAutosInPPFolder("", pathplannerFolderName);
+    }
+
     /**
      * Get a list of all auto names in the specified pathplanner folder
      *
      * @return List of all auto names
      */
-    public static List<String> getAllAutoNamesInFolder(String pathplannerFolder) {
+    public static List<String> getAllAutoNamesInPPFolder(String pathplannerFolder) {
         List<String> allAutoNames = AutoBuilder.getAllAutoNames();
         List<String> wantedAutoNames = new ArrayList<>();
 

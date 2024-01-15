@@ -7,8 +7,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
@@ -23,9 +22,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
 public class Swerve extends SubsystemBase {
@@ -217,31 +216,20 @@ public class Swerve extends SubsystemBase {
     public Command teleopDriveSwerveAndRotateToDPadCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
             DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
         CommandXboxController driverController = new CommandXboxController(0);
-        int targetAngle;
-        boolean isFinished = false;
 
-        if(driverController.povUp().getAsBoolean()) {
-            targetAngle = 0;
-        } else if(driverController.povRight().getAsBoolean()) {
-            targetAngle = 90;
-        } else if(driverController.povDown().getAsBoolean()) {
-            targetAngle = 180;
-        } else if(driverController.povLeft().getAsBoolean()) {
-            targetAngle = -90;
-        } else {
-            targetAngle = 0;
-            isFinished = true;
-        }
-
-
-        boolean finalIsFinished = isFinished;
-        return new FunctionalCommand(
-                null,
-                () -> teleopDriveSwerve(translationSup, strafeSup, () -> rotationPercentageFromTargetAngle(targetAngle), robotCentricSup),
-                null,
-                () -> (finalIsFinished || rotationSup.getAsDouble() > 0.1),
-                this
+        Commands.print("Rotating To D-Pad");
+        return this.run(
+                () -> teleopDriveSwerve(translationSup, strafeSup, () ->
+                        rotationPercentageFromTargetAngle(driverController.getHID().getPOV()), robotCentricSup)
         );
+    }
+
+    public void cancelRotateToDPad() {
+        if(this.getCurrentCommand() != this.getDefaultCommand()) {
+            CommandScheduler.getInstance().cancel(this.getCurrentCommand());
+            Commands.print("Cancelling Rotation to D-Pad");
+        }
+        Commands.print("Not Cancelling Rotation to D-Pad");
     }
 
     @Override
