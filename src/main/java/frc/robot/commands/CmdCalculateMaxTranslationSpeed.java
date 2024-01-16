@@ -5,12 +5,18 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Swerve;
 
+/**
+ * This Command drives the {@link Swerve} Drive in the positive X direction as fast as possible, then prints out the speeds of each module. DO NOT INCLUDE IN ACTUAL ROBOT CODE
+ */
 public class CmdCalculateMaxTranslationSpeed extends Command {
 
     private Swerve swerve;
     private Timer timer;
     private boolean isFinished;
 
+    /**
+     * @param swerve The Swerve Subsystem
+     */
     public CmdCalculateMaxTranslationSpeed(Swerve swerve) {
         this.swerve = swerve;
 
@@ -29,7 +35,7 @@ public class CmdCalculateMaxTranslationSpeed extends Command {
     @Override
     public void execute() {
         swerve.drive(
-                new Translation2d(5.2, 0.0),
+                new Translation2d(10, 0.0),
                 0.0,
                 true,
                 true

@@ -13,6 +13,9 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.lib.math.Conversions;
 import frc.lib.util.SwerveModuleConstants;
 
+/**
+ * Represents a Swerve Module on the Swerve Drivetrain
+ */
 public class SwerveModule {
     public int moduleNumber;
     private Rotation2d angleOffset;
@@ -49,12 +52,21 @@ public class SwerveModule {
         mDriveMotor.getConfigurator().setPosition(0.0);
     }
 
+    /**
+     * @param desiredState The desired {@link SwerveModuleState}
+     * @param isOpenLoop Controls driving in open or closed loop
+     */
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
         desiredState = SwerveModuleState.optimize(desiredState, getState().angle); 
         mAngleMotor.setControl(anglePosition.withPosition(desiredState.angle.getRotations()));
         setSpeed(desiredState, isOpenLoop);
     }
 
+    /**
+     * Sets the speed of the drive motor
+     * @param desiredState The desired {@link SwerveModuleState}
+     * @param isOpenLoop Controls driving in open or closed loop
+     */
     private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop){
         if(isOpenLoop){
             driveDutyCycle.Output = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
@@ -67,19 +79,32 @@ public class SwerveModule {
         }
     }
 
-    public void forceSetAngle(SwerveModuleState desiredState){
+    /**
+     * Sets the angle of the wheel
+     * @param desiredState The desired {@link SwerveModuleState}
+     */
+    public void setAngle(SwerveModuleState desiredState){
         mAngleMotor.setControl(anglePosition.withPosition(desiredState.angle.getRotations()));
     }
 
+    /**
+     * @return The angle of the {@link CANcoder}
+     */
     public Rotation2d getCANcoder(){
         return Rotation2d.fromRotations(angleEncoder.getAbsolutePosition().getValue());
     }
 
+    /**
+     * Resets the {@link SwerveModule} based on the {@link CANcoder} and angle offset
+     */
     public void resetToAbsolute(){
         double absolutePosition = getCANcoder().getRotations() - angleOffset.getRotations();
         mAngleMotor.setPosition(absolutePosition);
     }
 
+    /**
+     * @return The {@link SwerveModuleState} of the {@link SwerveModule}
+     */
     public SwerveModuleState getState(){
         return new SwerveModuleState(
             Conversions.RPSToMPS(mDriveMotor.getVelocity().getValue(), Constants.Swerve.wheelCircumference), 
@@ -87,6 +112,9 @@ public class SwerveModule {
         );
     }
 
+    /**
+     * @return The {@link SwerveModulePosition} of the {@link SwerveModule}
+     */
     public SwerveModulePosition getPosition(){
         return new SwerveModulePosition(
             Conversions.rotationsToMeters(mDriveMotor.getPosition().getValue(), Constants.Swerve.wheelCircumference), 
