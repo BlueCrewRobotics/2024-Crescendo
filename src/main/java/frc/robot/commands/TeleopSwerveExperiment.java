@@ -2,6 +2,8 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
@@ -27,38 +29,38 @@ public class TeleopSwerveExperiment extends Command {
         double angleBuffer = 5.0;
         double rotationSpeed = 0.3;
 
-//        // Rotate with D-Pad
-//        if (driverController.povUp().getAsBoolean()) {
-//            if (swerve.getGyroYaw().getDegrees() <= -0.0 - angleBuffer) {
-//                rotationVal = -rotationSpeed;
-//            } else if (swerve.getGyroYaw().getDegrees() >= 0.0 + angleBuffer) {
-//                rotationVal = rotationSpeed;
-//            }
-//        } else if (driverController.povRight().getAsBoolean()) {
-//            if (swerve.getGyroYaw().getDegrees() >= -90.0 && swerve.getGyroYaw().getDegrees() <= 90.0 - angleBuffer) {
-//                rotationVal = -rotationSpeed;
-//            } else if (swerve.getGyroYaw().getDegrees() < -90.0 || swerve.getGyroYaw().getDegrees() >= 90.0 + angleBuffer) {
-//                rotationVal = rotationSpeed;
-//            }
-//        } else if (driverController.povDown().getAsBoolean()) {
-//            if (swerve.getGyroYaw().getDegrees() <= 180.0 - angleBuffer && swerve.getGyroYaw().getDegrees() >= 0.0) {
-//                rotationVal = -rotationSpeed;
-//            } else if (swerve.getGyroYaw().getDegrees() >= -180 + angleBuffer && swerve.getGyroYaw().getDegrees() < 0.0) {
-//                rotationVal = rotationSpeed;
-//            }
-//        } else if (driverController.povLeft().getAsBoolean()) {
-//            if (swerve.getGyroYaw().getDegrees() >= 90.0 || swerve.getGyroYaw().getDegrees() <= -90.0 - angleBuffer) {
-//                rotationVal = -rotationSpeed;
-//            } else if (swerve.getGyroYaw().getDegrees() < 90.0 && swerve.getGyroYaw().getDegrees() >= -90.0 + angleBuffer) {
-//                rotationVal = rotationSpeed;
-//            }
-//        }
-//        // Rotate with joystick
-//        else {
-//            rotationVal = MathUtil.applyDeadband(-0.6 * driverController.getRightX(), Constants.stickDeadband);
-//        }
+        // Rotate with D-Pad
+        if (driverController.getHID().getPOV() == 0) {
+            if (swerve.getGyroYaw().getDegrees() <= -0.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw().getDegrees() >= 0.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
+            }
+        } else if (driverController.getHID().getPOV() == 90) {
+            if (swerve.getGyroYaw().getDegrees() >= -90.0 && swerve.getGyroYaw().getDegrees() <= 90.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw().getDegrees() < -90.0 || swerve.getGyroYaw().getDegrees() >= 90.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
+            }
+        } else if (driverController.getHID().getPOV() == 180) {
+            if (swerve.getGyroYaw().getDegrees() <= 180.0 - angleBuffer && swerve.getGyroYaw().getDegrees() >= 0.0) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw().getDegrees() >= -180 + angleBuffer && swerve.getGyroYaw().getDegrees() < 0.0) {
+                rotationVal = rotationSpeed;
+            }
+        } else if (driverController.getHID().getPOV() == 270) {
+            if (swerve.getGyroYaw().getDegrees() >= 90.0 || swerve.getGyroYaw().getDegrees() <= -90.0 - angleBuffer) {
+                rotationVal = -rotationSpeed;
+            } else if (swerve.getGyroYaw().getDegrees() < 90.0 && swerve.getGyroYaw().getDegrees() >= -90.0 + angleBuffer) {
+                rotationVal = rotationSpeed;
+            }
+        }
+        // Rotate with joystick
+        else {
+            rotationVal = MathUtil.applyDeadband(-0.6 * driverController.getRightX(), Constants.stickDeadband);
+        }
 
-        if(driverController.b().getAsBoolean()) {
+        if(driverController.getHID().getRawButton(XboxController.Button.kB.value)) {
             translationVal *= 0.5;
             strafeVal *= 0.5;
         }
