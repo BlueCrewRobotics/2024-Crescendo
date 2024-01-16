@@ -16,8 +16,17 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This is a customized {@link AutoBuilder} that can build {@link SendableChooser} with options for all Path Planner autos in a given folder in the Path Planner UI
+ */
 public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
 
+    /**
+     * @param defaultAutoName The name of the auto the chooser should default to
+     * @param pathplannerFolderName The name of the auto folder in the Path Planner UI from which this should pull autos from
+     * @return A {@link SendableChooser} of all Path Planner autos in the folder
+     * @throws RuntimeException if the Path Planner {@link AutoBuilder} is not configured
+     */
     public static SendableChooser<Command> buildAutoChooserFromAutosInPPFolder(String defaultAutoName, String pathplannerFolderName) {
         if (!AutoBuilder.isConfigured()) {
             throw new RuntimeException(
@@ -51,14 +60,19 @@ public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
         return chooser;
     }
 
+    /**
+     * @param pathplannerFolderName The name of the auto folder in the Path Planner UI from which this should pull autos from
+     * @return A {@link SendableChooser} of all Path Planner autos in the folder
+     * @throws RuntimeException if the Path Planner {@link AutoBuilder} is not configured
+     */
     public static SendableChooser<Command> buildAutoChooserFromAutosInPPFolder(String pathplannerFolderName) {
         return buildAutoChooserFromAutosInPPFolder("", pathplannerFolderName);
     }
 
     /**
-     * Get a list of all auto names in the specified pathplanner folder
+     * @param pathplannerFolder The name of the Path Planner UI folder
      *
-     * @return List of all auto names
+     * @return List of all auto names in the folder
      */
     public static List<String> getAllAutoNamesInPPFolder(String pathplannerFolder) {
         List<String> allAutoNames = AutoBuilder.getAllAutoNames();

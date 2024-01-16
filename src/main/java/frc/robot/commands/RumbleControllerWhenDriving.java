@@ -4,9 +4,15 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
+/**
+ * This Command will vibrate the controller according to how far the joysticks are pushed
+ */
 public class RumbleControllerWhenDriving extends Command {
     private CommandXboxController driver;
 
+    /**
+     * @param driver The Driver's Xbox Controller
+     */
     public RumbleControllerWhenDriving(CommandXboxController driver) {
         this.driver = driver;
     }

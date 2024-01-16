@@ -15,9 +15,15 @@ import edu.wpi.first.math.util.Units;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
+/**
+ * Contains all the robot constants
+ */
 public final class Constants {
     public static final double stickDeadband = 0.1;
 
+    /**
+     * All the Swerve Subsystem constants
+     */
     public static final class Swerve {
 
         public static final boolean invertGyro = true; // Always ensure Gyro is CCW+ CW-
@@ -92,7 +98,7 @@ public final class Constants {
         public static final NeutralModeValue driveNeutralMode = NeutralModeValue.Brake;
 
         /* Module Specific Constants */
-        /* Front Left Module - Module 0 */
+        /** Constants for the Front Left Module - Module 0 */
         public static final class Mod0 {
             public static final int driveMotorID = 0;
             public static final int angleMotorID = 4;
@@ -102,7 +108,7 @@ public final class Constants {
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
 
-        /* Front Right Module - Module 1 */
+        /** Constants for the Front Right Module - Module 1 */
         public static final class Mod1 {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 5;
@@ -112,7 +118,7 @@ public final class Constants {
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
         
-        /* Back Left Module - Module 2 */
+        /** Constants for the Back Left Module - Module 2 */
         public static final class Mod2 {
             public static final int driveMotorID = 2;
             public static final int angleMotorID = 6;
@@ -122,7 +128,7 @@ public final class Constants {
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
 
-        /* Back Right Module - Module 3 */
+        /** Constants for the Back Right Module - Module 3 */
         public static final class Mod3 {
             public static final int driveMotorID = 3;
             public static final int angleMotorID = 7;
@@ -133,6 +139,9 @@ public final class Constants {
         }
     }
 
+    /**
+     * Contains all the Constants used by Path Planner
+     */
     public static final class PathPlannerConstants {
         public static final HolonomicPathFollowerConfig pathFollowerConfig = new HolonomicPathFollowerConfig(
                 new PIDConstants(5.0, 0, 0), // Translation PID

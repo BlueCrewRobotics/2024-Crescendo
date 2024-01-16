@@ -6,12 +6,18 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 
+/**
+ * This command directs the {@link Swerve} to rotate much faster than it is actually capable of, and then prints out the angular velocity according to the NavX. DO NOT INCLUDE IN ACTUAL ROBOT CODE
+ */
 public class CmdCalculateMaxRotationSpeed extends Command {
 
     private Swerve swerve;
     private Timer timer = new Timer();
     private boolean isFinished;
 
+    /**
+     * @param swerve The Swerve Subsystem
+     */
     public CmdCalculateMaxRotationSpeed(Swerve swerve) {
         this.swerve = swerve;
 
