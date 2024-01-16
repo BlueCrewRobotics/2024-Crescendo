@@ -160,6 +160,12 @@ public final class Constants {
                 kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
     }
 
+    public static final int INTAKE_MOTOR_ID = 99999; //Placeholder
+    public static final int INDEXER_MOTOR_ID = 8888;
+
+    public static final double  INDEXER_MAX_LIMIT = 129834.42;
+    public static final double INDEXER_MIN_LIMIT = -398472938.23;
+
     public static final double GAME_PIECE_NOTE_DIAMETER = 0.36;
 
     public static final double FIELD_AMP_OPENING_WIDTH = 0.6096;
