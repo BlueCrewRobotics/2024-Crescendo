@@ -3,24 +3,24 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.SwerveSubsystem;
 
 /**
- * This Command drives the {@link Swerve} Drive in the positive X direction as fast as possible, then prints out the speeds of each module. DO NOT INCLUDE IN ACTUAL ROBOT CODE
+ * This Command drives the {@link SwerveSubsystem} Drive in the positive X direction as fast as possible, then prints out the speeds of each module. DO NOT INCLUDE IN ACTUAL ROBOT CODE
  */
 public class CmdCalculateMaxTranslationSpeed extends Command {
 
-    private Swerve swerve;
+    private SwerveSubsystem swerveSubsystem;
     private Timer timer;
     private boolean isFinished;
 
     /**
-     * @param swerve The Swerve Subsystem
+     * @param swerveSubsystem The Swerve Subsystem
      */
-    public CmdCalculateMaxTranslationSpeed(Swerve swerve) {
-        this.swerve = swerve;
+    public CmdCalculateMaxTranslationSpeed(SwerveSubsystem swerveSubsystem) {
+        this.swerveSubsystem = swerveSubsystem;
 
-        addRequirements(swerve);
+        addRequirements(swerveSubsystem);
 
         timer = new Timer();
     }
@@ -34,21 +34,21 @@ public class CmdCalculateMaxTranslationSpeed extends Command {
 
     @Override
     public void execute() {
-        swerve.drive(
+        swerveSubsystem.drive(
                 new Translation2d(10, 0.0),
                 0.0,
                 true,
                 true
         );
         if(timer.hasElapsed(2)) {
-            System.out.println("Module 0: " + swerve.getModuleStates()[0].speedMetersPerSecond);
-            System.out.println("Module 1: " + swerve.getModuleStates()[1].speedMetersPerSecond);
-            System.out.println("Module 2: " + swerve.getModuleStates()[2].speedMetersPerSecond);
-            System.out.println("Module 3: " + swerve.getModuleStates()[3].speedMetersPerSecond);
+            System.out.println("Module 0: " + swerveSubsystem.getModuleStates()[0].speedMetersPerSecond);
+            System.out.println("Module 1: " + swerveSubsystem.getModuleStates()[1].speedMetersPerSecond);
+            System.out.println("Module 2: " + swerveSubsystem.getModuleStates()[2].speedMetersPerSecond);
+            System.out.println("Module 3: " + swerveSubsystem.getModuleStates()[3].speedMetersPerSecond);
         }
         if (timer.hasElapsed(6)) {
             isFinished = true;
-            swerve.drive(
+            swerveSubsystem.drive(
                     new Translation2d(0.0, 0.0),
                     0.0,
                     true,

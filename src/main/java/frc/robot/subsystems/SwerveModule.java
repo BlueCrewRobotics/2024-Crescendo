@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -12,6 +12,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.lib.math.Conversions;
 import frc.lib.util.SwerveModuleConstants;
+import frc.robot.Constants;
+import frc.robot.Robot;
 
 /**
  * Represents a Swerve Module on the Swerve Drivetrain

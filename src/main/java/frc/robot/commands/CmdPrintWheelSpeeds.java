@@ -1,18 +1,18 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.SwerveSubsystem;
 
 public class CmdPrintWheelSpeeds extends Command {
 
-    private Swerve swerve;
+    private SwerveSubsystem swerveSubsystem;
 
-    public CmdPrintWheelSpeeds(Swerve swerve) {
-        this.swerve = swerve;
+    public CmdPrintWheelSpeeds(SwerveSubsystem swerveSubsystem) {
+        this.swerveSubsystem = swerveSubsystem;
     }
 
     @Override
     public void execute() {
-        System.out.println("Mod0: " + swerve.getModuleStates()[0].speedMetersPerSecond + " Mod1: " + swerve.getModuleStates()[1].speedMetersPerSecond + " Mod2: " + swerve.getModuleStates()[2].speedMetersPerSecond + " Mod3: " + swerve.getModuleStates()[3].speedMetersPerSecond);
+        System.out.println("Mod0: " + swerveSubsystem.getModuleStates()[0].speedMetersPerSecond + " Mod1: " + swerveSubsystem.getModuleStates()[1].speedMetersPerSecond + " Mod2: " + swerveSubsystem.getModuleStates()[2].speedMetersPerSecond + " Mod3: " + swerveSubsystem.getModuleStates()[3].speedMetersPerSecond);
     }
 }

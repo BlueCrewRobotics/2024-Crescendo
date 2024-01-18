@@ -80,7 +80,6 @@ public final class Constants {
         public static final double driveKP = 0.05;
         public static final double driveKI = 0.0;
         public static final double driveKD = 0.0;
-        public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values From SYSID */
         public static final double driveKS = 0.08403;
@@ -91,7 +90,7 @@ public final class Constants {
         /** Meters per Second */
         public static final double maxSpeed = 4.9;
         /** Radians per Second */
-        public static final double maxAngularVelocity = 14.8977;
+        public static final double maxAngularVelocity = 12.1725; //TODO: This is theoretical!
 
         /* Neutral Modes */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Brake;

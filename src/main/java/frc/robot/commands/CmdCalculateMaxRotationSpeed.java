@@ -4,24 +4,24 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.SwerveSubsystem;
 
 /**
- * This command directs the {@link Swerve} to rotate much faster than it is actually capable of, and then prints out the angular velocity according to the NavX. DO NOT INCLUDE IN ACTUAL ROBOT CODE
+ * This command directs the {@link SwerveSubsystem} to rotate much faster than it is actually capable of, and then prints out the angular velocity according to the NavX. DO NOT INCLUDE IN ACTUAL ROBOT CODE
  */
 public class CmdCalculateMaxRotationSpeed extends Command {
 
-    private Swerve swerve;
+    private SwerveSubsystem swerveSubsystem;
     private Timer timer = new Timer();
     private boolean isFinished;
 
     /**
-     * @param swerve The Swerve Subsystem
+     * @param swerveSubsystem The Swerve Subsystem
      */
-    public CmdCalculateMaxRotationSpeed(Swerve swerve) {
-        this.swerve = swerve;
+    public CmdCalculateMaxRotationSpeed(SwerveSubsystem swerveSubsystem) {
+        this.swerveSubsystem = swerveSubsystem;
 
-        addRequirements(swerve);
+        addRequirements(swerveSubsystem);
     }
 
     @Override
@@ -33,14 +33,14 @@ public class CmdCalculateMaxRotationSpeed extends Command {
 
     @Override
     public void execute() {
-        swerve.drive(
+        swerveSubsystem.drive(
                 new Translation2d(0.0, 0.0).times(Constants.Swerve.maxSpeed),
                 20.0,
                 true,
                 true
         );
         if(timer.hasElapsed(3)) {
-            System.out.println("Raw Rotation Speed in Radians per Second: " + Math.toRadians(swerve.getGyroYawSpeed()));
+            System.out.println("Raw Rotation Speed in Radians per Second: " + Math.toRadians(swerveSubsystem.getGyroYawSpeed()));
             isFinished = true;
         }
     }
