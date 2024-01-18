@@ -5,11 +5,11 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.SwerveModule;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -25,19 +25,20 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import java.util.function.IntSupplier;
 
 /**
  * This is the Swerve Drive Subsystem, based on team 364's code
  */
-public class Swerve extends SubsystemBase {
+public class SwerveSubsystem extends SubsystemBase {
     public SwerveDriveOdometry swerveOdometry;
     public SwerveModule[] mSwerveMods;
     private AHRS gyro;
 
     private Field2d field = new Field2d();
 
-    public Swerve() {
+    private PIDController rotationPIDController;
+
+    public SwerveSubsystem() {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
 
@@ -51,6 +52,10 @@ public class Swerve extends SubsystemBase {
         resetModulesToAbsolute();
 
         swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroYaw(), getModulePositions());
+
+        rotationPIDController = new PIDController(5, 0, 0);
+        rotationPIDController.enableContinuousInput(0, 360);
+        rotationPIDController.setTolerance(1);
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
@@ -85,7 +90,7 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
-     * Drives the {@link Swerve} Subsystem
+     * Drives the {@link SwerveSubsystem} Subsystem
      * @param translation A {@link Translation2d} representing the desired X and Y speed in meters per second
      * @param rotation The desired angular velocity in radians per second
      * @param fieldRelative Controls whether it should be driven in field or robot relative mode
@@ -264,37 +269,20 @@ public class Swerve extends SubsystemBase {
      * @param targetAngle The angle the robot should turn to
      * @return The angular velocity as a percentage
      */
-    public double rotationPercentageFromTargetAngle(double targetAngle) {
-        double headingError = (targetAngle - getGyroYaw().getDegrees() % 360);
-
-        if(headingError > 180) {
-            headingError = -180 + (headingError % 180);
-        } else if(headingError < -180) {
-            headingError = 180 + (headingError % 180);
-        }
-
-        return headingError/360;
+    public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
+        rotationPIDController.reset();
+        return MathUtil.clamp(rotationPIDController.calculate(getGyroYaw().getDegrees()%360, targetAngle.getDegrees()%360), -0.25, 0.25);
     }
 
-    // **** Commands ****
     /**
-     * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
-     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param rotationSup {@link IntSupplier} for the target angle
-     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     * Get the angle to a given position
+     * @param coords The coordinates to return the angle to
+     * @return The angle from your current position to the given coordinates
      */
-    public Command teleopDriveSwerveAndRotateToDPadCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
-                                                           IntSupplier rotationSup, BooleanSupplier robotCentricSup) {
-
-        return this.run(
-                () -> teleopDriveSwerve(
-                        translationSup,
-                        strafeSup,
-                        () -> rotationPercentageFromTargetAngle(rotationSup.getAsInt()),
-                        robotCentricSup
-                )
-        );
+    public Rotation2d getAngleToPose(Translation2d coords) {
+        return Rotation2d.fromRadians(Math.atan(
+                (coords.getX() - getPose().getX()) / (coords.getY()-getPose().getY())
+        ));
     }
 
     /**
@@ -304,6 +292,27 @@ public class Swerve extends SubsystemBase {
         if(this.getCurrentCommand() != this.getDefaultCommand()) {
             CommandScheduler.getInstance().cancel(this.getCurrentCommand());
         }
+    }
+
+    // **** Commands ****
+    /**
+     * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
+     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
+     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
+     * @param rotationSup {@link DoubleSupplier} for the target angle
+     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     */
+    public Command teleopDriveSwerveAndRotateToAngleCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
+                                                            DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
+
+        return this.run(
+                () -> teleopDriveSwerve(
+                        translationSup,
+                        strafeSup,
+                        () -> rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(rotationSup.getAsDouble())),
+                        robotCentricSup
+                )
+        );
     }
 
     @Override
