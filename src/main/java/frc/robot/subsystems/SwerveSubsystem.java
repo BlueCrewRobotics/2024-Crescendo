@@ -8,7 +8,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -33,13 +32,11 @@ import java.util.function.DoubleSupplier;
  */
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrivePoseEstimator swervePoseEstimator;
-    public SwerveModule[] mSwerveMods;
+    public SwerveModule[] swerveMods;
     private AHRS gyro;
 
     private final VisionPoseEstimator vision;
 
-    public SwerveModule[] mSwerveMods;
-    private AHRS gyro;
 
     private Field2d field = new Field2d();
 
@@ -49,7 +46,7 @@ public class SwerveSubsystem extends SubsystemBase {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
 
-        mSwerveMods = new SwerveModule[] {
+        swerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
             new SwerveModule(2, Constants.Swerve.Mod2.constants),
@@ -130,7 +127,7 @@ public class SwerveSubsystem extends SubsystemBase {
                                 );
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
-        for(SwerveModule mod : mSwerveMods){
+        for(SwerveModule mod : swerveMods){
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }
@@ -142,7 +139,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
         
-        for(SwerveModule mod : mSwerveMods){
+        for(SwerveModule mod : swerveMods){
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
         }
     }
@@ -158,7 +155,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(45))
             };
-            for(SwerveModule mod : mSwerveMods){
+            for(SwerveModule mod : swerveMods){
                 mod.setAngle(desiredStates[mod.moduleNumber]);
             }
         }
@@ -169,7 +166,7 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public SwerveModuleState[] getModuleStates(){
         SwerveModuleState[] states = new SwerveModuleState[4];
-        for(SwerveModule mod : mSwerveMods){
+        for(SwerveModule mod : swerveMods){
             states[mod.moduleNumber] = mod.getState();
         }
         return states;
@@ -180,7 +177,7 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public SwerveModulePosition[] getModulePositions(){
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
-        for(SwerveModule mod : mSwerveMods){
+        for(SwerveModule mod : swerveMods){
             positions[mod.moduleNumber] = mod.getPosition();
         }
         return positions;
@@ -198,13 +195,6 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public void setPose(Pose2d pose) {
         swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
-    }
-  
-    /**
-     * @return The {@link Pose2d} of the robot according to the {@link SwerveDrivePoseEstimator}
-     */
-    public Pose2d getPose() {
-        return swerveOdometry.getPoseMeters();
     }
 
     /**
@@ -264,7 +254,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * Resets each {@link SwerveModule} based on the {@link CANcoder} and angle offset
      */
     public void resetModulesToAbsolute(){
-        for(SwerveModule mod : mSwerveMods){
+        for(SwerveModule mod : swerveMods){
             mod.resetToAbsolute();
         }
     }
@@ -362,7 +352,7 @@ public class SwerveSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
         }
 
-        for(SwerveModule mod : mSwerveMods) {
+        for(SwerveModule mod : swerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Angle", mod.getPosition().angle.getDegrees());
