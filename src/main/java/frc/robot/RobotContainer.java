@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.bluecrew.pathplanner.CustomAutoBuilder;
 import frc.robot.commands.RumbleControllerWhenDriving;
+import frc.robot.commands.StartInTake;
+import frc.robot.commands.StopInTake;
 import frc.robot.subsystems.*;
 
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ public class RobotContainer {
 
     /* Subsystems */
     private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
+    private final SubIntake intake = new SubIntake();
 
     // Sendable Choosers
     private final SendableChooser<Command> autoChooser;
@@ -109,6 +112,9 @@ public class RobotContainer {
                 () -> swerveSubsystem.rotationPercentageFromTargetAngle(swerveSubsystem.getAngleToPose(new Translation2d(0, 0))),
                 robotCentric
         )));
+
+        driver.a().onTrue(new StartInTake(intake));
+        driver.b().onTrue(new StopInTake(intake));
     }
 
     /**
