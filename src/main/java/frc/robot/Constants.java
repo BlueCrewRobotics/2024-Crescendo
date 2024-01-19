@@ -189,11 +189,20 @@ public final class Constants {
                 kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
     }
 
-    public static final int INTAKE_MOTOR_ID = 99999; //Placeholder
-    public static final int INDEXER_MOTOR_ID = 8888;
+    public static final int SHOOTER_LEFT_MOTOR_ID = -1;
+    public static final int SHOOTER_RIGHT_MOTOR_ID = -2;
 
+    public static final double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
+    public static final double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // TODO: account for any gear ratio (currently is exactly 1:1 for 4" wheel)
+    public static final double shooterKS = 0.08403; // TODO: figure out what these should be!
+    public static final double shooterKV = 2.2341;
+    public static final double shooterKA = 0.27385;
+
+    public static final int INTAKE_MOTOR_ID = 99999; // TODO: Placeholder
+    public static final int INDEXER_MOTOR_ID = 8888;
     public static final double  INDEXER_MAX_LIMIT = 129834.42;
     public static final double INDEXER_MIN_LIMIT = -398472938.23;
+
 
     public static final double GAME_PIECE_NOTE_DIAMETER = 0.36;
 

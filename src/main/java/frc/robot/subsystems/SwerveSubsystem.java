@@ -8,6 +8,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -36,6 +37,9 @@ public class SwerveSubsystem extends SubsystemBase {
     private AHRS gyro;
 
     private final VisionPoseEstimator vision;
+
+    public SwerveModule[] mSwerveMods;
+    private AHRS gyro;
 
     private Field2d field = new Field2d();
 
@@ -195,6 +199,13 @@ public class SwerveSubsystem extends SubsystemBase {
     public void setPose(Pose2d pose) {
         swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
+  
+    /**
+     * @return The {@link Pose2d} of the robot according to the {@link SwerveDrivePoseEstimator}
+     */
+    public Pose2d getPose() {
+        return swerveOdometry.getPoseMeters();
+    }
 
     /**
      * @return The speeds of each {@link SwerveModule} as {@link ChassisSpeeds} Required by Path Planner
@@ -318,8 +329,7 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public Command teleopDriveSwerveAndRotateToAngleCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
                                                             double targetDegrees, BooleanSupplier robotCentricSup) {
-
-        return this.run(
+      return this.run(
                 () -> teleopDriveSwerve(
                         translationSup,
                         strafeSup,
@@ -351,6 +361,7 @@ public class SwerveSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
             SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
         }
+
         for(SwerveModule mod : mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
