@@ -2,20 +2,19 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.SwerveSubsystem;
 
 public class TeleopSwerveExperiment extends Command {
-    private Swerve swerve;
+    private SwerveSubsystem swerveSubsystem;
     private CommandXboxController driverController;
 
-    public TeleopSwerveExperiment(Swerve swerve, CommandXboxController driverController) {
-        this.swerve = swerve;
-        addRequirements(swerve);
+    public TeleopSwerveExperiment(SwerveSubsystem swerveSubsystem, CommandXboxController driverController) {
+        this.swerveSubsystem = swerveSubsystem;
+        addRequirements(swerveSubsystem);
 
         this.driverController = driverController;
     }
@@ -31,27 +30,27 @@ public class TeleopSwerveExperiment extends Command {
 
         // Rotate with D-Pad
         if (driverController.getHID().getPOV() == 0) {
-            if (swerve.getGyroYaw().getDegrees() <= -0.0 - angleBuffer) {
+            if (swerveSubsystem.getGyroYaw().getDegrees() <= -0.0 - angleBuffer) {
                 rotationVal = -rotationSpeed;
-            } else if (swerve.getGyroYaw().getDegrees() >= 0.0 + angleBuffer) {
+            } else if (swerveSubsystem.getGyroYaw().getDegrees() >= 0.0 + angleBuffer) {
                 rotationVal = rotationSpeed;
             }
         } else if (driverController.getHID().getPOV() == 90) {
-            if (swerve.getGyroYaw().getDegrees() >= -90.0 && swerve.getGyroYaw().getDegrees() <= 90.0 - angleBuffer) {
+            if (swerveSubsystem.getGyroYaw().getDegrees() >= -90.0 && swerveSubsystem.getGyroYaw().getDegrees() <= 90.0 - angleBuffer) {
                 rotationVal = -rotationSpeed;
-            } else if (swerve.getGyroYaw().getDegrees() < -90.0 || swerve.getGyroYaw().getDegrees() >= 90.0 + angleBuffer) {
+            } else if (swerveSubsystem.getGyroYaw().getDegrees() < -90.0 || swerveSubsystem.getGyroYaw().getDegrees() >= 90.0 + angleBuffer) {
                 rotationVal = rotationSpeed;
             }
         } else if (driverController.getHID().getPOV() == 180) {
-            if (swerve.getGyroYaw().getDegrees() <= 180.0 - angleBuffer && swerve.getGyroYaw().getDegrees() >= 0.0) {
+            if (swerveSubsystem.getGyroYaw().getDegrees() <= 180.0 - angleBuffer && swerveSubsystem.getGyroYaw().getDegrees() >= 0.0) {
                 rotationVal = -rotationSpeed;
-            } else if (swerve.getGyroYaw().getDegrees() >= -180 + angleBuffer && swerve.getGyroYaw().getDegrees() < 0.0) {
+            } else if (swerveSubsystem.getGyroYaw().getDegrees() >= -180 + angleBuffer && swerveSubsystem.getGyroYaw().getDegrees() < 0.0) {
                 rotationVal = rotationSpeed;
             }
         } else if (driverController.getHID().getPOV() == 270) {
-            if (swerve.getGyroYaw().getDegrees() >= 90.0 || swerve.getGyroYaw().getDegrees() <= -90.0 - angleBuffer) {
+            if (swerveSubsystem.getGyroYaw().getDegrees() >= 90.0 || swerveSubsystem.getGyroYaw().getDegrees() <= -90.0 - angleBuffer) {
                 rotationVal = -rotationSpeed;
-            } else if (swerve.getGyroYaw().getDegrees() < 90.0 && swerve.getGyroYaw().getDegrees() >= -90.0 + angleBuffer) {
+            } else if (swerveSubsystem.getGyroYaw().getDegrees() < 90.0 && swerveSubsystem.getGyroYaw().getDegrees() >= -90.0 + angleBuffer) {
                 rotationVal = rotationSpeed;
             }
         }
@@ -68,7 +67,7 @@ public class TeleopSwerveExperiment extends Command {
         //System.out.println("rotationVal = " + rotationVal + " translationVal = " + translationVal + " strafeVal = " + strafeVal);
 
         // Drive the swerve
-        swerve.drive(
+        swerveSubsystem.drive(
                 new Translation2d(translationVal, strafeVal).times(Constants.Swerve.maxSpeed),
                 rotationVal * Constants.Swerve.maxAngularVelocity,
                 !driverController.leftBumper().getAsBoolean(),

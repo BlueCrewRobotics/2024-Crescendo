@@ -2,6 +2,8 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -42,19 +44,19 @@ public class RobotContainer {
     private final Trigger cancelRotateToAngle = new Trigger(() -> (driver.getRightX() > 0.1 || driver.getRightX() < -0.1));
 
     /* Subsystems */
-    private final Swerve s_Swerve = new Swerve();
+    private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
 
     // Sendable Choosers
     private final SendableChooser<Command> autoChooser;
     private final SendableChooser<Integer> numOfAutoActions;
     private List<SendableChooser<Command>> selectedPathActions = new ArrayList<>();
     private List<SendableChooser<Command>> selectedNoteActions = new ArrayList<>();
-    private boolean hasSetupChoosers = false;
+    private boolean hasSetupAutoChoosers = false;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        s_Swerve.setDefaultCommand(
-                s_Swerve.run(() -> s_Swerve.teleopDriveSwerve(
+        swerveSubsystem.setDefaultCommand(
+                swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
                         driver::getLeftY,
                         driver::getLeftX,
                         driver::getRightX,
@@ -90,16 +92,23 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(s_Swerve::zeroHeading));
-        driver.povCenter().onFalse(s_Swerve.teleopDriveSwerveAndRotateToDPadCommand(
+        zeroGyro.onTrue(new InstantCommand(swerveSubsystem::zeroHeading));
+        driver.povCenter().onFalse(swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> driver.getHID().getPOV(),
+                () -> swerveSubsystem.rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(driver.getHID().getPOV())),
                 robotCentric
-        ));
-        cancelRotateToAngle.onTrue(new InstantCommand(s_Swerve::cancelCurrentCommand));
+                )));
+        cancelRotateToAngle.onTrue(new InstantCommand(swerveSubsystem::cancelCurrentCommand));
 
-        driver.rightStick().toggleOnTrue(new RumbleControllerWhenDriving(driver));
+        driver.leftStick().toggleOnTrue(new RumbleControllerWhenDriving(driver));
+
+        driver.rightStick().toggleOnTrue(swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
+                () -> driver.getRawAxis(translationAxis),
+                () -> driver.getRawAxis(strafeAxis),
+                () -> swerveSubsystem.rotationPercentageFromTargetAngle(swerveSubsystem.getAngleToPose(new Translation2d(0, 0))),
+                robotCentric
+        )));
     }
 
     /**
@@ -125,15 +134,16 @@ public class RobotContainer {
      * Creates all the {@link SendableChooser} for Autonomous
      */
     public void setupAutoChoosers() {
-        for (int i = 0; i < 5; i++) {
-            // Sendable Choosers from Custom Pathplanner AutoBuilder
-            SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
-            SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
+        if(!hasSetupAutoChoosers) {
+            for (int i = 0; i < 5; i++) {
+                // Sendable Choosers from Custom Pathplanner AutoBuilder
+                SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
+                SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
 
 
-            // Sendable Choosers for testing purposes only
-            selectedPathActions.add(pathAction);
-            selectedNoteActions.add(noteAction);
+                // Sendable Choosers for testing purposes only
+                selectedPathActions.add(pathAction);
+                selectedNoteActions.add(noteAction);
 
 //            // Set Default selections
 //            selectedPathActions.get(i).setDefaultOption("Path Action 1", Commands.print("Command Path Action 1"));
@@ -144,9 +154,11 @@ public class RobotContainer {
 //                selectedNoteActions.get(i).addOption("Note Action " + j, Commands.print("Command Note Action " + j));
 //            }
 
-            // Send Choosers to the dashboard
-            SmartDashboard.putData("Path Action " + (i+1), selectedPathActions.get(i));
-            SmartDashboard.putData("Note Action " + (i+1), selectedNoteActions.get(i));
+                // Send Choosers to the dashboard
+                SmartDashboard.putData("Path Action " + (i + 1), selectedPathActions.get(i));
+                SmartDashboard.putData("Note Action " + (i + 1), selectedNoteActions.get(i));
+            }
+            hasSetupAutoChoosers = true;
         }
     }
 }
