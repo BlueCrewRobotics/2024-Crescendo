@@ -51,7 +51,7 @@ public class RobotContainer {
     private final SendableChooser<Integer> numOfAutoActions;
     private List<SendableChooser<Command>> selectedPathActions = new ArrayList<>();
     private List<SendableChooser<Command>> selectedNoteActions = new ArrayList<>();
-    private boolean hasSetupChoosers = false;
+    private boolean hasSetupAutoChoosers = false;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -134,15 +134,16 @@ public class RobotContainer {
      * Creates all the {@link SendableChooser} for Autonomous
      */
     public void setupAutoChoosers() {
-        for (int i = 0; i < 5; i++) {
-            // Sendable Choosers from Custom Pathplanner AutoBuilder
-            SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
-            SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
+        if(!hasSetupAutoChoosers) {
+            for (int i = 0; i < 5; i++) {
+                // Sendable Choosers from Custom Pathplanner AutoBuilder
+                SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
+                SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
 
 
-            // Sendable Choosers for testing purposes only
-            selectedPathActions.add(pathAction);
-            selectedNoteActions.add(noteAction);
+                // Sendable Choosers for testing purposes only
+                selectedPathActions.add(pathAction);
+                selectedNoteActions.add(noteAction);
 
 //            // Set Default selections
 //            selectedPathActions.get(i).setDefaultOption("Path Action 1", Commands.print("Command Path Action 1"));
@@ -153,9 +154,11 @@ public class RobotContainer {
 //                selectedNoteActions.get(i).addOption("Note Action " + j, Commands.print("Command Note Action " + j));
 //            }
 
-            // Send Choosers to the dashboard
-            SmartDashboard.putData("Path Action " + (i+1), selectedPathActions.get(i));
-            SmartDashboard.putData("Note Action " + (i+1), selectedNoteActions.get(i));
+                // Send Choosers to the dashboard
+                SmartDashboard.putData("Path Action " + (i + 1), selectedPathActions.get(i));
+                SmartDashboard.putData("Note Action " + (i + 1), selectedNoteActions.get(i));
+            }
+            hasSetupAutoChoosers = true;
         }
     }
 }
