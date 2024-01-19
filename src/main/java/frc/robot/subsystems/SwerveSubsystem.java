@@ -5,7 +5,9 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -14,7 +16,6 @@ import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,9 +31,11 @@ import java.util.function.DoubleSupplier;
  * This is the Swerve Drive Subsystem, based on team 364's code
  */
 public class SwerveSubsystem extends SubsystemBase {
-    public SwerveDriveOdometry swerveOdometry;
+    private SwerveDrivePoseEstimator swervePoseEstimator;
     public SwerveModule[] mSwerveMods;
     private AHRS gyro;
+
+    private final VisionPoseEstimator vision;
 
     private Field2d field = new Field2d();
 
@@ -51,7 +54,18 @@ public class SwerveSubsystem extends SubsystemBase {
 
         resetModulesToAbsolute();
 
-        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroYaw(), getModulePositions());
+        vision = new VisionPoseEstimator();
+        
+        var stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1); // TODO: Tune the standard deviations
+        var visionStdDevs = VecBuilder.fill(1, 1, 1);
+        swervePoseEstimator =
+                new SwerveDrivePoseEstimator(
+                        Constants.Swerve.swerveKinematics,
+                        getGyroYaw(),
+                        getModulePositions(),
+                        new Pose2d(),
+                        stateStdDevs,
+                        visionStdDevs);
 
         rotationPIDController = new PIDController(5, 0, 0);
         rotationPIDController.enableContinuousInput(0, 360);
@@ -169,17 +183,17 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * @return The {@link Pose2d} of the robot according to the {@link SwerveDriveOdometry}
+     * @return The {@link Pose2d} of the robot according to the {@link SwerveDrivePoseEstimator}
      */
     public Pose2d getPose() {
-        return swerveOdometry.getPoseMeters();
+        return swervePoseEstimator.getEstimatedPosition();
     }
 
     /**
-     * @param pose The {@link Pose2d} to set the {@link SwerveDriveOdometry} to
+     * @param pose The {@link Pose2d} to set the {@link SwerveDrivePoseEstimator} to
      */
     public void setPose(Pose2d pose) {
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), pose);
+        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
     /**
@@ -200,25 +214,25 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * @return The heading reported by the {@link SwerveDriveOdometry} as a {@link Rotation2d}
+     * @return The heading reported by the {@link SwerveDrivePoseEstimator} as a {@link Rotation2d}
      */
     public Rotation2d getHeading(){
         return getPose().getRotation();
     }
 
     /**
-     * Sets the {@link SwerveDriveOdometry} heading
+     * Sets the {@link SwerveDrivePoseEstimator} heading
      * @param heading The heading of the robot
      */
     public void setHeading(Rotation2d heading){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
     }
 
     /**
-     * Resets the {@link SwerveDriveOdometry} heading
+     * Resets the {@link SwerveDrivePoseEstimator} heading
      */
     public void zeroHeading(){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
+        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     /**
@@ -299,17 +313,17 @@ public class SwerveSubsystem extends SubsystemBase {
      * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
      * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
      * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param rotationSup {@link DoubleSupplier} for the target angle
+     * @param targetDegrees The target angle
      * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
      */
     public Command teleopDriveSwerveAndRotateToAngleCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
-                                                            DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
+                                                            double targetDegrees, BooleanSupplier robotCentricSup) {
 
         return this.run(
                 () -> teleopDriveSwerve(
                         translationSup,
                         strafeSup,
-                        () -> rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(rotationSup.getAsDouble())),
+                        () -> rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees)),
                         robotCentricSup
                 )
         );
@@ -317,8 +331,26 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
-        swerveOdometry.update(getGyroYaw(), getModulePositions());
+        swervePoseEstimator.update(getGyroYaw(), getModulePositions());
 
+        // Correct pose estimate with vision measurements
+        var visionEst = vision.getEstimatedGlobalPose();
+        visionEst.ifPresent(
+                est -> {
+                    var estPose = est.estimatedPose.toPose2d();
+                    // Change our trust in the measurement based on the tags we can see
+                    var estStdDevs = vision.getEstimationStdDevs(estPose);
+
+                    swervePoseEstimator.addVisionMeasurement(
+                            est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+                });
+
+        SmartDashboard.putNumber("Swerve Estimator X", swervePoseEstimator.getEstimatedPosition().getX());
+        SmartDashboard.putNumber("Swerve Estimator Y", swervePoseEstimator.getEstimatedPosition().getY());
+        if(visionEst.isPresent()) {
+            SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
+            SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
+        }
         for(SwerveModule mod : mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
