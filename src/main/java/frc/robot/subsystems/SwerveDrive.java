@@ -28,9 +28,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 /**
- * This is the Swerve Drive Subsystem, based on team 364's code
+ * Swerve Drive Subsystem -- based on team 364's code
  */
-public class SwerveSubsystem extends SubsystemBase {
+public class SwerveDrive extends SubsystemBase {
     private SwerveDrivePoseEstimator swervePoseEstimator;
     public SwerveModule[] swerveMods;
     private AHRS gyro;
@@ -42,7 +42,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     private PIDController rotationPIDController;
 
-    public SwerveSubsystem() {
+    public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
 
@@ -68,13 +68,13 @@ public class SwerveSubsystem extends SubsystemBase {
                         stateStdDevs,
                         visionStdDevs);
 
-        rotationPIDController = new PIDController(5, 0, 0);
+        rotationPIDController = new PIDController(5, 0, 1);
         rotationPIDController.enableContinuousInput(0, 360);
         rotationPIDController.setTolerance(1);
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
-                this::getPose,
+                () -> new Pose2d(getPose().getTranslation(), getPose().getRotation().unaryMinus()),
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 this::driveRobotRelative,
@@ -105,7 +105,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Drives the {@link SwerveSubsystem} Subsystem
+     * Drives the {@link SwerveDrive} Subsystem
      * @param translation A {@link Translation2d} representing the desired X and Y speed in meters per second
      * @param rotation The desired angular velocity in radians per second
      * @param fieldRelative Controls whether it should be driven in field or robot relative mode
@@ -240,7 +240,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return The Robot yaw as reported by the NavX
      */
     public Rotation2d getGyroYaw() {
-        return Constants.Swerve.invertGyro ? (Rotation2d.fromDegrees(360-gyro.getYaw())) : Rotation2d.fromDegrees(gyro.getYaw());
+        return Constants.Swerve.invertGyro ? (Rotation2d.fromDegrees(-gyro.getYaw())) : Rotation2d.fromDegrees(gyro.getYaw());
     }
 
     /**
@@ -286,7 +286,7 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         rotationPIDController.reset();
-        return MathUtil.clamp(rotationPIDController.calculate(getGyroYaw().getDegrees()%360, targetAngle.getDegrees()%360), -0.25, 0.25);
+        return MathUtil.clamp(rotationPIDController.calculate(getGyroYaw().getDegrees()%360, targetAngle.getDegrees()%360), -0.15, 0.15);
     }
 
     /**
@@ -334,23 +334,24 @@ public class SwerveSubsystem extends SubsystemBase {
         swervePoseEstimator.update(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-        var visionEst = vision.getEstimatedGlobalPose();
-        visionEst.ifPresent(
-                est -> {
-                    var estPose = est.estimatedPose.toPose2d();
-                    // Change our trust in the measurement based on the tags we can see
-                    var estStdDevs = vision.getEstimationStdDevs(estPose);
-
-                    swervePoseEstimator.addVisionMeasurement(
-                            est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
-                });
+//        var visionEst = vision.getEstimatedGlobalPose();
+//        visionEst.ifPresent(
+//                est -> {
+//                    var estPose = est.estimatedPose.toPose2d();
+//                    // Change our trust in the measurement based on the tags we can see
+//                    var estStdDevs = vision.getEstimationStdDevs(estPose);
+//
+//                    swervePoseEstimator.addVisionMeasurement(
+//                            est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+//                });
 
         SmartDashboard.putNumber("Swerve Estimator X", swervePoseEstimator.getEstimatedPosition().getX());
         SmartDashboard.putNumber("Swerve Estimator Y", swervePoseEstimator.getEstimatedPosition().getY());
-        if(visionEst.isPresent()) {
-            SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
-            SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
-        }
+        SmartDashboard.putNumber("Rotation", getGyroYaw().getDegrees());
+//        if(visionEst.isPresent()) {
+//            SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
+//            SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
+//        }
 
         for(SwerveModule mod : swerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());

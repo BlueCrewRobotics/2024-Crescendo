@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This is a customized {@link AutoBuilder} that can build {@link SendableChooser} with options for all Path Planner autos in a given folder in the Path Planner UI
@@ -93,7 +94,7 @@ public class CustomAutoBuilder extends com.pathplanner.lib.auto.AutoBuilder {
                 String fileContent = fileContentBuilder.toString();
                 JSONObject json = (JSONObject) new JSONParser().parse(fileContent);
 
-                if(json.get("folder") == pathplannerFolder) {
+                if(Objects.equals(json.get("folder").toString(), pathplannerFolder)) {
                     wantedAutoNames.add(autoName);
                 }
             } catch (AutoBuilderException e) {

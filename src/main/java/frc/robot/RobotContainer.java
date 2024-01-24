@@ -2,8 +2,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -16,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.bluecrew.pathplanner.CustomAutoBuilder;
+import frc.lib.math.Conversions;
 import frc.robot.commands.RumbleControllerWhenDriving;
 import frc.robot.commands.StartInTake;
 import frc.robot.commands.StopInTake;
@@ -46,7 +49,7 @@ public class RobotContainer {
     private final Trigger cancelRotateToAngle = new Trigger(() -> (driver.getRightX() > 0.1 || driver.getRightX() < -0.1));
 
     /* Subsystems */
-    private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
+    private final SwerveDrive swerveDrive = new SwerveDrive();
     private final SubIntake intake = new SubIntake();
 
     // Sendable Choosers
@@ -58,8 +61,8 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        swerveSubsystem.setDefaultCommand(
-                swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
+        swerveDrive.setDefaultCommand(
+                swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
                         driver::getLeftY,
                         driver::getLeftX,
                         driver::getRightX,
@@ -74,6 +77,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("marker1", Commands.print("Passed marker 1"));
         NamedCommands.registerCommand("marker2", Commands.print("Passed marker 2"));
         NamedCommands.registerCommand("print hello", Commands.print("Hello"));
+        NamedCommands.registerCommand("EndPathAction", Commands.print("End of the Path Action"));
+        NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
         // Chooser for number of actions in auto
         numOfAutoActions = new SendableChooser<>();
@@ -95,21 +100,21 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveSubsystem::zeroHeading));
-        driver.povCenter().onFalse(swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
+        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
+        driver.povCenter().onFalse(swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> swerveSubsystem.rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(driver.getHID().getPOV())),
+                () -> swerveDrive.rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(driver.getHID().getPOV())),
                 robotCentric
                 )));
-        cancelRotateToAngle.onTrue(new InstantCommand(swerveSubsystem::cancelCurrentCommand));
+        cancelRotateToAngle.onTrue(new InstantCommand(swerveDrive::cancelCurrentCommand));
 
         driver.leftStick().toggleOnTrue(new RumbleControllerWhenDriving(driver));
 
-        driver.rightStick().toggleOnTrue(swerveSubsystem.run(() -> swerveSubsystem.teleopDriveSwerve(
+        driver.rightStick().toggleOnTrue(swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> swerveSubsystem.rotationPercentageFromTargetAngle(swerveSubsystem.getAngleToPose(new Translation2d(0, 0))),
+                () -> swerveDrive.rotationPercentageFromTargetAngle(swerveDrive.getAngleToPose(new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)))),
                 robotCentric
         )));
 
@@ -141,7 +146,7 @@ public class RobotContainer {
      */
     public void setupAutoChoosers() {
         if(!hasSetupAutoChoosers) {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 1; i++) {
                 // Sendable Choosers from Custom Pathplanner AutoBuilder
                 SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
                 SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
