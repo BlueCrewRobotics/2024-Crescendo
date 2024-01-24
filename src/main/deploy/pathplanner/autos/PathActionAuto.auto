@@ -3,9 +3,9 @@
   "startingPose": {
     "position": {
       "x": 2.6,
-      "y": 6.792093415824429
+      "y": 6.79
     },
-    "rotation": 0.0
+    "rotation": 0
   },
   "command": {
     "type": "sequential",
@@ -20,12 +20,12 @@
         {
           "type": "named",
           "data": {
-            "name": "EndNoteAction"
+            "name": "EndPathAction"
           }
         }
       ]
     }
   },
-  "folder": "Note Actions",
+  "folder": "Path Actions",
   "choreoAuto": false
 }

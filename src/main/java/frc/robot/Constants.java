@@ -107,7 +107,7 @@ public final class Constants {
             public static final int driveMotorID = 0;
             public static final int angleMotorID = 4;
             public static final int canCoderID = 0;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(25.35);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(318.58);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -117,7 +117,7 @@ public final class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 1;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(48.58);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(24.84);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -127,7 +127,7 @@ public final class Constants {
             public static final int driveMotorID = 2;
             public static final int angleMotorID = 6;
             public static final int canCoderID = 2;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(123.43);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(295.35);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -137,7 +137,7 @@ public final class Constants {
             public static final int driveMotorID = 3;
             public static final int angleMotorID = 7;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(114.84);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(33.43);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -147,7 +147,7 @@ public final class Constants {
         public static final String cameraName = "testCamera";
         // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
         public static final Transform3d robotToCam =
-                new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0, 0, 0));
+                new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d(Math.toRadians(32), 0, 0));
 
         // The layout of the AprilTags on the field
         public static final AprilTagFieldLayout tagLayout =
@@ -167,8 +167,8 @@ public final class Constants {
                 new PIDConstants(5.0, 0, 0), // Translation PID
                 new PIDConstants(5.0, 0, 0), // Rotation PID
                 4.8, // Max Speed Meters per second
-                Math.sqrt((0.5 * Swerve.trackWidth) * (0.5 * Swerve.trackWidth) *
-                        (0.5 * Swerve.wheelBase) * (0.5 * Swerve.wheelBase)), // Drive base radius in meters. Distance from robot center to furthest module.
+                Math.sqrt(Swerve.trackWidth * Swerve.trackWidth +
+                        Swerve.wheelBase * Swerve.wheelBase)/2, // Drive base radius in meters. Distance from robot center to furthest module.
                 new ReplanningConfig()
         );
     }

@@ -70,6 +70,9 @@ public class SwerveModule {
      * @param isOpenLoop Controls driving in open or closed loop
      */
     private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop){
+        // Scale speed by cosine of angle error. This scales down movement perpendicular to the desired
+        // direction of travel that can occur when modules change directions. This results in smoother driving.
+        desiredState.speedMetersPerSecond *= desiredState.angle.minus(Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())).getCos();
         if(isOpenLoop){
             driveDutyCycle.Output = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
             mDriveMotor.setControl(driveDutyCycle);
