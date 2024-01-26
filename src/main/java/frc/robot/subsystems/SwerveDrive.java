@@ -74,7 +74,7 @@ public class SwerveDrive extends SubsystemBase {
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
-                () -> new Pose2d(getPose().getTranslation(), getPose().getRotation().unaryMinus()),
+                this::getPose,
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 this::driveRobotRelative,
@@ -269,14 +269,14 @@ public class SwerveDrive extends SubsystemBase {
     public void teleopDriveSwerve(DoubleSupplier translationSup, DoubleSupplier strafeSup,
                                   DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
         /* Get Values, Deadband*/
-        double translationVal = MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.stickDeadband);
-        double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
-        double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
+        double translationVal = -MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.stickDeadband);
+        double strafeVal = -MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
+        double rotationVal = -MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
 
         drive(new Translation2d(translationVal, strafeVal).times(Constants.Swerve.maxSpeed),
                 rotationVal * Constants.Swerve.maxAngularVelocity,
                 !robotCentricSup.getAsBoolean(),
-                true);
+                false);
     }
 
     /**
@@ -286,7 +286,8 @@ public class SwerveDrive extends SubsystemBase {
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         rotationPIDController.reset();
-        return MathUtil.clamp(rotationPIDController.calculate(getGyroYaw().getDegrees()%360, targetAngle.getDegrees()%360), -0.15, 0.15);
+        return MathUtil.clamp(rotationPIDController.calculate(getGyroYaw().getDegrees()%360,
+                targetAngle.getDegrees()%360), -0.15, 0.15);
     }
 
     /**

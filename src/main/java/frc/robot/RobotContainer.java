@@ -114,7 +114,8 @@ public class RobotContainer {
         driver.rightStick().toggleOnTrue(swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> swerveDrive.rotationPercentageFromTargetAngle(swerveDrive.getAngleToPose(new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)))),
+                () -> swerveDrive.rotationPercentageFromTargetAngle(swerveDrive.getAngleToPose(
+                        new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)))),
                 robotCentric
         )));
 
