@@ -1,18 +1,21 @@
 {
-  "robotWidth": 0.42545,
-  "robotLength": 0.42545,
+  "robotWidth": 0.8128,
+  "robotLength": 1.016,
   "holonomicMode": true,
   "pathFolders": [
-    "CenterLineToSpeaker",
+    "CenterLine-Other",
+    "Speaker-Other",
+    "Stage-Other",
+    "StartingNotes-Other",
     "TestingStuffs"
   ],
   "autoFolders": [
     "Path Actions",
     "Note Actions"
   ],
-  "defaultMaxVel": 0.05,
-  "defaultMaxAccel": 1.0,
-  "defaultMaxAngVel": 1.0,
-  "defaultMaxAngAccel": 20.0,
+  "defaultMaxVel": 4.5,
+  "defaultMaxAccel": 3.0,
+  "defaultMaxAngVel": 360.0,
+  "defaultMaxAngAccel": 270.0,
   "maxModuleSpeed": 4.8
 }
