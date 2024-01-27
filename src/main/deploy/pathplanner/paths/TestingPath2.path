@@ -3,41 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.045750364756543,
-        "y": 5.092037803988399
+        "x": 5.0,
+        "y": 5.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.5888617600243786,
-        "y": 5.092037803988399
+        "x": 7.761817576687479,
+        "y": 5.053283498039865
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.601745139779039,
-        "y": 4.65609881801159
+        "x": 5.281729819758089,
+        "y": 6.080554341341242
       },
       "prevControl": {
-        "x": 3.9802612778020343,
-        "y": 4.447066680477851
+        "x": 5.976928225658776,
+        "y": 6.611031294979258
       },
       "nextControl": {
-        "x": 5.426729775455676,
-        "y": 4.933577144286072
+        "x": 4.893288820089041,
+        "y": 5.78415119020689
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.6615196798707546,
-        "y": 4.173016064055385
+        "x": 3.0,
+        "y": 5.0
       },
       "prevControl": {
-        "x": 5.788979232997225,
-        "y": 3.1749831220108176
+        "x": 4.082274550415408,
+        "y": 5.0
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,12 +46,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.65,
-      "rotationDegrees": 90.0,
-      "rotateFast": false
-    },
-    {
-      "waypointRelativePos": 1.35,
+      "waypointRelativePos": 0.5,
       "rotationDegrees": -90.0,
       "rotateFast": false
     }
@@ -61,12 +56,12 @@
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 1.0,
-    "maxAngularVelocity": 270.0,
-    "maxAngularAcceleration": 180.0
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 270.0
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -1.2753910774384136,
+    "velocity": 0.5,
+    "rotation": 0.0,
     "rotateFast": false
   },
   "reversed": false,

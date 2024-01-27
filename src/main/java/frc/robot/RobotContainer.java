@@ -2,8 +2,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -16,9 +14,7 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.bluecrew.pathplanner.CustomAutoBuilder;
-import frc.lib.math.Conversions;
 import frc.robot.commands.RumbleControllerWhenDriving;
 import frc.robot.commands.StartInTake;
 import frc.robot.commands.StopInTake;
@@ -26,6 +22,7 @@ import frc.robot.subsystems.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -46,7 +43,7 @@ public class RobotContainer {
     private final JoystickButton zeroGyro = new JoystickButton(driver.getHID(), XboxController.Button.kY.value);
     private final JoystickButton robotCentric = new JoystickButton(driver.getHID(), XboxController.Button.kLeftBumper.value);
 
-    private final Trigger cancelRotateToAngle = new Trigger(() -> (driver.getRightX() > 0.1 || driver.getRightX() < -0.1));
+    private final BooleanSupplier cancelAutoRotation = () -> (driver.getRightX() > 0.1 || driver.getRightX() < -0.1);
 
     /* Subsystems */
     private final SwerveDrive swerveDrive = new SwerveDrive();
@@ -62,13 +59,12 @@ public class RobotContainer {
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         swerveDrive.setDefaultCommand(
-                swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
+                swerveDrive.teleopDriveSwerveDriveCommand(
                         driver::getLeftY,
                         driver::getLeftX,
                         driver::getRightX,
                         () -> driver.leftBumper().getAsBoolean()
-                ))
-        );
+                ));
 
         // Configure the button bindings
         configureButtonBindings();
@@ -100,24 +96,22 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
-        driver.povCenter().onFalse(swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
+        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroGyro));
+        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> swerveDrive.rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(driver.getHID().getPOV())),
+                () -> -driver.getHID().getPOV(),
                 robotCentric
-                )));
-        cancelRotateToAngle.onTrue(new InstantCommand(swerveDrive::cancelCurrentCommand));
+                ).until(cancelAutoRotation));
 
         driver.leftStick().toggleOnTrue(new RumbleControllerWhenDriving(driver));
 
-        driver.rightStick().toggleOnTrue(swerveDrive.run(() -> swerveDrive.teleopDriveSwerve(
+        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
                 () -> driver.getRawAxis(translationAxis),
                 () -> driver.getRawAxis(strafeAxis),
-                () -> swerveDrive.rotationPercentageFromTargetAngle(swerveDrive.getAngleToPose(
-                        new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)))),
+                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
                 robotCentric
-        )));
+        ).until(cancelAutoRotation));
 
         driver.a().onTrue(new StartInTake(intake));
         driver.b().onTrue(new StopInTake(intake));
