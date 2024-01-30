@@ -46,12 +46,18 @@ public class RobotContainer {
     private final SwerveDrive swerveDrive = new SwerveDrive();
     private final SubIntake intake = new SubIntake();
 
-    // Sendable Choosers
+    // Sendable Choosers for autonomous
+    // total number of notes to score (including in speaker+amp) during auto
     private SendableChooser<Integer> numOfAutoActionsChooser;
+    // number of notes to score in amp during auto
     private SendableChooser<Integer> numOfAmpScoresChooser;
+    // number of notes to pick up from starting line area
     private SendableChooser<Integer> numOfNotesFromStartChooser;
+    // should travel to-from center line go under stage, near amp, or near source
     private SendableChooser<String> autoLaneChooser;
+    // if you travel under stage, do you go toward amp or source to find notes
     private SendableChooser<Integer> directionToSearchInChooser;
+    // prioritize getting notes from center line (over those from starting area)
     private SendableChooser<Boolean> grabFromCenterFirstChooser;
 
 
@@ -161,10 +167,10 @@ public class RobotContainer {
         grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
 
         SmartDashboard.putData("Number Of Auto Actions", numOfAutoActionsChooser);
-        SmartDashboard.putData("NumberOfAmpScores", numOfAmpScoresChooser);
+        SmartDashboard.putData("Number Of Amp Scores", numOfAmpScoresChooser);
         SmartDashboard.putData("Autonomous Lane", autoLaneChooser);
-        SmartDashboard.putData("NumberOfNotesFromStart", numOfNotesFromStartChooser);
-        SmartDashboard.putData("DirectionToSearchIn", directionToSearchInChooser);
-        SmartDashboard.putData("GrabFromWhere", grabFromCenterFirstChooser);
+        SmartDashboard.putData("Number Of Notes From Start", numOfNotesFromStartChooser);
+        SmartDashboard.putData("Direction To Search In", directionToSearchInChooser);
+        SmartDashboard.putData("Grab From Where", grabFromCenterFirstChooser);
     }
 }

@@ -21,7 +21,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
      * @param numOfAmpScores {@link Integer} The number of notes to score in the amp
      * @param autoLane {@link String} The general area of the field the robot should drive in. MUST BE DEFINED IN CONSTANTS (see {@link frc.robot.Constants.AutoConstants}
      * @param numOfNotesFromStart {@link Integer} The number of notes to pickup from the starting area
-     * @param searchDirection {@link Integer} Which direction the robot should search in (currently 1 or -1, may change)
+     * @param searchDirection {@link Integer} Which direction the robot should search in (currently 1 (toward source) or -1 (towards amp), may change)
      * @param grabFromCenterFirst {@link Boolean} Whether to grab
      */
     public AutonomousCommandsBuilder(int numOfAutoActions, int numOfAmpScores, String autoLane,
