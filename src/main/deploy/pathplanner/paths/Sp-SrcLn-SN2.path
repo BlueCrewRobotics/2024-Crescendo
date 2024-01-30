@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.2054529995687897,
-        "y": 4.343497445473574
+        "x": 1.1854184633756866,
+        "y": 4.294037184246849
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5790344916445647,
-        "y": 4.018499703666074
+        "x": 1.75108107120284,
+        "y": 4.721148452713573
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.401765241999476,
-        "y": 4.0993891435457295
+        "x": 2.4937362847109417,
+        "y": 5.272912101056761
       },
       "prevControl": {
-        "x": 2.001262341914219,
-        "y": 4.167819606230298
+        "x": 2.147066538530431,
+        "y": 5.030171331511921
       },
       "nextControl": null,
       "isLocked": false,
@@ -35,12 +35,12 @@
     "maxVelocity": 4.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 270.0
+    "maxAngularAcceleration": 120.0
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0,
-    "rotateFast": false
+    "rotation": 35.0,
+    "rotateFast": true
   },
   "reversed": false,
   "folder": "Speaker-Other",

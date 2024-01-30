@@ -4,6 +4,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -15,7 +16,6 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
@@ -144,6 +144,7 @@ public final class Constants {
     }
 
     public static final class PhotonVision {
+
         public static final String cameraName = "testCamera";
         // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
         public static final Transform3d robotToCam =
@@ -159,10 +160,30 @@ public final class Constants {
         public static final Matrix<N3, N1> multiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     }
 
+    public static final class ShooterConstants {
+
+        public enum ShooterStatus {
+            PRIMED,
+            UNREADY
+        }
+
+        public enum ShooterMode {
+            PICKUP,
+            SPEAKER,
+            AMP,
+            TRAP
+        }
+    }
+
     /**
      * Contains all the Constants used by Path Planner
      */
     public static final class PathPlannerConstants {
+
+        public static final PathConstraints pathConstraints =
+                new PathConstraints(1.5, 1,
+                        2*Math.PI, 1.5*Math.PI);
+
         public static final HolonomicPathFollowerConfig pathFollowerConfig = new HolonomicPathFollowerConfig(
                 new PIDConstants(5.0, 0, 0), // Translation PID
                 new PIDConstants(5.0, 0, 0), // Rotation PID
@@ -173,20 +194,20 @@ public final class Constants {
         );
     }
 
-    public static final class AutoConstants { //TODO: The below constants are used in the example auto, and must be tuned to specific robot
-        public static final double kMaxSpeedMetersPerSecond = 3;
-        public static final double kMaxAccelerationMetersPerSecondSquared = 3;
-        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
-        public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
-    
-        public static final double kPXController = 1;
-        public static final double kPYController = 1;
-        public static final double kPThetaController = 1;
-    
-        /* Constraint for the motion profilied robot angle controller */
-        public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
-            new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+    public static final class AutoConstants {
+        public static final String ampLane = "AmpLn";
+        public static final String stageLane = "StLn";
+        public static final String sourceLane = "SrcLn";
+    }
+
+    public static final class GameStateConstants {
+
+        public enum RobotCycleStatus {
+            NO_NOTE_CANT_SEE_SPEAKER,
+            NO_NOTE_SEES_SPEAKER,
+            HAS_NOTE_CANT_SEE_SPEAKER,
+            HAS_NOTE_SEES_SPEAKER
+        }
     }
 
     public static final int SHOOTER_LEFT_MOTOR_ID = 11;
