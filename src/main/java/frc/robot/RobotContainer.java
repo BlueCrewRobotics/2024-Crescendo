@@ -1,6 +1,5 @@
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -14,14 +13,12 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.lib.bluecrew.pathplanner.CustomAutoBuilder;
+import frc.robot.autos.AutonomousCommandsBuilder;
 import frc.robot.commands.RumbleControllerWhenDriving;
 import frc.robot.commands.StartInTake;
 import frc.robot.commands.StopInTake;
 import frc.robot.subsystems.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -50,11 +47,13 @@ public class RobotContainer {
     private final SubIntake intake = new SubIntake();
 
     // Sendable Choosers
-    private final SendableChooser<Command> autoChooser;
-    private final SendableChooser<Integer> numOfAutoActions;
-    private List<SendableChooser<Command>> selectedPathActions = new ArrayList<>();
-    private List<SendableChooser<Command>> selectedNoteActions = new ArrayList<>();
-    private boolean hasSetupAutoChoosers = false;
+    private SendableChooser<Integer> numOfAutoActionsChooser;
+    private SendableChooser<Integer> numOfAmpScoresChooser;
+    private SendableChooser<Integer> numOfNotesFromStartChooser;
+    private SendableChooser<String> autoLaneChooser;
+    private SendableChooser<Integer> directionToSearchInChooser;
+    private SendableChooser<Boolean> grabFromCenterFirstChooser;
+
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -76,16 +75,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("EndPathAction", Commands.print("End of the Path Action"));
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
-        // Chooser for number of actions in auto
-        numOfAutoActions = new SendableChooser<>();
-        numOfAutoActions.setDefaultOption("0", 0);
-        for (int i = 1; i <= 5; i++) {
-            numOfAutoActions.addOption("" + i, i);
-        }
-        SmartDashboard.putData("Number Of Auto Actions", numOfAutoActions);
-        // Auto Chooser
-        autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Mode", autoChooser);
+        setupAutoChoosers();
     }
 
     /**
@@ -123,48 +113,57 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An ExampleCommand will run in autonomous
-        //return autoChooser.getSelected();
-
-        Command[] autoCommands = new Command[numOfAutoActions.getSelected()*2];
-
-        for (int i = 0; i < (autoCommands.length/2); i++) {
-            autoCommands[(i*2)] = selectedPathActions.get(i).getSelected();
-            autoCommands[(i*2)+1] = selectedNoteActions.get(i).getSelected();
-        }
-
-        return new SequentialCommandGroup(autoCommands);
+        return new AutonomousCommandsBuilder(numOfAutoActionsChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+                autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
+                directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
     }
 
     /**
-     * Creates all the {@link SendableChooser} for Autonomous
+     * Creates each {@link SendableChooser} for Autonomous
      */
     public void setupAutoChoosers() {
-        if(!hasSetupAutoChoosers) {
-            for (int i = 0; i < 1; i++) {
-                // Sendable Choosers from Custom Pathplanner AutoBuilder
-                SendableChooser<Command> pathAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Path Actions");
-                SendableChooser<Command> noteAction = CustomAutoBuilder.buildAutoChooserFromAutosInPPFolder("Note Actions");
-
-
-                // Sendable Choosers for testing purposes only
-                selectedPathActions.add(pathAction);
-                selectedNoteActions.add(noteAction);
-
-//            // Set Default selections
-//            selectedPathActions.get(i).setDefaultOption("Path Action 1", Commands.print("Command Path Action 1"));
-//            selectedNoteActions.get(i).setDefaultOption("Note Action 1", Commands.print("Command Note Action 1"));
-//
-//            for (int j = 2; j <= 5; j++) {
-//                selectedPathActions.get(i).addOption("Path Action " + j, Commands.print("Command Path Action " + j));
-//                selectedNoteActions.get(i).addOption("Note Action " + j, Commands.print("Command Note Action " + j));
-//            }
-
-                // Send Choosers to the dashboard
-                SmartDashboard.putData("Path Action " + (i + 1), selectedPathActions.get(i));
-                SmartDashboard.putData("Note Action " + (i + 1), selectedNoteActions.get(i));
-            }
-            hasSetupAutoChoosers = true;
+        // Chooser for number of actions in auto
+        numOfAutoActionsChooser = new SendableChooser<>();
+        numOfAutoActionsChooser.setDefaultOption("0", 0);
+        for (int i = 1; i <= 5; i++) {
+            numOfAutoActionsChooser.addOption("" + i, i);
         }
+
+        // Choose how many notes to score in Amp
+        numOfAmpScoresChooser = new SendableChooser<>();
+        numOfAmpScoresChooser.setDefaultOption("0", 0);
+        numOfAmpScoresChooser.addOption("1", 1);
+        numOfAmpScoresChooser.addOption("2", 2);
+
+        // Choose which lane the robot should travel in
+        autoLaneChooser = new SendableChooser<>();
+        autoLaneChooser.setDefaultOption("None", null);
+        autoLaneChooser.addOption("AmpSideLane", Constants.AutoConstants.ampLane);
+        autoLaneChooser.addOption("UnderStageLane", Constants.AutoConstants.stageLane);
+        autoLaneChooser.addOption("SourceSideLane", Constants.AutoConstants.sourceLane);
+
+        // Choose how many notes to get from the starting zone
+        numOfNotesFromStartChooser = new SendableChooser<>();
+        numOfNotesFromStartChooser.setDefaultOption("0", 0);
+        numOfNotesFromStartChooser.addOption("1", 1);
+        numOfNotesFromStartChooser.addOption("2", 2);
+        numOfNotesFromStartChooser.addOption("3", 3);
+
+        // Choose Which direction the robot will search for notes in
+        directionToSearchInChooser = new SendableChooser<>();
+        directionToSearchInChooser.setDefaultOption("TowardsAmp", -1);
+        directionToSearchInChooser.addOption("TowardsSource", 1);
+
+        // Choose whether to grab notes from the center or the start first
+        grabFromCenterFirstChooser = new SendableChooser<>();
+        grabFromCenterFirstChooser.setDefaultOption("GrabFromCenterFirst", true);
+        grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
+
+        SmartDashboard.putData("Number Of Auto Actions", numOfAutoActionsChooser);
+        SmartDashboard.putData("NumberOfAmpScores", numOfAmpScoresChooser);
+        SmartDashboard.putData("Autonomous Lane", autoLaneChooser);
+        SmartDashboard.putData("NumberOfNotesFromStart", numOfNotesFromStartChooser);
+        SmartDashboard.putData("DirectionToSearchIn", directionToSearchInChooser);
+        SmartDashboard.putData("GrabFromWhere", grabFromCenterFirstChooser);
     }
 }
