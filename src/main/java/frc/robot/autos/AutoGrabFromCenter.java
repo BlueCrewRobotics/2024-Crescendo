@@ -26,16 +26,18 @@ public class AutoGrabFromCenter extends SequentialCommandGroup {
         addCommands(
                 // Look for a note until we see that one is available
                 new FindCenterPiece(orderOfCenterNotes, comingFrom, autoLane).until(() -> GlobalVariables.getInstance().isAutoPieceIsAvailable()),
-                // Follow the path to the note we are in front of until the path ends, or we pick up a note
-                new AutoFollowNumberedNotePath("CN", () -> GlobalVariables.getInstance().getCenterNoteIndex(), "Intake")
+                // Follow the path to the note we are in front of until the path ends, or we pick up a note,
+                // but only if AutoPieceIsAvailable is true
+                (new AutoFollowNumberedNotePath("CN", () -> GlobalVariables.getInstance().getCenterNoteIndex(), "Intake")
                         // Race with IntakeNote command
                         .raceWith(new IntakeNote())
                         // At the same time, set the piece availability to false
                         .alongWith(new InstantCommand(() -> GlobalVariables.getInstance().setAutoPieceIsAvailable(false)))
                         // And set that the note we are in front of no longer exists (because we are picking it up
                         .alongWith(new InstantCommand(() -> GlobalVariables.getInstance().setCenterNoteExists(
-                                GlobalVariables.getInstance().getCenterNoteIndex()-1, false
-                        )))
+                                GlobalVariables.getInstance().getCenterNoteIndex()-1, false)))
+                // Only if a piece is available
+                ).onlyIf(() -> GlobalVariables.getInstance().isAutoPieceIsAvailable())
         );
 
         // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,

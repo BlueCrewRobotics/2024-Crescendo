@@ -2,6 +2,7 @@ package frc.robot.autos;
 
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.lib.bluecrew.util.GlobalVariables;
 import frc.robot.commands.ShootNoteIntoAmp;
 import frc.robot.commands.ShootNoteIntoSpeaker;
 
@@ -64,7 +65,11 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
 
 
             // Something here with this for loop and the proceeding if statement seems wrong,
-            // maybe getting rid of the -1 from numOfAutoActions? I've been staring at this code for too long
+            // I've been staring at this code for too long
+            // Also there's and else statement somewhere that just drives out of the starting zone,
+            // which should probably be moved to work properly, and also somewhere should be something
+            // to always end by driving to the center line, in case we have enough left over time to do that,
+            // so we can get another note more quickly at the start of teleop
             for (int i = 0; i < numOfAutoActions-1; i++) {
                 // Do we want score more than just the note we start with?
                 if(numOfAutoActions > 1) {
@@ -73,7 +78,11 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                     // OR if we are grabbing from the start first, but we've already gotten all the ones from start that we planned to
                     if (((grabFromCenterFirst && i < numOfNotesFromCenter) || (!grabFromCenterFirst && i >= numOfNotesFromStart))) {
                         System.out.println("Grab From Center");
-                        addCommands(new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane));
+                        addCommands(
+                                new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane)
+                                        // Unless all the center notes we wanted are gone
+                                        .unless(() -> GlobalVariables.getInstance().isCenterNotesGone())
+                        );
 
                         // Prioritize scoring in the Amp (not sure if we want it this way)
                         if (i < numOfAmpScores) {
@@ -82,6 +91,8 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Amp"),
                                     new ShootNoteIntoAmp()
+                                            // Only if we have a note
+                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
                             );
                         } else {
                             // Score in the Speaker
@@ -91,6 +102,8 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Sp"),
                                     new ShootNoteIntoSpeaker()
+                                            // Only if we have a note
+                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
                             );
                         }
                     } else {
@@ -106,6 +119,8 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints),
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Amp"),
                                     new ShootNoteIntoAmp()
+                                            // Only if we have a note
+                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
                             );
                         } else {
                             // Score in the Speaker
@@ -115,6 +130,8 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Sp"),
                                     new ShootNoteIntoSpeaker()
+                                            // Only if we have a note
+                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
                             );
                         }
 

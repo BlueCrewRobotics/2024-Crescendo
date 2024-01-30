@@ -32,5 +32,5 @@ public class SubIndexer extends SubsystemBase {
 
   }
 
-
+  // TODO: Set GlobalVariables.hasNote using a beam break sensor using WPILib's DigitalInput class
 }

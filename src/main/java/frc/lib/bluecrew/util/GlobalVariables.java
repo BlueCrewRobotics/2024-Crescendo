@@ -2,7 +2,6 @@ package frc.lib.bluecrew.util;
 
 
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static frc.robot.Constants.GameStateConstants.*;
 
@@ -17,8 +16,11 @@ public final class GlobalVariables {
     private int numOfAutoActionsAttempted;
     private boolean[] centerNotesExist;
     private int centerNoteIndex;
+    private boolean centerNotesGone;
 
+    // Probably actually just want two booleans (one for if we have a note, one for if we can score in the speaker)
     private RobotCycleStatus robotCycleStatus;
+    private boolean hasNote;
 
     private boolean autoPieceIsAvailable;
 
@@ -32,7 +34,9 @@ public final class GlobalVariables {
         };
 
         autoPieceIsAvailable = false;
+        centerNotesGone = false;
         centerNoteIndex = 0;
+        hasNote = true;
     }
 
     public static synchronized GlobalVariables getInstance() {
@@ -90,5 +94,21 @@ public final class GlobalVariables {
     public int getCenterNoteIndex() {
         System.out.println("Getting Center Note Index: " + centerNoteIndex);
         return centerNoteIndex;
+    }
+
+    public void setCenterNotesGone(boolean centerNotesGone) {
+        this.centerNotesGone = centerNotesGone;
+    }
+
+    public boolean isCenterNotesGone() {
+        return centerNotesGone;
+    }
+
+    public boolean hasNote() {
+        return hasNote;
+    }
+
+    public void setHasNote(boolean hasNote) {
+        this.hasNote = hasNote;
     }
 }
