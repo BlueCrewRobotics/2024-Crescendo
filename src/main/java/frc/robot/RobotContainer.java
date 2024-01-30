@@ -150,6 +150,7 @@ public class RobotContainer {
         numOfNotesFromStartChooser.addOption("3", 3);
 
         // Choose Which direction the robot will search for notes in
+        // TODO: add a closest-outwards option
         directionToSearchInChooser = new SendableChooser<>();
         directionToSearchInChooser.setDefaultOption("TowardsAmp", -1);
         directionToSearchInChooser.addOption("TowardsSource", 1);

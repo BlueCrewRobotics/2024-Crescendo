@@ -6,6 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static frc.robot.Constants.GameStateConstants.*;
 
+/**
+ * This class is singleton, and contains all the global variables that we use throughout a match.
+ */
 public final class GlobalVariables {
 
     private static GlobalVariables instance;
@@ -37,6 +40,13 @@ public final class GlobalVariables {
             instance = new GlobalVariables();
         }
         return instance;
+    }
+
+    /**
+     * Should only be used at the start of autonomous or similar
+     */
+    public void resetVariables() {
+        instance = new GlobalVariables();
     }
 
     public void setRobotCycleStatus(RobotCycleStatus status) {
