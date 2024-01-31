@@ -9,8 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 
-public class SubIndexer extends SubsystemBase {
-  /** Creates a new SubIndexer. */
+public class IndexerModule {
 
   private CANSparkMax indexerMotor = new CANSparkMax(Constants.INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
   private SparkPIDController indexerController = indexerMotor.getPIDController();
@@ -18,19 +17,23 @@ public class SubIndexer extends SubsystemBase {
   private double IndexerMaxLimit = Constants.INDEXER_MAX_LIMIT;
   private double IndexerMinLimit = Constants.INDEXER_MIN_LIMIT;
 
-  public SubIndexer() {}
+  // TODO: indexer beam-break
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+  public IndexerModule() {
 
-  public void configureMotor(){
     indexerMotor.setSmartCurrentLimit(20);
-    indexerMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward,(float) IndexerMaxLimit);
+    indexerMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, (float) IndexerMaxLimit);
     indexerMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, (float) IndexerMinLimit);
 
   }
 
   // TODO: Set GlobalVariables.hasNote using a beam break sensor using WPILib's DigitalInput class
+
+  /**
+   * @return whether or not we "see" a note in the intake (via beam-break)
+   */
+  public boolean noteInIntake() {
+
+  }
+
 }
