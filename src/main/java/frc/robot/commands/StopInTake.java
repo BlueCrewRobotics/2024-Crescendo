@@ -1,14 +1,14 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SubIntake;
+import frc.robot.subsystems.IntakeModule;
 
 
 public class StopInTake extends Command {
-    private final SubIntake Intake;
+    private final IntakeModule Intake;
 
-    public StopInTake(SubIntake subIntake) {
-        this.Intake = subIntake;
+    public StopInTake(IntakeModule intakeModule) {
+        this.Intake = intakeModule;
         // each subsystem used by the command must be passed into the
         // addRequirements() method (which takes a vararg of Subsystem)
         addRequirements(this.Intake);

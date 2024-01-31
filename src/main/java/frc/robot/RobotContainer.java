@@ -44,7 +44,7 @@ public class RobotContainer {
 
     /* Subsystems */
     private final SwerveDrive swerveDrive = new SwerveDrive();
-    private final SubIntake intake = new SubIntake();
+    private final IntakeModule intake = new IntakeModule();
 
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto

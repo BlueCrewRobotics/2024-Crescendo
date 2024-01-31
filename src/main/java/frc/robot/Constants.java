@@ -210,8 +210,8 @@ public final class Constants {
         }
     }
 
-    public static final int SHOOTER_LEFT_MOTOR_ID = 11;
-    public static final int SHOOTER_RIGHT_MOTOR_ID = 10;
+    public static final int SHOOTER_TOP_MOTOR_ID = 11;
+    public static final int SHOOTER_BOTTOM_MOTOR_ID = 10;
 
     public static final double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
     public static final double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // TODO: account for any gear ratio (currently is exactly 1:1 for 4" wheel)
@@ -224,6 +224,11 @@ public final class Constants {
     public static final double  INDEXER_MAX_LIMIT = 129834.42;
     public static final double INDEXER_MIN_LIMIT = -398472938.23;
 
+    public static final int ARM_LEFT_MOTOR_ID = 12;
+    public static final int ARM_RIGHT_MOTOR_ID = 13;
+
+    public static final int ELEVATOR_MOTOR_1_ID = 14;
+    public static final int ELEVATOR_MOTOR_2_ID = 15;
 
     public static final double GAME_PIECE_NOTE_DIAMETER = 0.36;
 
