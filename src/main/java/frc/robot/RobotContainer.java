@@ -55,8 +55,8 @@ public class RobotContainer {
     private SendableChooser<Integer> numOfNotesFromStartChooser;
     // should travel to-from center line go under stage, near amp, or near source
     private SendableChooser<String> autoLaneChooser;
-    // if you travel under stage, do you go toward amp or source to find notes
-    private SendableChooser<Integer> directionToSearchInChooser;
+    // if you travel under stage, do you go toward amp or source or go from the middle out to find notes
+    private SendableChooser<String> directionToSearchInChooser;
     // prioritize getting notes from center line (over those from starting area)
     private SendableChooser<Boolean> grabFromCenterFirstChooser;
 
@@ -158,8 +158,9 @@ public class RobotContainer {
         // Choose Which direction the robot will search for notes in
         // TODO: add a closest-outwards option
         directionToSearchInChooser = new SendableChooser<>();
-        directionToSearchInChooser.setDefaultOption("TowardsAmp", -1);
-        directionToSearchInChooser.addOption("TowardsSource", 1);
+        directionToSearchInChooser.setDefaultOption("TowardsAmp", "ToAmp");
+        directionToSearchInChooser.addOption("TowardsSource", "ToSrc");
+        directionToSearchInChooser.addOption("MiddleOut", "MidOut");
 
         // Choose whether to grab notes from the center or the start first
         grabFromCenterFirstChooser = new SendableChooser<>();
