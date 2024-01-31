@@ -1,41 +1,31 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.lib.math.Conversions;
 import frc.robot.Constants;
 
 import static frc.robot.Constants.SHOOTER_MAX_ROTATIONS_PER_SECOND;
 import static frc.robot.Constants.SHOOTER_METERS_PER_ROTATION;
 
-public class Shooter extends SubsystemBase{
+public class ShooterModule {
 
-    private final TalonFX leftShooterMotor = new TalonFX(Constants.SHOOTER_LEFT_MOTOR_ID);
-    private final TalonFX rightShooterMotor = new TalonFX(Constants.SHOOTER_RIGHT_MOTOR_ID);
+    private final TalonFX topShooterMotor = new TalonFX(Constants.SHOOTER_TOP_MOTOR_ID);
+    private final TalonFX bottomShooterMotor = new TalonFX(Constants.SHOOTER_BOTTOM_MOTOR_ID);
 
     private final VelocityVoltage shooterVelocity = new VelocityVoltage(1);
     private final SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
 
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
 
-    public Shooter(){
-
-    }
-
-    private void configureMotors() {
+    public ShooterModule() {
 
         TalonFXConfiguration leftMotorFXConfig = new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
@@ -53,15 +43,15 @@ public class Shooter extends SubsystemBase{
                         .withStatorCurrentLimitEnable(true)
                         .withSupplyCurrentThreshold(10));
 
-        leftShooterMotor.getConfigurator().clearStickyFaults();
-        leftShooterMotor.getConfigurator().apply(leftMotorFXConfig);
-        rightShooterMotor.getConfigurator().clearStickyFaults();
-        rightShooterMotor.getConfigurator().apply(rightMotorFXConfig);
+        topShooterMotor.getConfigurator().clearStickyFaults();
+        topShooterMotor.getConfigurator().apply(leftMotorFXConfig);
+        bottomShooterMotor.getConfigurator().clearStickyFaults();
+        bottomShooterMotor.getConfigurator().apply(rightMotorFXConfig);
     }
 
     public void stop() {
-        leftShooterMotor.stopMotor();
-        rightShooterMotor.stopMotor();
+        topShooterMotor.stopMotor();
+        bottomShooterMotor.stopMotor();
     }
 
     public void shoot (double speed) {
@@ -69,8 +59,8 @@ public class Shooter extends SubsystemBase{
         shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
         shooterVelocity.FeedForward = shooterFeedForward.calculate(shooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
 
-         leftShooterMotor.setControl(shooterVelocity);
-         rightShooterMotor.setControl(shooterVelocity);
+         topShooterMotor.setControl(shooterVelocity);
+         bottomShooterMotor.setControl(shooterVelocity);
 
         // leftShooterMotor.setControl(shooterDutyCycle.withOutput());
         // rightShooterMotor.setControl(shooterDutyCycle.withOutput());

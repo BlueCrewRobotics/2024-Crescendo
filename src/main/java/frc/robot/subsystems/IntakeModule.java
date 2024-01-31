@@ -13,11 +13,12 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class SubIntake extends SubsystemBase {
-  /** Creates a new SubIntake. */
-private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
+public class IntakeModule  {
 
-  public SubIntake() {
+  private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
+  // TODO: intake beam-break
+
+  public IntakeModule() {
 
     TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
 /*
@@ -34,16 +35,17 @@ private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
     intakeMotor.getConfigurator().apply(motorFXConfig);
   }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
-
   public void spin(double speed){intakeMotor.setControl(new DutyCycleOut(speed));}
 
   public void stopSpinning(){intakeMotor.setControl(new DutyCycleOut(0));}
 
   public double getIntakeVelocity(){return intakeMotor.getVelocity().getValue();}
 
+  /**
+   * @return whether or not a note can be seen in the indexer
+   */
+  public boolean noteInIndexer() {
+
+  }
 
 }
