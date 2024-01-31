@@ -48,15 +48,15 @@ public class RobotContainer {
 
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
-    private SendableChooser<Integer> numOfAutoActionsChooser;
+    private SendableChooser<Integer> numOfNotesToScoreChooser;
     // number of notes to score in amp during auto
     private SendableChooser<Integer> numOfAmpScoresChooser;
     // number of notes to pick up from starting line area
     private SendableChooser<Integer> numOfNotesFromStartChooser;
     // should travel to-from center line go under stage, near amp, or near source
     private SendableChooser<String> autoLaneChooser;
-    // if you travel under stage, do you go toward amp or source to find notes
-    private SendableChooser<Integer> directionToSearchInChooser;
+    // if you travel under stage, do you go toward amp or source or go from the middle out to find notes
+    private SendableChooser<String> directionToSearchInChooser;
     // prioritize getting notes from center line (over those from starting area)
     private SendableChooser<Boolean> grabFromCenterFirstChooser;
 
@@ -119,7 +119,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return new AutonomousCommandsBuilder(numOfAutoActionsChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
     }
@@ -129,10 +129,10 @@ public class RobotContainer {
      */
     public void setupAutoChoosers() {
         // Chooser for number of actions in auto
-        numOfAutoActionsChooser = new SendableChooser<>();
-        numOfAutoActionsChooser.setDefaultOption("0", 0);
+        numOfNotesToScoreChooser = new SendableChooser<>();
+        numOfNotesToScoreChooser.setDefaultOption("0", 0);
         for (int i = 1; i <= 5; i++) {
-            numOfAutoActionsChooser.addOption("" + i, i);
+            numOfNotesToScoreChooser.addOption("" + i, i);
         }
 
         // Choose how many notes to score in Amp
@@ -158,15 +158,16 @@ public class RobotContainer {
         // Choose Which direction the robot will search for notes in
         // TODO: add a closest-outwards option
         directionToSearchInChooser = new SendableChooser<>();
-        directionToSearchInChooser.setDefaultOption("TowardsAmp", -1);
-        directionToSearchInChooser.addOption("TowardsSource", 1);
+        directionToSearchInChooser.setDefaultOption("TowardsAmp", "ToAmp");
+        directionToSearchInChooser.addOption("TowardsSource", "ToSrc");
+        directionToSearchInChooser.addOption("MiddleOut", "MidOut");
 
         // Choose whether to grab notes from the center or the start first
         grabFromCenterFirstChooser = new SendableChooser<>();
         grabFromCenterFirstChooser.setDefaultOption("GrabFromCenterFirst", true);
         grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
 
-        SmartDashboard.putData("Number Of Auto Actions", numOfAutoActionsChooser);
+        SmartDashboard.putData("Number Of Auto Actions", numOfNotesToScoreChooser);
         SmartDashboard.putData("Number Of Amp Scores", numOfAmpScoresChooser);
         SmartDashboard.putData("Autonomous Lane", autoLaneChooser);
         SmartDashboard.putData("Number Of Notes From Start", numOfNotesFromStartChooser);

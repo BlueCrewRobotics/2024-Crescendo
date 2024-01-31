@@ -85,7 +85,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
             addCommands(
                     // Wait for it to clock through every thing (waiting 30ms, runs every 20ms),
                     // so we don't accidentally trigger this if we got the last piece
-                    new WaitCommand(0.03),
+                    Commands.waitSeconds(0.03),
                     new InstantCommand(() -> GlobalVariables.getInstance().setCenterNotesGone(true))
             );
 
