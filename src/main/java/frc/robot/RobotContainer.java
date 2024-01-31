@@ -48,7 +48,7 @@ public class RobotContainer {
 
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
-    private SendableChooser<Integer> numOfAutoActionsChooser;
+    private SendableChooser<Integer> numOfNotesToScoreChooser;
     // number of notes to score in amp during auto
     private SendableChooser<Integer> numOfAmpScoresChooser;
     // number of notes to pick up from starting line area
@@ -119,7 +119,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return new AutonomousCommandsBuilder(numOfAutoActionsChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
     }
@@ -129,10 +129,10 @@ public class RobotContainer {
      */
     public void setupAutoChoosers() {
         // Chooser for number of actions in auto
-        numOfAutoActionsChooser = new SendableChooser<>();
-        numOfAutoActionsChooser.setDefaultOption("0", 0);
+        numOfNotesToScoreChooser = new SendableChooser<>();
+        numOfNotesToScoreChooser.setDefaultOption("0", 0);
         for (int i = 1; i <= 5; i++) {
-            numOfAutoActionsChooser.addOption("" + i, i);
+            numOfNotesToScoreChooser.addOption("" + i, i);
         }
 
         // Choose how many notes to score in Amp
@@ -167,7 +167,7 @@ public class RobotContainer {
         grabFromCenterFirstChooser.setDefaultOption("GrabFromCenterFirst", true);
         grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
 
-        SmartDashboard.putData("Number Of Auto Actions", numOfAutoActionsChooser);
+        SmartDashboard.putData("Number Of Auto Actions", numOfNotesToScoreChooser);
         SmartDashboard.putData("Number Of Amp Scores", numOfAmpScoresChooser);
         SmartDashboard.putData("Autonomous Lane", autoLaneChooser);
         SmartDashboard.putData("Number Of Notes From Start", numOfNotesFromStartChooser);

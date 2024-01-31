@@ -20,14 +20,14 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
 
     /**
      * This class automatically generates the autonomous routine based on six inputs
-     * @param numOfAutoActions {@link Integer} The number of notes to score
+     * @param numOfNotesToScore {@link Integer} The total number of notes to score
      * @param numOfAmpScores {@link Integer} The number of notes to score in the amp
      * @param autoLane {@link String} The general area of the field the robot should drive in. MUST BE DEFINED IN CONSTANTS (see {@link frc.robot.Constants.AutoConstants}
      * @param numOfNotesFromStart {@link Integer} The number of notes to pickup from the starting area
      * @param searchDirection {@link Integer} Which direction the robot should search in (currently 1 (toward source) or -1 (towards amp), may change)
      * @param grabFromCenterFirst {@link Boolean} Whether to grab
      */
-    public AutonomousCommandsBuilder(int numOfAutoActions, int numOfAmpScores, String autoLane,
+    public AutonomousCommandsBuilder(int numOfNotesToScore, int numOfAmpScores, String autoLane,
                                      int numOfNotesFromStart, String searchDirection, boolean grabFromCenterFirst){
 
 
@@ -45,10 +45,10 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
          */
 
         // Make sure we don't try to take more notes from the start than we want to score
-        if(numOfNotesFromStart >= numOfAutoActions) numOfNotesFromStart = numOfAutoActions-1;
+        if(numOfNotesFromStart >= numOfNotesToScore) numOfNotesFromStart = numOfNotesToScore-1;
 
         // Calculate the number of notes the robot should get from the center
-        int numOfNotesFromCenter = numOfAutoActions-(numOfNotesFromStart+1);
+        int numOfNotesFromCenter = numOfNotesToScore-(numOfNotesFromStart+1);
 
         // The order we should grab the start notes in
         int[] orderOfStartNotes = orderOfNotes(numOfNotesFromStart, autoLane, searchDirection, 3);
@@ -60,20 +60,20 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
         // Keep track of where we last scored
         String lastScoredIn;
 
-        if (numOfAutoActions > 0) {
+        if (numOfNotesToScore > 0) {
             // Shoot in the speaker firsts thing
             addCommands(/*new ShootNoteIntoSpeaker()*/Commands.print("ShootIntoSpeaker"));
             System.out.println("Shoot Speaker");
             lastScoredIn = "Sp";
 
-            if (numOfAutoActions == 1) {
+            if (numOfNotesToScore == 1) {
                 addCommands(
                         //AutoBuilder.followPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-SL"))
                         Commands.print("Following: " + lastScoredIn + "-" + autoLane + "-SL")
                 );
             }
             else {
-                for (int i = 0; i < numOfAutoActions - 1; i++) {
+                for (int i = 0; i < numOfNotesToScore - 1; i++) {
 
                     // We should get from the center line if we are getting from the center line first,
                     // and we haven't already gotten all the notes from the center line that we planned to
@@ -100,7 +100,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                             // Score in the Speaker
                             lastScoredIn = "Sp";
                             addCommands(
-                                    // TODO: add command for calculating direction to face and shooter velocity, and spin up the shooter, probably or as it follows the path
+                                    // TODO: add command for calculating direction to face and shooter velocity, and spin up the shooter, probably as it follows the path
                                     //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Sp"),
                                     new ShootNoteIntoSpeaker()
