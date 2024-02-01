@@ -24,8 +24,16 @@ import frc.lib.util.SwerveModuleConstants;
  * Contains all the robot constants
  */
 public final class Constants {
-    public static final double stickDeadband = 0.1;
 
+    /**
+     * All the driver controls constants
+     */
+    public static final class DriverControls {
+        public static final double stickDeadband = 0.1;
+        public static final double swerveSensitivityExponent = 1.5; // Should to be >= 1
+        public static final double swerveSpeedMultiplier = 0.7; // Should be <= 1
+        public static final double swerveRotationMultiplier = 0.7; // Should be <= 1
+    }
     /**
      * All the Swerve Subsystem constants
      */
@@ -34,20 +42,20 @@ public final class Constants {
         public static final boolean invertGyro = true; // Always ensure Gyro is CCW+ CW-
 
         public static final COTSTalonFXSwerveConstants chosenModule =
-        COTSTalonFXSwerveConstants.SDS.MK4i.Falcon500(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L2);
+                COTSTalonFXSwerveConstants.SDS.MK4i.Falcon500(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L2);
 
         /* Drivetrain Constants */
         public static final double trackWidth = Units.inchesToMeters(20.5);
         public static final double wheelBase = Units.inchesToMeters(20.5);
         public static final double wheelCircumference = chosenModule.wheelCircumference;
 
-        /* Swerve Kinematics 
+        /* Swerve Kinematics
          * No need to ever change this unless you are not doing a traditional rectangular/square 4 module swerve */
-         public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
-            new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
-            new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
-            new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
-            new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
+        public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+                new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
+                new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
+                new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
+                new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
 
         /* Module Gear Ratios */
         public static final double driveGearRatio = chosenModule.driveGearRatio;
@@ -92,9 +100,13 @@ public final class Constants {
         public static final double driveKA = 0.27385;
 
         /* Swerve Profiling Values */
-        /** Meters per Second */
+        /**
+         * Meters per Second
+         */
         public static final double maxSpeed = 4.9;
-        /** Radians per Second */
+        /**
+         * Radians per Second
+         */
         public static final double maxAngularVelocity = 12.1725; //TODO: This is theoretical!
 
         /* Neutral Modes */
@@ -102,44 +114,53 @@ public final class Constants {
         public static final NeutralModeValue driveNeutralMode = NeutralModeValue.Brake;
 
         /* Module Specific Constants */
-        /** Constants for the Front Left Module - Module 0 */
+
+        /**
+         * Constants for the Front Left Module - Module 0
+         */
         public static final class Mod0 {
             public static final int driveMotorID = 0;
             public static final int angleMotorID = 4;
             public static final int canCoderID = 0;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(138.58);
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants =
+                    new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
 
-        /** Constants for the Front Right Module - Module 1 */
+        /**
+         * Constants for the Front Right Module - Module 1
+         */
         public static final class Mod1 {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 1;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(204.84);
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants =
+                    new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
-        
-        /** Constants for the Back Left Module - Module 2 */
+
+        /**
+         * Constants for the Back Left Module - Module 2
+         */
         public static final class Mod2 {
             public static final int driveMotorID = 2;
             public static final int angleMotorID = 6;
             public static final int canCoderID = 2;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(115.35);
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants =
+                    new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
 
-        /** Constants for the Back Right Module - Module 3 */
+        /**
+         * Constants for the Back Right Module - Module 3
+         */
         public static final class Mod3 {
             public static final int driveMotorID = 3;
             public static final int angleMotorID = 7;
             public static final int canCoderID = 3;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(213.43);
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants =
+                    new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
     }
 
@@ -182,14 +203,14 @@ public final class Constants {
 
         public static final PathConstraints pathConstraints =
                 new PathConstraints(1.5, 1,
-                        2*Math.PI, 1.5*Math.PI);
+                        2 * Math.PI, 1.5 * Math.PI);
 
         public static final HolonomicPathFollowerConfig pathFollowerConfig = new HolonomicPathFollowerConfig(
                 new PIDConstants(5.0, 0, 0), // Translation PID
                 new PIDConstants(5.0, 0, 0), // Rotation PID
                 4.8, // Max Speed Meters per second
                 Math.sqrt(Swerve.trackWidth * Swerve.trackWidth +
-                        Swerve.wheelBase * Swerve.wheelBase)/2, // Drive base radius in meters. Distance from robot center to furthest module.
+                        Swerve.wheelBase * Swerve.wheelBase) / 2, // Drive base radius in meters. Distance from robot center to furthest module.
                 new ReplanningConfig()
         );
     }
@@ -221,7 +242,7 @@ public final class Constants {
 
     public static final int INTAKE_MOTOR_ID = 8; // TODO: Placeholder
     public static final int INDEXER_MOTOR_ID = 9;
-    public static final double  INDEXER_MAX_LIMIT = 129834.42;
+    public static final double INDEXER_MAX_LIMIT = 129834.42;
     public static final double INDEXER_MIN_LIMIT = -398472938.23;
 
     public static final int ARM_LEFT_MOTOR_ID = 12;

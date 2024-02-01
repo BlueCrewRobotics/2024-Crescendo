@@ -31,11 +31,6 @@ public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driver = new CommandXboxController(0);
 
-    /* Drive Controls */
-    private final int translationAxis = XboxController.Axis.kLeftY.value;
-    private final int strafeAxis = XboxController.Axis.kLeftX.value;
-    private final int rotationAxis = XboxController.Axis.kRightX.value;
-
     /* Driver Buttons */
     private final JoystickButton zeroGyro = new JoystickButton(driver.getHID(), XboxController.Button.kY.value);
     private final JoystickButton robotCentric = new JoystickButton(driver.getHID(), XboxController.Button.kLeftBumper.value);
@@ -44,7 +39,7 @@ public class RobotContainer {
 
     /* Subsystems */
     private final SwerveDrive swerveDrive = new SwerveDrive();
-    private final IntakeModule intake = new IntakeModule();
+    private final NotePlayerSubsystem notePlayerSubsystem = new NotePlayerSubsystem();
 
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
@@ -67,6 +62,7 @@ public class RobotContainer {
                 swerveDrive.teleopDriveSwerveDriveCommand(
                         driver::getLeftY,
                         driver::getLeftX,
+                        driver::getRightTriggerAxis,
                         driver::getRightX,
                         () -> driver.leftBumper().getAsBoolean()
                 ));
@@ -94,23 +90,23 @@ public class RobotContainer {
         /* Driver Buttons */
         zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroGyro));
         driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
-                () -> driver.getRawAxis(translationAxis),
-                () -> driver.getRawAxis(strafeAxis),
+                driver::getLeftY,
+                driver::getLeftX,
+                driver::getRightTriggerAxis,
                 () -> -driver.getHID().getPOV(),
                 robotCentric
                 ).until(cancelAutoRotation));
 
-        driver.leftStick().toggleOnTrue(new RumbleControllerWhenDriving(driver));
-
         driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
-                () -> driver.getRawAxis(translationAxis),
-                () -> driver.getRawAxis(strafeAxis),
+                driver::getLeftY,
+                driver::getLeftX,
+                driver::getRightTriggerAxis,
                 new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
                 robotCentric
         ).until(cancelAutoRotation));
 
-        driver.a().onTrue(new StartInTake(intake));
-        driver.b().onTrue(new StopInTake(intake));
+        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        driver.a().onTrue(notePlayerSubsystem.intakeNote());
     }
 
     /**
@@ -156,7 +152,6 @@ public class RobotContainer {
         numOfNotesFromStartChooser.addOption("3", 3);
 
         // Choose Which direction the robot will search for notes in
-        // TODO: add a closest-outwards option
         directionToSearchInChooser = new SendableChooser<>();
         directionToSearchInChooser.setDefaultOption("TowardsAmp", "ToAmp");
         directionToSearchInChooser.addOption("TowardsSource", "ToSrc");

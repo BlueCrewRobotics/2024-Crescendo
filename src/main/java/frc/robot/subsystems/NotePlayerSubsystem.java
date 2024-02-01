@@ -37,6 +37,23 @@ public class NotePlayerSubsystem extends SubsystemBase {
 
     }
 
+    public IntakeModule getIntake() {
+        return intake;
+    }
 
+    @Override
+    public void periodic() {
+        if (intake.noteInIntake()) {
+            System.out.println("I SEE A NOTE WOWIIEEEEE!!!");
+        }
+    }
 
+    // Commands:
+
+    public Command intakeNote() {
+        return this.startEnd(
+                () -> intake.spin(0.25),
+                () -> intake.stopSpinning())
+                .until(() -> intake.noteInIntake());
+    }
 }

@@ -33,7 +33,7 @@ public class IndexerModule {
    * @return whether or not we "see" a note in the intake (via beam-break)
    */
   public boolean noteInIntake() {
-
+    return true;
   }
 
 }

@@ -10,17 +10,22 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class IntakeModule  {
+public class IntakeModule {
 
-  private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
-  // TODO: intake beam-break
+    private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
 
-  public IntakeModule() {
+    private final DigitalInput beamBreak;
 
-    TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
+    public IntakeModule() {
+
+        TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
 /*
           .withMotorOutput(new MotorOutputConfigs()
                   .withInverted(InvertedValue.Clockwise_Positive))
@@ -30,22 +35,33 @@ public class IntakeModule  {
                   .withSupplyCurrentThreshold(10));
 */
 
-    motorFXConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        motorFXConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    intakeMotor.getConfigurator().apply(motorFXConfig);
-  }
+        intakeMotor.getConfigurator().apply(motorFXConfig);
 
-  public void spin(double speed){intakeMotor.setControl(new DutyCycleOut(speed));}
+        beamBreak = new DigitalInput(9);
+    }
 
-  public void stopSpinning(){intakeMotor.setControl(new DutyCycleOut(0));}
+    public void spin(double speed) {
+        intakeMotor.setControl(new DutyCycleOut(speed));
+    }
 
-  public double getIntakeVelocity(){return intakeMotor.getVelocity().getValue();}
+    public void stopSpinning() {
+        intakeMotor.setControl(new DutyCycleOut(0));
+    }
 
-  /**
-   * @return whether or not a note can be seen in the indexer
-   */
-  public boolean noteInIndexer() {
+    public double getIntakeVelocity() {
+        return intakeMotor.getVelocity().getValue();
+    }
 
-  }
+    /**
+     * @return whether or not a note can be seen in the indexer
+     */
+    public boolean noteInIndexer() {
+        return true; // TODO
+    }
 
+    public boolean noteInIntake() {
+        return !beamBreak.get();
+    }
 }
