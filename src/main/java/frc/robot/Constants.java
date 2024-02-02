@@ -240,6 +240,11 @@ public final class Constants {
     public static final double shooterKV = 2.2341;
     public static final double shooterKA = 0.27385;
 
+    public static final double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-4); // TODO: Placeholder // The horizontal offset of the base of the arm from the center of the robot
+    public static final double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(16); // TODO: Placeholder // The vertical offset of the pivot point on the arm from the floor
+    public static final double SHOOTER_ARM_LENGTH = Units.inchesToMeters(12); // TODO: Placeholder // The length from the pivot point to the point on the arm directly beneath the shooter wheels
+    public static final double SHOOTER_ARM_TO_WHEELS_LENGTH = Units.inchesToMeters(6); // TODO: Placeholder // The perpendicular length of the arm to the shooter wheels
+
     public static final int INTAKE_MOTOR_ID = 8; // TODO: Placeholder
     public static final int INDEXER_MOTOR_ID = 9;
     public static final double INDEXER_MAX_LIMIT = 129834.42;

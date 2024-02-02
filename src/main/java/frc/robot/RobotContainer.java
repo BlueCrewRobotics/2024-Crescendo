@@ -115,9 +115,10 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
-                autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
-                directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
+//        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+//                autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
+//                directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
+        return notePlayerSubsystem.aimAtTarget().repeatedly();
     }
 
     /**
