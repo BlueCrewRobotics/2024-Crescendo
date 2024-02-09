@@ -376,7 +376,7 @@ public class SwerveDrive extends SubsystemBase {
         poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-        poseEstimator.updateWithVision();
+//        poseEstimator.updateWithVision();
 
         SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
         SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());

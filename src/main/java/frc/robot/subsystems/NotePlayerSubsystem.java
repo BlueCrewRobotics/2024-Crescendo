@@ -167,9 +167,9 @@ public class NotePlayerSubsystem extends SubsystemBase {
     }
 
     public Command runIndexer() {
-        return this.startEnd(
+        return null; /* this.startEnd(
                 () -> indexer.
-        )
+        )*/
     }
 
     public Command aimAtTarget() {

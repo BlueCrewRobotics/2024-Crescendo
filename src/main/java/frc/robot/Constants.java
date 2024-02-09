@@ -235,6 +235,9 @@ public final class Constants {
         }
     }
 
+
+    public static final int BLINKIN_PORT = 9;
+
     public static final int SHOOTER_TOP_MOTOR_ID = 10;
     public static final int SHOOTER_BOTTOM_MOTOR_ID = 9;
 

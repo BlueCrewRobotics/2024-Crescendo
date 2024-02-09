@@ -77,6 +77,9 @@ public class RobotContainer {
         NamedCommands.registerCommand("EndPathAction", Commands.print("End of the Path Action"));
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
+        // Fire-up the blinkin
+        BlinkinSubsystem.getInstance().setColorMode(BlinkinSubsystem.BLINKIN_SOLID_BLUE);
+
         setupAutoChoosers();
     }
 

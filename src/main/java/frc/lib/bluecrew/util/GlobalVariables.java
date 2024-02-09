@@ -22,6 +22,8 @@ public final class GlobalVariables {
     private RobotCycleStatus robotCycleStatus;
     private boolean hasNote;
 
+    private boolean hasSpeakerTarget;
+
     private boolean autoPieceIsAvailable;
 
     private GlobalVariables() {
@@ -110,5 +112,13 @@ public final class GlobalVariables {
 
     public void setHasNote(boolean hasNote) {
         this.hasNote = hasNote;
+    }
+
+    public boolean hasSpeakerTarget() {
+        return hasSpeakerTarget;
+    }
+
+    public void setHasSpeakerTarget(boolean hasSpeakerTarget) {
+        this.hasSpeakerTarget = hasSpeakerTarget;
     }
 }
