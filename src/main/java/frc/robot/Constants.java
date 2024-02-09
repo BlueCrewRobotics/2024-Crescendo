@@ -166,9 +166,13 @@ public final class Constants {
 
     public static final class PhotonVision {
 
-        public static final String cameraName = "testCamera";
+        public static final String noteCamera = "noteCamera";
+        public static final String aprilTagCamera1 = "aprilTagCamera1";
+        public static final String aprilTagCamera2 = "aprilTagCamera2";
         // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-        public static final Transform3d robotToCam =
+        public static final Transform3d robotToTagCam1 =
+                new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d(Math.toRadians(32), 0, 0));
+        public static final Transform3d robotToTagCam2 =
                 new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d(Math.toRadians(32), 0, 0));
 
         // The layout of the AprilTags on the field
@@ -231,8 +235,8 @@ public final class Constants {
         }
     }
 
-    public static final int SHOOTER_TOP_MOTOR_ID = 11;
-    public static final int SHOOTER_BOTTOM_MOTOR_ID = 10;
+    public static final int SHOOTER_TOP_MOTOR_ID = 10;
+    public static final int SHOOTER_BOTTOM_MOTOR_ID = 9;
 
     public static final double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
     public static final double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // TODO: account for any gear ratio (currently is exactly 1:1 for 4" wheel)
@@ -240,21 +244,22 @@ public final class Constants {
     public static final double shooterKV = 2.2341;
     public static final double shooterKA = 0.27385;
 
-    public static final double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-4); // TODO: Placeholder // The horizontal offset of the base of the arm from the center of the robot
-    public static final double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(16); // TODO: Placeholder // The vertical offset of the pivot point on the arm from the floor
-    public static final double SHOOTER_ARM_LENGTH = Units.inchesToMeters(12); // TODO: Placeholder // The length from the pivot point to the point on the arm directly beneath the shooter wheels
-    public static final double SHOOTER_ARM_TO_WHEELS_LENGTH = Units.inchesToMeters(6); // TODO: Placeholder // The perpendicular length of the arm to the shooter wheels
+    public static final double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
+    public static final double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);
+    public static final double SHOOTER_ARM_LENGTH = Units.inchesToMeters(13);
+    public static final double SHOOTER_ARM_TO_WHEELS_LENGTH = Units.inchesToMeters(8);
 
     public static final int INTAKE_MOTOR_ID = 8; // TODO: Placeholder
-    public static final int INDEXER_MOTOR_ID = 9;
-    public static final double INDEXER_MAX_LIMIT = 129834.42;
-    public static final double INDEXER_MIN_LIMIT = -398472938.23;
+    public static final int INDEXER_MOTOR_ID = 3;
+    public static final double ARM_MAX_LIMIT = 129834.42;
+    public static final double ARM_MIN_LIMIT = -398472938.23;
 
-    public static final int ARM_LEFT_MOTOR_ID = 12;
-    public static final int ARM_RIGHT_MOTOR_ID = 13;
+    public static final int ARM_LEFT_MOTOR_ID = 1;
+    public static final int ARM_RIGHT_MOTOR_ID = 2;
+    public static final int ARM_CAN_CODER_ID = 4;
 
-    public static final int ELEVATOR_MOTOR_1_ID = 14;
-    public static final int ELEVATOR_MOTOR_2_ID = 15;
+    public static final int ELEVATOR_MOTOR_1_ID = 12;
+    public static final int ELEVATOR_MOTOR_2_ID = 11;
 
     public static final double GAME_PIECE_NOTE_DIAMETER = 0.36;
 

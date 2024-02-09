@@ -5,7 +5,6 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -31,11 +30,10 @@ import java.util.function.DoubleSupplier;
  * Swerve Drive Subsystem -- based on team 364's code
  */
 public class SwerveDrive extends SubsystemBase {
-    private final SwerveDrivePoseEstimator swervePoseEstimator;
     public SwerveModule[] swerveMods;
     private final AHRS gyro;
 
-    private final VisionPoseEstimator vision;
+    private final PoseEstimator poseEstimator;
 
 
     private final Field2d field = new Field2d();
@@ -55,18 +53,7 @@ public class SwerveDrive extends SubsystemBase {
 
         resetModulesToAbsolute();
 
-        vision = new VisionPoseEstimator();
-
-        var stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1); // TODO: Tune the standard deviations
-        var visionStdDevs = VecBuilder.fill(1, 1, 1);
-        swervePoseEstimator =
-                new SwerveDrivePoseEstimator(
-                        Constants.Swerve.swerveKinematics,
-                        getGyroYaw(),
-                        getModulePositions(),
-                        new Pose2d(),
-                        stateStdDevs,
-                        visionStdDevs);
+        poseEstimator = PoseEstimator.getInstance();
 
         rotationPIDController = new PIDController(0.01, 0, 0.001);
         rotationPIDController.enableContinuousInput(-180, 180);
@@ -74,7 +61,7 @@ public class SwerveDrive extends SubsystemBase {
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
-                this::getPose,
+                poseEstimator::getPose,
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 this::driveRobotRelative,
@@ -186,17 +173,10 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     /**
-     * @return The {@link Pose2d} of the robot according to the {@link SwerveDrivePoseEstimator}
-     */
-    public Pose2d getPose() {
-        return swervePoseEstimator.getEstimatedPosition();
-    }
-
-    /**
      * @param pose The {@link Pose2d} to set the {@link SwerveDrivePoseEstimator} to
      */
     public void setPose(Pose2d pose) {
-        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), pose);
     }
 
     /**
@@ -221,7 +201,7 @@ public class SwerveDrive extends SubsystemBase {
      * @return The heading reported by the {@link SwerveDrivePoseEstimator} as a {@link Rotation2d}
      */
     public Rotation2d getHeading() {
-        return getPose().getRotation();
+        return poseEstimator.getPose().getRotation();
     }
 
     /**
@@ -230,14 +210,15 @@ public class SwerveDrive extends SubsystemBase {
      * @param heading The heading of the robot
      */
     public void setHeading(Rotation2d heading) {
-        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), new Pose2d(poseEstimator.getPose().getTranslation(), heading));
     }
 
     /**
      * Resets the {@link SwerveDrivePoseEstimator} heading
      */
-    public void zeroGyro() {
-        gyro.zeroYaw();
+
+    public void zeroHeading(){
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), new Pose2d(poseEstimator.getPose().getTranslation(), new Rotation2d()));
     }
 
     /**
@@ -296,7 +277,7 @@ public class SwerveDrive extends SubsystemBase {
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         System.out.println(targetAngle.getDegrees());
         rotationPIDController.reset();
-        return MathUtil.clamp(-rotationPIDController.calculate(getGyroYaw().getDegrees() % 360,
+        return MathUtil.clamp(-rotationPIDController.calculate(getHeading().getDegrees() % 360,
                 targetAngle.getDegrees() % 360), -0.3, 0.3);
     }
 
@@ -308,7 +289,7 @@ public class SwerveDrive extends SubsystemBase {
      */
     public Rotation2d getAngleToPose(Translation2d coords) {
         return Rotation2d.fromRadians(Math.atan(
-                (coords.getX() - getPose().getX()) / (coords.getY() - getPose().getY())
+                (coords.getX() - poseEstimator.getPose().getX()) / (coords.getY() - poseEstimator.getPose().getY())
         ));
     }
 
@@ -392,27 +373,14 @@ public class SwerveDrive extends SubsystemBase {
 
     @Override
     public void periodic() {
-        swervePoseEstimator.update(getGyroYaw(), getModulePositions());
+        poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-//        var visionEst = vision.getEstimatedGlobalPose();
-//        visionEst.ifPresent(
-//                est -> {
-//                    var estPose = est.estimatedPose.toPose2d();
-//                    // Change our trust in the measurement based on the tags we can see
-//                    var estStdDevs = vision.getEstimationStdDevs(estPose);
-//
-//                    swervePoseEstimator.addVisionMeasurement(
-//                            est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
-//                });
+        poseEstimator.updateWithVision();
 
-        SmartDashboard.putNumber("Swerve Estimator X", swervePoseEstimator.getEstimatedPosition().getX());
-        SmartDashboard.putNumber("Swerve Estimator Y", swervePoseEstimator.getEstimatedPosition().getY());
-        SmartDashboard.putNumber("Rotation", getGyroYaw().getDegrees());
-//        if(visionEst.isPresent()) {
-//            SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
-//            SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
-//        }
+        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
+        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
+        SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
 
         for (SwerveModule mod : swerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());

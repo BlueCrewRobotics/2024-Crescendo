@@ -166,6 +166,12 @@ public class NotePlayerSubsystem extends SubsystemBase {
                 .until(() -> intake.noteInIntake());
     }
 
+    public Command runIndexer() {
+        return this.startEnd(
+                () -> indexer.
+        )
+    }
+
     public Command aimAtTarget() {
         Translation3d targetCoords = new Translation3d(
                 Units.inchesToMeters(-1.5),

@@ -88,7 +88,7 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroGyro));
+        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
         driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
                 driver::getLeftY,
                 driver::getLeftX,

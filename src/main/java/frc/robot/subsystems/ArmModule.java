@@ -4,8 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.*;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 
@@ -17,8 +17,8 @@ public class ArmModule {
   private SparkRelativeEncoder leftEncoder = (SparkRelativeEncoder) leftMotor.getEncoder();
   private SparkPIDController rightController = leftMotor.getPIDController();
   private SparkRelativeEncoder rightEncoder = (SparkRelativeEncoder) rightMotor.getEncoder();
-  private double maxLimit = Constants.INDEXER_MAX_LIMIT;
-  private double minLimit = Constants.INDEXER_MIN_LIMIT;
+  private double maxLimit = Constants.ARM_MAX_LIMIT;
+  private double minLimit = Constants.ARM_MIN_LIMIT;
 
   public ArmModule() {
 
