@@ -35,7 +35,7 @@ public class ShooterModule {
                         .withStatorCurrentLimitEnable(true)
                         .withSupplyCurrentThreshold(10));
 
-        TalonFXConfiguration rightMotorFXConfig =  new TalonFXConfiguration()
+        TalonFXConfiguration rightMotorFXConfig = new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive))
                 .withCurrentLimits(new CurrentLimitsConfigs()
@@ -54,13 +54,13 @@ public class ShooterModule {
         bottomShooterMotor.stopMotor();
     }
 
-    public void shoot (double speed) {
+    public void shoot(double speed) {
 
         shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
         shooterVelocity.FeedForward = shooterFeedForward.calculate(shooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
 
-         topShooterMotor.setControl(shooterVelocity);
-         bottomShooterMotor.setControl(shooterVelocity);
+        topShooterMotor.setControl(shooterVelocity);
+        bottomShooterMotor.setControl(shooterVelocity);
 
         // leftShooterMotor.setControl(shooterDutyCycle.withOutput());
         // rightShooterMotor.setControl(shooterDutyCycle.withOutput());
@@ -80,5 +80,4 @@ public class ShooterModule {
     public VelocityVoltage getShooterVelocity() {
         return shooterVelocity;
     }
-
 }

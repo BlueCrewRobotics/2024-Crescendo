@@ -11,7 +11,6 @@ public class StopInTake extends Command {
         this.Intake = intakeModule;
         // each subsystem used by the command must be passed into the
         // addRequirements() method (which takes a vararg of Subsystem)
-        addRequirements(this.Intake);
     }
 
     /**

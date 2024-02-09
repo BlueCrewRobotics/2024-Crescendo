@@ -5,7 +5,6 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -31,42 +30,30 @@ import java.util.function.DoubleSupplier;
  * Swerve Drive Subsystem -- based on team 364's code
  */
 public class SwerveDrive extends SubsystemBase {
-    private SwerveDrivePoseEstimator swervePoseEstimator;
     public SwerveModule[] swerveMods;
-    private AHRS gyro;
+    private final AHRS gyro;
 
-    private final VisionPoseEstimator vision;
+    private final PoseEstimator poseEstimator;
 
 
-    private Field2d field = new Field2d();
+    private final Field2d field = new Field2d();
 
-    private PIDController rotationPIDController;
+    private final PIDController rotationPIDController;
 
     public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
 
-        swerveMods = new SwerveModule[] {
-            new SwerveModule(0, Constants.Swerve.Mod0.constants),
-            new SwerveModule(1, Constants.Swerve.Mod1.constants),
-            new SwerveModule(2, Constants.Swerve.Mod2.constants),
-            new SwerveModule(3, Constants.Swerve.Mod3.constants)
+        swerveMods = new SwerveModule[]{
+                new SwerveModule(0, Constants.Swerve.Mod0.constants),
+                new SwerveModule(1, Constants.Swerve.Mod1.constants),
+                new SwerveModule(2, Constants.Swerve.Mod2.constants),
+                new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
         resetModulesToAbsolute();
 
-        vision = new VisionPoseEstimator();
-        
-        var stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1); // TODO: Tune the standard deviations
-        var visionStdDevs = VecBuilder.fill(1, 1, 1);
-        swervePoseEstimator =
-                new SwerveDrivePoseEstimator(
-                        Constants.Swerve.swerveKinematics,
-                        getGyroYaw(),
-                        getModulePositions(),
-                        new Pose2d(),
-                        stateStdDevs,
-                        visionStdDevs);
+        poseEstimator = PoseEstimator.getInstance();
 
         rotationPIDController = new PIDController(0.01, 0, 0.001);
         rotationPIDController.enableContinuousInput(-180, 180);
@@ -74,7 +61,7 @@ public class SwerveDrive extends SubsystemBase {
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
-                this::getPose,
+                poseEstimator::getPose,
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 this::driveRobotRelative,
@@ -106,40 +93,42 @@ public class SwerveDrive extends SubsystemBase {
 
     /**
      * Drives the {@link SwerveDrive} Subsystem
-     * @param translation A {@link Translation2d} representing the desired X and Y speed in meters per second
-     * @param rotation The desired angular velocity in radians per second
+     *
+     * @param translation   A {@link Translation2d} representing the desired X and Y speed in meters per second
+     * @param rotation      The desired angular velocity in radians per second
      * @param fieldRelative Controls whether it should be driven in field or robot relative mode
-     * @param isOpenLoop Controls whether it drives in open loop
+     * @param isOpenLoop    Controls whether it drives in open loop
      */
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates =
-            Constants.Swerve.swerveKinematics.toSwerveModuleStates(
-                fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    translation.getX(), 
-                                    translation.getY(), 
-                                    rotation, 
-                                    getHeading()
-                                )
+                Constants.Swerve.swerveKinematics.toSwerveModuleStates(
+                        fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
+                                translation.getX(),
+                                translation.getY(),
+                                rotation,
+                                getHeading()
+                        )
                                 : new ChassisSpeeds(
-                                    translation.getX(), 
-                                    translation.getY(), 
-                                    rotation)
-                                );
+                                translation.getX(),
+                                translation.getY(),
+                                rotation)
+                );
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
-        for(SwerveModule mod : swerveMods){
+        for (SwerveModule mod : swerveMods) {
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }
 
     /**
      * Sets the states of each module
+     *
      * @param desiredStates An array of the {@link SwerveModuleState} for each {@link SwerveModule}
      */
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
-        
-        for(SwerveModule mod : swerveMods){
+
+        for (SwerveModule mod : swerveMods) {
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
         }
     }
@@ -148,14 +137,14 @@ public class SwerveDrive extends SubsystemBase {
      * Turns all the wheels to face inwards creating and "X" shape to lock the robot in place if the robot is not currently moving
      */
     public void xLockWheels() {
-        if(getModuleStates()[0].speedMetersPerSecond < 0.1) {
+        if (getModuleStates()[0].speedMetersPerSecond < 0.1) {
             SwerveModuleState[] desiredStates = {
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(45)),
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(45))
             };
-            for(SwerveModule mod : swerveMods){
+            for (SwerveModule mod : swerveMods) {
                 mod.setAngle(desiredStates[mod.moduleNumber]);
             }
         }
@@ -164,9 +153,9 @@ public class SwerveDrive extends SubsystemBase {
     /**
      * @return An array containing the {@link SwerveModuleState} of each {@link SwerveModule}
      */
-    public SwerveModuleState[] getModuleStates(){
+    public SwerveModuleState[] getModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
-        for(SwerveModule mod : swerveMods){
+        for (SwerveModule mod : swerveMods) {
             states[mod.moduleNumber] = mod.getState();
         }
         return states;
@@ -175,26 +164,19 @@ public class SwerveDrive extends SubsystemBase {
     /**
      * @return An array of the {@link SwerveModulePosition} of each {@link SwerveModule}
      */
-    public SwerveModulePosition[] getModulePositions(){
+    public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
-        for(SwerveModule mod : swerveMods){
+        for (SwerveModule mod : swerveMods) {
             positions[mod.moduleNumber] = mod.getPosition();
         }
         return positions;
     }
 
     /**
-     * @return The {@link Pose2d} of the robot according to the {@link SwerveDrivePoseEstimator}
-     */
-    public Pose2d getPose() {
-        return swervePoseEstimator.getEstimatedPosition();
-    }
-
-    /**
      * @param pose The {@link Pose2d} to set the {@link SwerveDrivePoseEstimator} to
      */
     public void setPose(Pose2d pose) {
-        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), pose);
     }
 
     /**
@@ -206,6 +188,7 @@ public class SwerveDrive extends SubsystemBase {
 
     /**
      * Required by Path Planner, drives the robot given {@link ChassisSpeeds}
+     *
      * @param speeds the ChassisSpeeds to drive the robot with
      */
     public void driveRobotRelative(ChassisSpeeds speeds) {
@@ -217,23 +200,25 @@ public class SwerveDrive extends SubsystemBase {
     /**
      * @return The heading reported by the {@link SwerveDrivePoseEstimator} as a {@link Rotation2d}
      */
-    public Rotation2d getHeading(){
-        return getPose().getRotation();
+    public Rotation2d getHeading() {
+        return poseEstimator.getPose().getRotation();
     }
 
     /**
      * Sets the {@link SwerveDrivePoseEstimator} heading
+     *
      * @param heading The heading of the robot
      */
-    public void setHeading(Rotation2d heading){
-        swervePoseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+    public void setHeading(Rotation2d heading) {
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), new Pose2d(poseEstimator.getPose().getTranslation(), heading));
     }
 
     /**
      * Resets the {@link SwerveDrivePoseEstimator} heading
      */
-    public void zeroGyro(){
-        gyro.zeroYaw();
+
+    public void zeroHeading(){
+        poseEstimator.setPose(getGyroYaw(), getModulePositions(), new Pose2d(poseEstimator.getPose().getTranslation(), new Rotation2d()));
     }
 
     /**
@@ -253,28 +238,29 @@ public class SwerveDrive extends SubsystemBase {
     /**
      * Resets each {@link SwerveModule} based on the {@link CANcoder} and angle offset
      */
-    public void resetModulesToAbsolute(){
-        for(SwerveModule mod : swerveMods){
+    public void resetModulesToAbsolute() {
+        for (SwerveModule mod : swerveMods) {
             mod.resetToAbsolute();
         }
     }
 
     /**
      * Used for driving the robot during teleop
-     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param rotationSup {@link DoubleSupplier} for the angular velocity as a percentage
-     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     *
+     * @param translationVal  {@link Double} for the forwards/backwards speed as a percentage
+     * @param strafeVal       {@link Double} for the left/right speed as a percentage
+     * @param slowVal         {@link Double} for the amount to slow the robot by
+     * @param rotationVal     {@link Double} for the angular velocity as a percentage
+     * @param robotCentricSup {@link Double} for driving in robot or field centric mode
      */
-    public void teleopDriveSwerveDrive(double translationSup, double strafeSup,
-                                       double rotationSup, boolean robotCentricSup) {
-        /* Get Values, Deadband*/
-        double translationVal = -MathUtil.applyDeadband(translationSup, Constants.stickDeadband);
-        double strafeVal = -MathUtil.applyDeadband(strafeSup, Constants.stickDeadband);
-        double rotationVal = -MathUtil.applyDeadband(rotationSup, Constants.stickDeadband);
+    public void teleopDriveSwerveDrive(double translationVal, double strafeVal, double slowVal,
+                                       double rotationVal, boolean robotCentricSup) {
+        translationVal *= (1-slowVal*0.5);
+        strafeVal *= (1-slowVal*0.5);
 
-        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal*Constants.Swerve.maxSpeed, 2)
-                + Math.pow(strafeVal*Constants.Swerve.maxSpeed, 2)));
+
+        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * Constants.Swerve.maxSpeed, 2)
+                + Math.pow(strafeVal * Constants.Swerve.maxSpeed, 2)));
 
         drive(new Translation2d(translationVal, strafeVal).times(Constants.Swerve.maxSpeed),
                 rotationVal * Constants.Swerve.maxAngularVelocity,
@@ -284,51 +270,57 @@ public class SwerveDrive extends SubsystemBase {
 
     /**
      * Creates an angular velocity based on a target angle, and the direction the robot is currently facing
+     *
      * @param targetAngle The angle the robot should turn to
      * @return The angular velocity as a percentage
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         System.out.println(targetAngle.getDegrees());
         rotationPIDController.reset();
-        return MathUtil.clamp(-rotationPIDController.calculate(getGyroYaw().getDegrees()%360,
-                targetAngle.getDegrees()%360), -0.3, 0.3);
+        return MathUtil.clamp(-rotationPIDController.calculate(getHeading().getDegrees() % 360,
+                targetAngle.getDegrees() % 360), -0.3, 0.3);
     }
 
     /**
      * Get the angle to a given position
+     *
      * @param coords The coordinates to return the angle to
      * @return The angle from your current position to the given coordinates
      */
     public Rotation2d getAngleToPose(Translation2d coords) {
         return Rotation2d.fromRadians(Math.atan(
-                (coords.getX() - getPose().getX()) / (coords.getY()-getPose().getY())
+                (coords.getX() - poseEstimator.getPose().getX()) / (coords.getY() - poseEstimator.getPose().getY())
         ));
     }
 
-    /**
-     * Cancels the command currently running on this subsystem unless it's the default command
-     */
-    public void cancelCurrentCommand() {
-        if(this.getCurrentCommand() != this.getDefaultCommand()) {
-            CommandScheduler.getInstance().cancel(this.getCurrentCommand());
-        }
+    private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
+        return () -> (-1 *
+                (Math.pow(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), Constants.DriverControls.stickDeadband),
+                        Constants.DriverControls.swerveSensitivityExponent) * Constants.DriverControls.swerveSpeedMultiplier));
     }
 
     // **** Commands ****
 
     /**
      * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
-     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param rotationSup {@link DoubleSupplier} for rotation speed as a percentage
-     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     *
+     * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
+     * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage
+     * @param rawRotationSup    {@link DoubleSupplier} for rotation speed as a percentage
+     * @param robotCentricSup   {@link BooleanSupplier} for driving in robot or field centric mode
      */
-    public Command teleopDriveSwerveDriveCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
-                                          DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
+    public Command teleopDriveSwerveDriveCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
+                                                 DoubleSupplier rawRotationSup, BooleanSupplier robotCentricSup) {
+        DoubleSupplier rotationSup = () -> (-1 *
+                (Math.pow(MathUtil.applyDeadband(rawRotationSup.getAsDouble(), Constants.DriverControls.stickDeadband),
+                        Constants.DriverControls.swerveSensitivityExponent) * Constants.DriverControls.swerveRotationMultiplier));
+
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
 
         return this.run(() -> teleopDriveSwerveDrive(
-                translationSup.getAsDouble(),
-                strafeSup.getAsDouble(),
+                speedsFromJoysticks(rawTranslationSup).getAsDouble(),
+                speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                slowSup.getAsDouble(),
                 rotationSup.getAsDouble(),
                 robotCentricSup.getAsBoolean()
         ));
@@ -336,17 +328,21 @@ public class SwerveDrive extends SubsystemBase {
 
     /**
      * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
-     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param targetDegrees The target angle
-     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     *
+     * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
+     * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage
+     * @param targetDegrees     The target angle
+     * @param robotCentricSup   {@link BooleanSupplier} for driving in robot or field centric mode
      */
-    public Command teleopDriveSwerveDriveAndRotateToAngleCommand(DoubleSupplier translationSup, DoubleSupplier strafeSup,
+    public Command teleopDriveSwerveDriveAndRotateToAngleCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                                  DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
+
         return this.run(
                 () -> teleopDriveSwerveDrive(
-                        translationSup.getAsDouble(),
-                        strafeSup.getAsDouble(),
+                        speedsFromJoysticks(rawTranslationSup).getAsDouble(),
+                        speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                        slowSup.getAsDouble(),
                         rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees.getAsDouble())),
                         robotCentricSup.getAsBoolean()
                 ));
@@ -354,17 +350,21 @@ public class SwerveDrive extends SubsystemBase {
 
     /**
      * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
-     * @param translationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param strafeSup {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param position The {@link Translation2d} to face
-     * @param robotCentricSup {@link BooleanSupplier} for driving in robot or field centric mode
+     *
+     * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
+     * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage
+     * @param position          The {@link Translation2d} to face
+     * @param robotCentricSup   {@link BooleanSupplier} for driving in robot or field centric mode
      */
-    public Command teleopDriveSwerveDriveAndFacePosition(DoubleSupplier translationSup, DoubleSupplier strafeSup,
-                                                            Translation2d position, BooleanSupplier robotCentricSup) {
-      return this.run(
+    public Command teleopDriveSwerveDriveAndFacePosition(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
+                                                         Translation2d position, BooleanSupplier robotCentricSup) {
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
+
+        return this.run(
                 () -> teleopDriveSwerveDrive(
-                        translationSup.getAsDouble(),
-                        strafeSup.getAsDouble(),
+                        speedsFromJoysticks(rawTranslationSup).getAsDouble(),
+                        speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                        slowSup.getAsDouble(),
                         rotationPercentageFromTargetAngle(
                                 getAngleToPose(position)),
                         robotCentricSup.getAsBoolean()
@@ -372,30 +372,17 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     @Override
-    public void periodic(){
-        swervePoseEstimator.update(getGyroYaw(), getModulePositions());
+    public void periodic() {
+        poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-//        var visionEst = vision.getEstimatedGlobalPose();
-//        visionEst.ifPresent(
-//                est -> {
-//                    var estPose = est.estimatedPose.toPose2d();
-//                    // Change our trust in the measurement based on the tags we can see
-//                    var estStdDevs = vision.getEstimationStdDevs(estPose);
-//
-//                    swervePoseEstimator.addVisionMeasurement(
-//                            est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
-//                });
+        poseEstimator.updateWithVision();
 
-        SmartDashboard.putNumber("Swerve Estimator X", swervePoseEstimator.getEstimatedPosition().getX());
-        SmartDashboard.putNumber("Swerve Estimator Y", swervePoseEstimator.getEstimatedPosition().getY());
-        SmartDashboard.putNumber("Rotation", getGyroYaw().getDegrees());
-//        if(visionEst.isPresent()) {
-//            SmartDashboard.putNumber("Vision Estimator X", visionEst.get().estimatedPose.getX());
-//            SmartDashboard.putNumber("Vision Estimator Y", visionEst.get().estimatedPose.getY());
-//        }
+        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
+        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
+        SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
 
-        for(SwerveModule mod : swerveMods) {
+        for (SwerveModule mod : swerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Angle", mod.getPosition().angle.getDegrees());

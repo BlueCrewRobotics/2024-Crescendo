@@ -22,8 +22,8 @@ public class TeleopSwerveExperiment extends Command {
     @Override
     public void execute() {
         /* Get Values, Deadband*/
-        double translationVal = MathUtil.applyDeadband(-driverController.getLeftY(), Constants.stickDeadband);
-        double strafeVal = MathUtil.applyDeadband(-driverController.getLeftX(), Constants.stickDeadband);
+        double translationVal = MathUtil.applyDeadband(-driverController.getLeftY(), Constants.DriverControls.stickDeadband);
+        double strafeVal = MathUtil.applyDeadband(-driverController.getLeftX(), Constants.DriverControls.stickDeadband);
         double rotationVal = 0.0;
         double angleBuffer = 5.0;
         double rotationSpeed = 0.3;
@@ -56,7 +56,7 @@ public class TeleopSwerveExperiment extends Command {
         }
         // Rotate with joystick
         else {
-            rotationVal = MathUtil.applyDeadband(-0.6 * driverController.getRightX(), Constants.stickDeadband);
+            rotationVal = MathUtil.applyDeadband(-0.6 * driverController.getRightX(), Constants.DriverControls.stickDeadband);
         }
 
         if(driverController.getHID().getRawButton(XboxController.Button.kB.value)) {
