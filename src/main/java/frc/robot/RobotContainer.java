@@ -14,9 +14,7 @@ import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.autos.AutonomousCommandsBuilder;
-import frc.robot.commands.RumbleControllerWhenDriving;
-import frc.robot.commands.StartInTake;
-import frc.robot.commands.StopInTake;
+import frc.robot.commands.*;
 import frc.robot.subsystems.*;
 
 import java.util.function.BooleanSupplier;
@@ -55,6 +53,11 @@ public class RobotContainer {
     // prioritize getting notes from center line (over those from starting area)
     private SendableChooser<Boolean> grabFromCenterFirstChooser;
 
+    {
+        // Fire-up the blinkin
+        BlinkinSubsystem.getInstance().setColorMode(BlinkinSubsystem.BLINKIN_SOLID_BLUE);
+
+    }
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -77,8 +80,6 @@ public class RobotContainer {
         NamedCommands.registerCommand("EndPathAction", Commands.print("End of the Path Action"));
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
-        // Fire-up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinSubsystem.BLINKIN_SOLID_BLUE);
 
         setupAutoChoosers();
     }
@@ -108,8 +109,16 @@ public class RobotContainer {
                 robotCentric
         ).until(cancelAutoRotation));
 
-        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
-        driver.a().onTrue(notePlayerSubsystem.intakeNote());
+//        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+//        driver.a().onTrue(notePlayerSubsystem.intakeNote());
+
+        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
+        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
+//        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
+//        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
+//        driver.povUp().onTrue(new StartInTake(notePlayerSubsystem.getIntake()));
+//        driver.povDown().onTrue(new StopInTake(notePlayerSubsystem.getIntake()));
+
     }
 
     /**
