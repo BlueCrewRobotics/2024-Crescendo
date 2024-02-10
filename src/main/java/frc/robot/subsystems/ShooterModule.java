@@ -20,13 +20,13 @@ public class ShooterModule {
     private final TalonFX topShooterMotor = new TalonFX(Constants.SHOOTER_TOP_MOTOR_ID);
     private final TalonFX bottomShooterMotor = new TalonFX(Constants.SHOOTER_BOTTOM_MOTOR_ID);
 
-    private final VelocityVoltage shooterVelocity = new VelocityVoltage(1);
-    private final SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
+    private  VelocityVoltage shooterVelocity = new VelocityVoltage(1);
+    private  SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
 
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
 
     public ShooterModule() {
-
+/*
         TalonFXConfiguration leftMotorFXConfig = new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive))
@@ -42,11 +42,22 @@ public class ShooterModule {
                         .withSupplyCurrentLimit(15)
                         .withStatorCurrentLimitEnable(true)
                         .withSupplyCurrentThreshold(10));
+*/
+        TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
+
+        /*
+        motorFXConfig.MotionMagic.MotionMagicCruiseVelocity = 20; // Target cruise velocity
+        motorFXConfig.MotionMagic.MotionMagicAcceleration = 40; // Target acceleration of  (0.5 seconds)
+        motorFXConfig.MotionMagic.MotionMagicJerk = 200; // Target jerk (0.1 seconds)
+*/
+
+        motorFXConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .75;
+        motorFXConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.75;
 
         topShooterMotor.getConfigurator().clearStickyFaults();
-        topShooterMotor.getConfigurator().apply(leftMotorFXConfig);
+        topShooterMotor.getConfigurator().apply(motorFXConfig);
         bottomShooterMotor.getConfigurator().clearStickyFaults();
-        bottomShooterMotor.getConfigurator().apply(rightMotorFXConfig);
+        bottomShooterMotor.getConfigurator().apply(motorFXConfig);
     }
 
     public void stop() {
@@ -56,8 +67,16 @@ public class ShooterModule {
 
     public void shoot(double speed) {
 
-        shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
+//        topShooterMotor.setControl(new DutyCycleOut(speed));
+//        bottomShooterMotor.setControl(new DutyCycleOut(speed));
+
+        shooterVelocity = new VelocityVoltage(SHOOTER_MAX_ROTATIONS_PER_SECOND * speed);
+        shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
+
+//        shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
         shooterVelocity.FeedForward = shooterFeedForward.calculate(shooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
+        //shooterVelocity.withAcceleration(25);
+
 
         topShooterMotor.setControl(shooterVelocity);
         bottomShooterMotor.setControl(shooterVelocity);

@@ -21,6 +21,18 @@ public class IndexerModule {
     indexerMotor.setSmartCurrentLimit(20);
   }
 
+  public void spin(double speed) {
+    indexerMotor.set(speed);
+  }
+
+  public void stop() {
+    indexerMotor.stopMotor();
+  }
+
+  public double getEncoderPosition() {
+    return indexerMotor.getEncoder().getPosition();
+  }
+
   // TODO: Set GlobalVariables.hasNote using a beam break sensor using WPILib's DigitalInput class
 
   /**

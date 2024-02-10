@@ -33,6 +33,12 @@ public class NotePlayerSubsystem extends SubsystemBase {
     public IntakeModule getIntake() {
         return intake;
     }
+    public ShooterModule getShooter() {
+        return shooter;
+    }
+    public IndexerModule getIndexer() {
+        return indexer;
+    }
 
     @Override
     public void periodic() {
