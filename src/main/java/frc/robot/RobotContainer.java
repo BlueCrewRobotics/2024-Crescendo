@@ -112,10 +112,10 @@ public class RobotContainer {
 //        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
 //        driver.a().onTrue(notePlayerSubsystem.intakeNote());
 
-        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
-        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
-//        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
-//        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
+//        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
+//        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
+        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
+        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
 //        driver.povUp().onTrue(new StartInTake(notePlayerSubsystem.getIntake()));
 //        driver.povDown().onTrue(new StopInTake(notePlayerSubsystem.getIntake()));
 

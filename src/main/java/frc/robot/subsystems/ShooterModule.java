@@ -20,6 +20,7 @@ public class ShooterModule {
     private final TalonFX topShooterMotor = new TalonFX(Constants.SHOOTER_TOP_MOTOR_ID);
     private final TalonFX bottomShooterMotor = new TalonFX(Constants.SHOOTER_BOTTOM_MOTOR_ID);
 
+
     private  VelocityVoltage shooterVelocity = new VelocityVoltage(1);
     private  SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
 
@@ -77,7 +78,7 @@ public class ShooterModule {
         shooterVelocity.FeedForward = shooterFeedForward.calculate(shooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
         //shooterVelocity.withAcceleration(25);
 
-
+        System.out.println(("Shooter velocity set to: " + shooterVelocity.Velocity));
         topShooterMotor.setControl(shooterVelocity);
         bottomShooterMotor.setControl(shooterVelocity);
 
@@ -87,16 +88,21 @@ public class ShooterModule {
 
     }
 
-
-    public DutyCycleOut getShooterDutyCycle() {
-        return shooterDutyCycle;
+    public double getShooterTopVelocity() {
+        return topShooterMotor.getVelocity().getValue().doubleValue();
     }
 
-    public double getShooterSpeed() {
-        return shooterVelocity.Velocity / SHOOTER_MAX_ROTATIONS_PER_SECOND;
+    public double getShooterBottomVelocity() {
+        return topShooterMotor.getVelocity().getValue().doubleValue();
     }
 
-    public VelocityVoltage getShooterVelocity() {
-        return shooterVelocity;
+    public long getShooterTopEncoderPos() {
+        return (long)(topShooterMotor.getPosition().getValue() * 2048.0d);
     }
+
+    public long getShooterBottomEncoderPos() {
+        return (long)(topShooterMotor.getPosition().getValue() * 2048.0d);
+    }
+
+
 }

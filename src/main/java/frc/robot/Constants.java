@@ -244,9 +244,9 @@ public final class Constants {
 
     public static final double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
     public static final double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // TODO: account for any gear ratio (currently is exactly 1:1 for 4" wheel)
-    public static final double shooterKS = 0.08403; // TODO: figure out what these should be!
-    public static final double shooterKV = 2.2341;
-    public static final double shooterKA = 0.27385;
+    public static final double shooterKS = 0.01; // TODO: figure out what these should be!
+    public static final double shooterKV = 0.348;
+    public static final double shooterKA = 0.15;
 
     public static final double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
     public static final double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);

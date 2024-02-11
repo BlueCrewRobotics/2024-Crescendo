@@ -28,6 +28,8 @@ public class StartShooter extends Command {
     @Override
     public void execute() {
         shooter.shoot(0.25);
+        System.out.println("Shooter top pos (@ " + System.nanoTime() + ": " + shooter.getShooterTopEncoderPos() + " vel: " + shooter.getShooterTopVelocity());
+        System.out.println("Shooter bot pos (@ " + System.nanoTime() + ": " + shooter.getShooterBottomEncoderPos() + " vel: " + shooter.getShooterBottomVelocity());
     }
 
     /**
