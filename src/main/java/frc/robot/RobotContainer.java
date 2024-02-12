@@ -13,9 +13,9 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.autos.AutonomousCommandsBuilder;
-import frc.robot.commands.*;
 import frc.robot.subsystems.*;
+import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 import java.util.function.BooleanSupplier;
 
@@ -61,14 +61,6 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        swerveDrive.setDefaultCommand(
-                swerveDrive.teleopDriveSwerveDriveCommand(
-                        driver::getLeftY,
-                        driver::getLeftX,
-                        driver::getRightTriggerAxis,
-                        driver::getRightX,
-                        () -> driver.leftBumper().getAsBoolean()
-                ));
 
         // Configure the button bindings
         configureButtonBindings();
@@ -91,34 +83,54 @@ public class RobotContainer {
      * JoystickButton}.
      */
     private void configureButtonBindings() {
-        /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
-        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
-                driver::getLeftY,
-                driver::getLeftX,
-                driver::getRightTriggerAxis,
-                () -> -driver.getHID().getPOV(),
-                robotCentric
-                ).until(cancelAutoRotation));
+        // Default Commands:
+        swerveDrive.setDefaultCommand(
+                swerveDrive.teleopDriveSwerveDriveCommand(
+                        driver::getLeftY,
+                        driver::getLeftX,
+                        driver::getRightTriggerAxis,
+                        driver::getRightX,
+                        () -> driver.leftBumper().getAsBoolean()
+                ));
 
-        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
-                driver::getLeftY,
-                driver::getLeftX,
-                driver::getRightTriggerAxis,
-                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
-                robotCentric
-        ).until(cancelAutoRotation));
+        notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
+
+//        /* Driver Buttons */
+        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
+//        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
+//                driver::getLeftY,
+//                driver::getLeftX,
+//                driver::getRightTriggerAxis,
+//                () -> -driver.getHID().getPOV(),
+//                robotCentric
+//                ).until(cancelAutoRotation));
+//
+//        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
+//                driver::getLeftY,
+//                driver::getLeftX,
+//                driver::getRightTriggerAxis,
+//                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
+//                robotCentric
+//        ).until(cancelAutoRotation));
 
 //        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
 //        driver.a().onTrue(notePlayerSubsystem.intakeNote());
 
 //        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
 //        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
-        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
-        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
+//        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
+//        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
 //        driver.povUp().onTrue(new StartInTake(notePlayerSubsystem.getIntake()));
 //        driver.povDown().onTrue(new StopInTake(notePlayerSubsystem.getIntake()));
 
+        //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        //driver.a().onTrue(notePlayerSubsystem.intakeNote());
+        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
+        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(59));
+        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
+        //driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
+        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
+        driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
     }
 
     /**

@@ -1,7 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.IntakeModule;
+import frc.robot.subsystems.noteplayer.IntakeModule;
 
 
 public class StartInTake extends Command {

@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.swervedrive;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.PoseEstimator;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -255,8 +256,8 @@ public class SwerveDrive extends SubsystemBase {
      */
     public void teleopDriveSwerveDrive(double translationVal, double strafeVal, double slowVal,
                                        double rotationVal, boolean robotCentricSup) {
-        translationVal *= (1-slowVal*0.5);
-        strafeVal *= (1-slowVal*0.5);
+        translationVal *= (1-(slowVal*0.75));
+        strafeVal *= (1-slowVal*0.75);
 
 
         SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * Constants.Swerve.maxSpeed, 2)
@@ -294,9 +295,8 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
-        return () -> (-1 *
-                (Math.pow(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), Constants.DriverControls.stickDeadband),
-                        Constants.DriverControls.swerveSensitivityExponent) * Constants.DriverControls.swerveSpeedMultiplier));
+        return () -> (-1 * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), Constants.DriverControls.stickDeadband))
+                , Constants.DriverControls.swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * Constants.DriverControls.swerveSpeedMultiplier);
     }
 
     // **** Commands ****
@@ -312,8 +312,8 @@ public class SwerveDrive extends SubsystemBase {
     public Command teleopDriveSwerveDriveCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                  DoubleSupplier rawRotationSup, BooleanSupplier robotCentricSup) {
         DoubleSupplier rotationSup = () -> (-1 *
-                (Math.pow(MathUtil.applyDeadband(rawRotationSup.getAsDouble(), Constants.DriverControls.stickDeadband),
-                        Constants.DriverControls.swerveSensitivityExponent) * Constants.DriverControls.swerveRotationMultiplier));
+                Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawRotationSup.getAsDouble(), Constants.DriverControls.stickDeadband))
+                        , Constants.DriverControls.swerveSensitivityExponent), rawRotationSup.getAsDouble()) * Constants.DriverControls.swerveRotationMultiplier);
 
         DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
 

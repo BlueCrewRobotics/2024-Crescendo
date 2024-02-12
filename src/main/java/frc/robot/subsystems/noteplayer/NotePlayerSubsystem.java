@@ -1,6 +1,5 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.noteplayer;
 
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.*;
@@ -9,9 +8,6 @@ import frc.robot.Constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -23,9 +19,6 @@ public class NotePlayerSubsystem extends SubsystemBase {
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-    private List<Integer> loopCounters = new ArrayList<>();
-    private List<Long> loopTimes = new ArrayList<>();
-
     public NotePlayerSubsystem() {
 
     }
@@ -33,6 +26,7 @@ public class NotePlayerSubsystem extends SubsystemBase {
     public IntakeModule getIntake() {
         return intake;
     }
+
     public ShooterModule getShooter() {
         return shooter;
     }
@@ -43,8 +37,9 @@ public class NotePlayerSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (intake.noteInIntake()) {
-            System.out.println("I SEE A NOTE WOWIIEEEEE!!!");
+            System.out.println("Intake Beam Broken!!!");
         }
+        arm.periodic();
     }
 
     /**
@@ -165,17 +160,35 @@ public class NotePlayerSubsystem extends SubsystemBase {
 
     // Commands:
 
-    public Command intakeNote() {
-        return this.startEnd(
-                        () -> intake.spin(0.25),
-                        () -> intake.stopSpinning())
-                .until(() -> intake.noteInIntake());
+    public Command allStop() {
+        return this.run(() -> {intake.stopSpinning(); indexer.stop();});
     }
 
-    public Command runIndexer() {
-        return null; /* this.startEnd(
-                () -> indexer.
-        )*/
+    public Command intakeNote() {
+        return ((new RunCommand(() -> intake.spin(0.3))
+                .until(intake::noteInIntake).andThen(
+                new RunCommand(() -> intake.spin(0.15))
+                        .raceWith(pullNoteIntoIndexer())))
+        );
+    }
+
+    public Command pullNoteIntoIndexer() {
+        return new RunCommand(
+                () -> indexer.spin(1)
+        ).until(indexer::noteInIndexer);
+    }
+
+    public Command feedNoteToShooter() {
+        return new RunCommand(
+                () -> indexer.spin(1))
+                .onlyWhile(indexer::noteInIndexer);
+    }
+
+    public Command spinUpShooter() {
+        return ((new RunCommand(
+                () -> shooter.shoot(0.15)
+        ).onlyWhile(indexer::noteInIndexer))
+                .andThen(() -> shooter.shoot(0.15)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command aimAtTarget() {
@@ -186,5 +199,11 @@ public class NotePlayerSubsystem extends SubsystemBase {
         );
 
         return new InstantCommand(() -> this.calculateShootingParameters(generateRandomBotPose(), targetCoords));
+    }
+
+    public Command rotateArmToDegrees(double degrees) {
+        return new RunCommand(
+                () -> arm.rotateToDegrees(degrees)
+        );
     }
 }

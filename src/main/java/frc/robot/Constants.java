@@ -30,9 +30,9 @@ public final class Constants {
      */
     public static final class DriverControls {
         public static final double stickDeadband = 0.1;
-        public static final double swerveSensitivityExponent = 1.5; // Should to be >= 1
+        public static final double swerveSensitivityExponent = 1.8; // Should to be >= 1
         public static final double swerveSpeedMultiplier = 0.7; // Should be <= 1
-        public static final double swerveRotationMultiplier = 0.7; // Should be <= 1
+        public static final double swerveRotationMultiplier = 0.6; // Should be <= 1
     }
     /**
      * All the Swerve Subsystem constants
@@ -255,12 +255,12 @@ public final class Constants {
 
     public static final int INTAKE_MOTOR_ID = 12;
     public static final int INDEXER_MOTOR_ID = 3;
-    public static final double ARM_MAX_LIMIT = 129834.42;
-    public static final double ARM_MIN_LIMIT = -398472938.23;
 
     public static final int ARM_LEFT_MOTOR_ID = 1;
     public static final int ARM_RIGHT_MOTOR_ID = 2;
     public static final int ARM_CAN_CODER_ID = 4;
+    public static final float ARM_MAX_LIMIT = 11.0f;
+    public static final float ARM_MIN_LIMIT = -11.77f;
 
     public static final int ELEVATOR_MOTOR_1_ID = 8;
     public static final int ELEVATOR_MOTOR_2_ID = 9;
