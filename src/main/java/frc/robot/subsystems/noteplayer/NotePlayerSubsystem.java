@@ -1,30 +1,27 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.noteplayer;
 
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.*;
+import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.geom.Line2D;
 
 /**
  *
  */
-public class NotePlayerSubsystem extends SubsystemBase {
+public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants, Constants.FieldCoordinates {
 
     private IndexerModule indexer = new IndexerModule();
     private IntakeModule intake = new IntakeModule();
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
-
-    private List<Integer> loopCounters = new ArrayList<>();
-    private List<Long> loopTimes = new ArrayList<>();
 
     public NotePlayerSubsystem() {
 
@@ -33,6 +30,7 @@ public class NotePlayerSubsystem extends SubsystemBase {
     public IntakeModule getIntake() {
         return intake;
     }
+
     public ShooterModule getShooter() {
         return shooter;
     }
@@ -43,8 +41,9 @@ public class NotePlayerSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (intake.noteInIntake()) {
-            System.out.println("I SEE A NOTE WOWIIEEEEE!!!");
+            System.out.println("Intake Beam Broken!!!");
         }
+        arm.periodic();
     }
 
     /**
@@ -55,13 +54,13 @@ public class NotePlayerSubsystem extends SubsystemBase {
      * @return The position of the shooter as a {@link Translation2d}, X for distance, Y for height above floor
      */
     public Translation2d calculateShooterTargetRelativePosition(double robotDistance, Rotation2d angle) {
-        double verticalOffset = (-angle.getSin() * Constants.SHOOTER_ARM_LENGTH) +
-                (angle.getCos() * Constants.SHOOTER_ARM_TO_WHEELS_LENGTH) +
-                Constants.SHOOTER_VERTICAL_OFFSET;
+        double verticalOffset = (-angle.getSin() * SHOOTER_ARM_LENGTH) +
+                (angle.getCos() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_VERTICAL_OFFSET;
 
-        double horizontalOffset = (angle.getCos() * Constants.SHOOTER_ARM_LENGTH) +
-                (angle.getSin() * Constants.SHOOTER_ARM_TO_WHEELS_LENGTH) +
-                Constants.SHOOTER_HORIZONTAL_OFFSET;
+        double horizontalOffset = (angle.getCos() * SHOOTER_ARM_LENGTH) +
+                (angle.getSin() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_HORIZONTAL_OFFSET;
 
         return new Translation2d(robotDistance + horizontalOffset, verticalOffset);
     }
@@ -149,6 +148,25 @@ public class NotePlayerSubsystem extends SubsystemBase {
         return new Translation2d(launchSpeed, shooterAngle);
     }
 
+    public boolean hasLineOfSight(Translation2d botPose, Translation2d targetPose) {
+        Rotation2d angleToTarget = botPose.minus(targetPose).getAngle();
+        Translation2d perpendicularOffset;
+        if (botPose.getY() > RED_STAGE_SPEAKER_POINT.getY()) {
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.minus(Rotation2d.fromDegrees(90)));
+        } else {
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.plus(Rotation2d.fromDegrees(90)));
+        }
+
+        Line2D notePath = new Line2D.Double(botPose.getX() + perpendicularOffset.getX(), botPose.getY() + perpendicularOffset.getY(),
+                targetPose.getX() + perpendicularOffset.getX(), targetPose.getY() + perpendicularOffset.getY());
+
+        if (FieldState.getInstance().onRedAlliance()) {
+            return notePath.intersectsLine(RED_STAGE_RIGHT) || notePath.intersectsLine(RED_CENTER_STAGE) || notePath.intersectsLine(RED_STAGE_LEFT);
+        } else {
+            return notePath.intersectsLine(BLUE_STAGE_RIGHT) || notePath.intersectsLine(BLUE_CENTER_STAGE) || notePath.intersectsLine(BLUE_STAGE_LEFT);
+        }
+    }
+
     /**
      * This is what we used for generating random robot poses for tuning the
      * calculateShootingParameters method
@@ -165,17 +183,35 @@ public class NotePlayerSubsystem extends SubsystemBase {
 
     // Commands:
 
-    public Command intakeNote() {
-        return this.startEnd(
-                        () -> intake.spin(0.25),
-                        () -> intake.stopSpinning())
-                .until(() -> intake.noteInIntake());
+    public Command allStop() {
+        return this.run(() -> {intake.stopSpinning(); indexer.stop();});
     }
 
-    public Command runIndexer() {
-        return null; /* this.startEnd(
-                () -> indexer.
-        )*/
+    public Command intakeNote() {
+        return ((new RunCommand(() -> intake.spin(0.3))
+                .until(intake::noteInIntake).andThen(
+                new RunCommand(() -> intake.spin(0.15))
+                        .raceWith(pullNoteIntoIndexer())))
+        );
+    }
+
+    public Command pullNoteIntoIndexer() {
+        return new RunCommand(
+                () -> indexer.spin(1)
+        ).until(indexer::noteInIndexer);
+    }
+
+    public Command feedNoteToShooter() {
+        return new RunCommand(
+                () -> indexer.spin(1))
+                .onlyWhile(indexer::noteInIndexer);
+    }
+
+    public Command spinUpShooter() {
+        return ((new RunCommand(
+                () -> shooter.shoot(0.15)
+        ).onlyWhile(indexer::noteInIndexer))
+                .andThen(() -> shooter.shoot(0.15)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command aimAtTarget() {
@@ -186,5 +222,11 @@ public class NotePlayerSubsystem extends SubsystemBase {
         );
 
         return new InstantCommand(() -> this.calculateShootingParameters(generateRandomBotPose(), targetCoords));
+    }
+
+    public Command rotateArmToDegrees(double degrees) {
+        return new RunCommand(
+                () -> arm.rotateToDegrees(degrees)
+        );
     }
 }

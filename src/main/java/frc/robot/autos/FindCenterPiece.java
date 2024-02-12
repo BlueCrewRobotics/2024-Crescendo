@@ -1,9 +1,8 @@
 package frc.robot.autos;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj2.command.*;
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
         // based on the input orderOfCenterNotes and whether or note they exist
         List<Integer> centerNotesToGet = new ArrayList<>();
         for (int note : orderOfCenterNotes) {
-            if (GlobalVariables.getInstance().getCenterNotesExist()[note-1]) {
+            if (FieldState.getInstance().getCenterNotesExist()[note-1]) {
                 centerNotesToGet.add(note);
             }
         }
@@ -59,7 +58,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
                             // After we follow the paths, check if the note we are in front of is available/exists,
                             // at the same time as setting the global note index
                             new CheckForPieceAvailability()).alongWith(
-                            new InstantCommand(() -> GlobalVariables.getInstance().setCenterNoteIndex(noteIndex))
+                            new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex))
                     )
             );
 
@@ -77,7 +76,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
                         //AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
                         Commands.print("Following: CN" + centerNotesToGet.get(i - 1) + "-CN" + nextNote),
                         // Set the global note index, and check for piece availability
-                        new InstantCommand(() -> GlobalVariables.getInstance().setCenterNoteIndex(noteIndex2)),
+                        new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex2)),
                         new CheckForPieceAvailability()
                 );
             }
@@ -86,7 +85,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
                     // Wait for it to clock through every thing (waiting 30ms, runs every 20ms),
                     // so we don't accidentally trigger this if we got the last piece
                     Commands.waitSeconds(0.03),
-                    new InstantCommand(() -> GlobalVariables.getInstance().setCenterNotesGone(true))
+                    new InstantCommand(() -> FieldState.getInstance().setCenterNotesGone(true))
             );
 
             // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,

@@ -4,19 +4,18 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
+import frc.robot.Constants;
 import frc.robot.commands.ShootNoteIntoAmp;
 import frc.robot.commands.ShootNoteIntoSpeaker;
 
 import java.util.Objects;
 
-import static frc.robot.Constants.AutoConstants.*;
-import static frc.robot.Constants.PathPlannerConstants.pathConstraints;
-
 /**
  * This class automatically generates the autonomous routine based on six inputs
  */
-public class AutonomousCommandsBuilder extends SequentialCommandGroup {
+public class AutonomousCommandsBuilder extends SequentialCommandGroup implements Constants.AutoConstants, Constants.PathPlannerConstants {
 
     /**
      * This class automatically generates the autonomous routine based on six inputs
@@ -83,7 +82,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                         addCommands(
                                 new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane)
                                         // Unless all the center notes we wanted are gone
-                                        .unless(() -> GlobalVariables.getInstance().isCenterNotesGone())
+                                        .unless(() -> FieldState.getInstance().isCenterNotesGone())
                         );
 
                         // Prioritize scoring in the Amp (not sure if we want it this way)
@@ -94,7 +93,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Amp"),
                                     new ShootNoteIntoAmp()
                                             // Only if we have a note
-                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
+                                            .onlyIf(() -> RobotState.getInstance().hasNote())
                             );
                         } else {
                             // Score in the Speaker
@@ -105,7 +104,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Sp"),
                                     new ShootNoteIntoSpeaker()
                                             // Only if we have a note
-                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
+                                            .onlyIf(() -> RobotState.getInstance().hasNote())
                             );
                         }
                     } else {
@@ -122,7 +121,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Amp"),
                                     new ShootNoteIntoAmp()
                                             // Only if we have a note
-                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
+                                            .onlyIf(() -> RobotState.getInstance().hasNote())
                             );
                         } else {
                             // Score in the Speaker
@@ -133,7 +132,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup {
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Sp"),
                                     new ShootNoteIntoSpeaker()
                                             // Only if we have a note
-                                            .onlyIf(() -> GlobalVariables.getInstance().hasNote())
+                                            .onlyIf(() -> RobotState.getInstance().hasNote())
                             );
                         }
                         // Keep track of how many times we have tried to get a note from the center

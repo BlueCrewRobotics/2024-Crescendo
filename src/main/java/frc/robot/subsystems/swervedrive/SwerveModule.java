@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.swervedrive;
 
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -18,7 +18,7 @@ import frc.robot.Robot;
 /**
  * Represents a Swerve Module on the Swerve Drivetrain
  */
-public class SwerveModule {
+public class SwerveModule implements Constants.Swerve {
     public int moduleNumber;
     private Rotation2d angleOffset;
 
@@ -26,7 +26,7 @@ public class SwerveModule {
     private TalonFX mDriveMotor;
     private CANcoder angleEncoder;
 
-    private final SimpleMotorFeedforward driveFeedForward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
+    private final SimpleMotorFeedforward driveFeedForward = new SimpleMotorFeedforward(driveKS, driveKV, driveKA);
 
     /* drive motor control requests */
     private final DutyCycleOut driveDutyCycle = new DutyCycleOut(0);
@@ -52,6 +52,9 @@ public class SwerveModule {
         mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
         mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.getConfigurator().setPosition(0.0);
+
+        mDriveMotor.setSafetyEnabled(true);
+        mAngleMotor.setSafetyEnabled(true);
     }
 
     /**
@@ -74,11 +77,11 @@ public class SwerveModule {
         // direction of travel that can occur when modules change directions. This results in smoother driving.
         desiredState.speedMetersPerSecond *= desiredState.angle.minus(Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())).getCos();
         if(isOpenLoop){
-            driveDutyCycle.Output = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
+            driveDutyCycle.Output = desiredState.speedMetersPerSecond / maxSpeed;
             mDriveMotor.setControl(driveDutyCycle);
         }
         else {
-            driveVelocity.Velocity = Conversions.MPSToRPS(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference);
+            driveVelocity.Velocity = Conversions.MPSToRPS(desiredState.speedMetersPerSecond, wheelCircumference);
             driveVelocity.FeedForward = driveFeedForward.calculate(desiredState.speedMetersPerSecond);
             mDriveMotor.setControl(driveVelocity);
         }
@@ -112,7 +115,7 @@ public class SwerveModule {
      */
     public SwerveModuleState getState(){
         return new SwerveModuleState(
-            Conversions.RPSToMPS(mDriveMotor.getVelocity().getValue(), Constants.Swerve.wheelCircumference), 
+            Conversions.RPSToMPS(mDriveMotor.getVelocity().getValue(), wheelCircumference),
             Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())
         );
     }
@@ -122,7 +125,7 @@ public class SwerveModule {
      */
     public SwerveModulePosition getPosition(){
         return new SwerveModulePosition(
-            Conversions.rotationsToMeters(mDriveMotor.getPosition().getValue(), Constants.Swerve.wheelCircumference), 
+            Conversions.rotationsToMeters(mDriveMotor.getPosition().getValue(), wheelCircumference),
             Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())
         );
     }

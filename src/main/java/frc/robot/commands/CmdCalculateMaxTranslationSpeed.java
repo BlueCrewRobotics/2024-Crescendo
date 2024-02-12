@@ -3,7 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 /**
  * This Command drives the {@link SwerveDrive} Drive in the positive X direction as fast as possible, then prints out the speeds of each module. DO NOT INCLUDE IN ACTUAL ROBOT CODE

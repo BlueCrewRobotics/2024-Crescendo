@@ -1,8 +1,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -13,9 +11,10 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.autos.AutonomousCommandsBuilder;
-import frc.robot.commands.*;
+import frc.lib.bluecrew.util.BlinkinValues;
 import frc.robot.subsystems.*;
+import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 import java.util.function.BooleanSupplier;
 
@@ -25,7 +24,7 @@ import java.util.function.BooleanSupplier;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer {
+public class RobotContainer implements Constants.AutoConstants {
     /* Controllers */
     private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -55,20 +54,12 @@ public class RobotContainer {
 
     {
         // Fire-up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinSubsystem.BLINKIN_SOLID_BLUE);
+        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
 
     }
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        swerveDrive.setDefaultCommand(
-                swerveDrive.teleopDriveSwerveDriveCommand(
-                        driver::getLeftY,
-                        driver::getLeftX,
-                        driver::getRightTriggerAxis,
-                        driver::getRightX,
-                        () -> driver.leftBumper().getAsBoolean()
-                ));
 
         // Configure the button bindings
         configureButtonBindings();
@@ -91,34 +82,54 @@ public class RobotContainer {
      * JoystickButton}.
      */
     private void configureButtonBindings() {
-        /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
-        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
-                driver::getLeftY,
-                driver::getLeftX,
-                driver::getRightTriggerAxis,
-                () -> -driver.getHID().getPOV(),
-                robotCentric
-                ).until(cancelAutoRotation));
+        // Default Commands:
+        swerveDrive.setDefaultCommand(
+                swerveDrive.teleopDriveSwerveDriveCommand(
+                        driver::getLeftY,
+                        driver::getLeftX,
+                        driver::getRightTriggerAxis,
+                        driver::getRightX,
+                        () -> driver.leftBumper().getAsBoolean()
+                ));
 
-        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
-                driver::getLeftY,
-                driver::getLeftX,
-                driver::getRightTriggerAxis,
-                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
-                robotCentric
-        ).until(cancelAutoRotation));
+        notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
+
+//        /* Driver Buttons */
+        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
+//        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
+//                driver::getLeftY,
+//                driver::getLeftX,
+//                driver::getRightTriggerAxis,
+//                () -> -driver.getHID().getPOV(),
+//                robotCentric
+//                ).until(cancelAutoRotation));
+//
+//        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
+//                driver::getLeftY,
+//                driver::getLeftX,
+//                driver::getRightTriggerAxis,
+//                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
+//                robotCentric
+//        ).until(cancelAutoRotation));
 
 //        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
 //        driver.a().onTrue(notePlayerSubsystem.intakeNote());
 
 //        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
 //        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
-        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
-        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
+//        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
+//        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
 //        driver.povUp().onTrue(new StartInTake(notePlayerSubsystem.getIntake()));
 //        driver.povDown().onTrue(new StopInTake(notePlayerSubsystem.getIntake()));
 
+        //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        //driver.a().onTrue(notePlayerSubsystem.intakeNote());
+        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
+        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(59));
+        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
+        //driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
+        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
+        driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
     }
 
     /**
@@ -153,9 +164,9 @@ public class RobotContainer {
         // Choose which lane the robot should travel in
         autoLaneChooser = new SendableChooser<>();
         autoLaneChooser.setDefaultOption("None", null);
-        autoLaneChooser.addOption("AmpSideLane", Constants.AutoConstants.ampLane);
-        autoLaneChooser.addOption("UnderStageLane", Constants.AutoConstants.stageLane);
-        autoLaneChooser.addOption("SourceSideLane", Constants.AutoConstants.sourceLane);
+        autoLaneChooser.addOption("AmpSideLane", ampLane);
+        autoLaneChooser.addOption("UnderStageLane", stageLane);
+        autoLaneChooser.addOption("SourceSideLane", sourceLane);
 
         // Choose how many notes to get from the starting zone
         numOfNotesFromStartChooser = new SendableChooser<>();

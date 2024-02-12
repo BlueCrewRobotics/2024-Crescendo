@@ -2,22 +2,22 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.noteplayer;
 
 import com.revrobotics.*;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
 
-public class IndexerModule {
+public class IndexerModule implements Constants.NotePlayerConstants {
 
-  private CANSparkMax indexerMotor = new CANSparkMax(Constants.INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
+  private CANSparkMax indexerMotor = new CANSparkMax(INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
   private SparkPIDController indexerController = indexerMotor.getPIDController();
   private SparkRelativeEncoder indexerEncoder = (SparkRelativeEncoder) indexerMotor.getEncoder();
 
-  // TODO: indexer beam-break
+  private DigitalInput beamBreak = new DigitalInput(9);
 
   public IndexerModule() {
-
     indexerMotor.setSmartCurrentLimit(20);
   }
 
@@ -33,13 +33,12 @@ public class IndexerModule {
     return indexerMotor.getEncoder().getPosition();
   }
 
-  // TODO: Set GlobalVariables.hasNote using a beam break sensor using WPILib's DigitalInput class
-
   /**
-   * @return whether or not we "see" a note in the intake (via beam-break)
+   * @return whether or not we "see" a note in the indexer (via beam-break)
    */
-  public boolean noteInIntake() {
-    return true;
+  public boolean noteInIndexer() {
+    return !beamBreak.get();
   }
 
+  // TODO: Set GlobalVariables.hasNote using noteInIndexer
 }

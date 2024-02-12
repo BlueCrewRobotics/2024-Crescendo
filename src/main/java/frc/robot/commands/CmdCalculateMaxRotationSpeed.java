@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 /**
  * This command directs the {@link SwerveDrive} to rotate much faster than it is actually capable of, and then prints out the angular velocity according to the NavX. DO NOT INCLUDE IN ACTUAL ROBOT CODE
@@ -34,7 +34,7 @@ public class CmdCalculateMaxRotationSpeed extends Command {
     @Override
     public void execute() {
         swerveDrive.drive(
-                new Translation2d(0.0, 0.0).times(Constants.Swerve.maxSpeed),
+                new Translation2d(0.0, 0.0),
                 20.0,
                 true,
                 true

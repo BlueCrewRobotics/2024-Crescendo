@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.noteplayer;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -17,15 +17,15 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class IntakeModule {
+public class IntakeModule implements Constants.NotePlayerConstants {
 
-    private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
+    private TalonFX intakeMotor = new TalonFX(INTAKE_MOTOR_ID);
 
     private final DigitalInput beamBreak;
 
     public IntakeModule() {
 
-        TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
+        //TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
 /*
           .withMotorOutput(new MotorOutputConfigs()
                   .withInverted(InvertedValue.Clockwise_Positive))
@@ -35,11 +35,13 @@ public class IntakeModule {
                   .withSupplyCurrentThreshold(10));
 */
 
-        motorFXConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+//        motorFXConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+//
+//        intakeMotor.getConfigurator().apply(motorFXConfig);
 
-        intakeMotor.getConfigurator().apply(motorFXConfig);
+        intakeMotor.setSafetyEnabled(true);
 
-        beamBreak = new DigitalInput(9);
+        beamBreak = new DigitalInput(8);
     }
 
     public void spin(double speed) {
@@ -55,12 +57,8 @@ public class IntakeModule {
     }
 
     /**
-     * @return whether or not a note can be seen in the indexer
+     * @return whether or not a note can be seen in the intake
      */
-    public boolean noteInIndexer() {
-        return true; // TODO
-    }
-
     public boolean noteInIntake() {
         return !beamBreak.get();
     }

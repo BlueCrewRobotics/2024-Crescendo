@@ -44,9 +44,7 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 
-import static frc.robot.Constants.PhotonVision.*;
-
-public final class PoseEstimator {
+public final class PoseEstimator implements Constants.PhotonVision, Constants.Swerve {
 
     private final PhotonCamera camera1;
     private final PhotonCamera camera2;
@@ -73,7 +71,7 @@ public final class PoseEstimator {
 
         swervePoseEstimator =
                 new SwerveDrivePoseEstimator(
-                        Constants.Swerve.swerveKinematics,
+                        swerveKinematics,
                         new Rotation2d(),
                         new SwerveModulePosition[] {
                                 new SwerveModulePosition(),

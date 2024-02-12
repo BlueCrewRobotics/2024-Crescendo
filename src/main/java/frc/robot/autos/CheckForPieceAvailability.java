@@ -1,7 +1,7 @@
 package frc.robot.autos;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.RobotState;
 
 public class CheckForPieceAvailability extends Command {
 
@@ -14,7 +14,7 @@ public class CheckForPieceAvailability extends Command {
     @Override
     public void initialize() {
         System.out.println("Check for piece availability init");
-        GlobalVariables.getInstance().setAutoPieceIsAvailable(true);
+        RobotState.getInstance().setAutoPieceIsAvailable(true);
     }
 
     @Override
