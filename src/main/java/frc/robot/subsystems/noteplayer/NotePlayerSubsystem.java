@@ -3,16 +3,20 @@ package frc.robot.subsystems.noteplayer;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.*;
+import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
+import java.awt.geom.Line2D;
+
 /**
  *
  */
-public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants {
+public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants, Constants.FieldCoordinates {
 
     private IndexerModule indexer = new IndexerModule();
     private IntakeModule intake = new IntakeModule();
@@ -142,6 +146,25 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
         // Return the shooting parameters as a vector in Translation2d form
         return new Translation2d(launchSpeed, shooterAngle);
+    }
+
+    public boolean hasLineOfSight(Translation2d botPose, Translation2d targetPose) {
+        Rotation2d angleToTarget = botPose.minus(targetPose).getAngle();
+        Translation2d perpendicularOffset;
+        if (botPose.getY() > RED_STAGE_SPEAKER_POINT.getY()) {
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.minus(Rotation2d.fromDegrees(90)));
+        } else {
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.plus(Rotation2d.fromDegrees(90)));
+        }
+
+        Line2D notePath = new Line2D.Double(botPose.getX() + perpendicularOffset.getX(), botPose.getY() + perpendicularOffset.getY(),
+                targetPose.getX() + perpendicularOffset.getX(), targetPose.getY() + perpendicularOffset.getY());
+
+        if (FieldState.getInstance().onRedAlliance()) {
+            return notePath.intersectsLine(RED_STAGE_RIGHT) || notePath.intersectsLine(RED_CENTER_STAGE) || notePath.intersectsLine(RED_STAGE_LEFT);
+        } else {
+            return notePath.intersectsLine(BLUE_STAGE_RIGHT) || notePath.intersectsLine(BLUE_CENTER_STAGE) || notePath.intersectsLine(BLUE_STAGE_LEFT);
+        }
     }
 
     /**

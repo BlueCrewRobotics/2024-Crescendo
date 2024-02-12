@@ -20,6 +20,9 @@ import edu.wpi.first.math.util.Units;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+
 /**
  * Contains all the robot constants
  */
@@ -258,6 +261,7 @@ public interface Constants {
         double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);
         double SHOOTER_ARM_LENGTH = Units.inchesToMeters(13);
         double SHOOTER_ARM_TO_WHEELS_LENGTH = Units.inchesToMeters(8);
+        double GAME_PIECE_NOTE_DIAMETER = Units.inchesToMeters(14);
     }
 
     interface ElevatorConstants {
@@ -270,7 +274,27 @@ public interface Constants {
         int BLINKIN_PORT = 9;
     }
 
-    double GAME_PIECE_NOTE_DIAMETER = 0.36;
+    interface FieldCoordinates {
+        // Blue Alliance stage post coordinates:
+        Translation2d BLUE_STAGE_AMP_POINT = new Translation2d(Units.inchesToMeters(230), Units.inchesToMeters(227.12));
+        Translation2d BLUE_STAGE_SPEAKER_POINT = new Translation2d(Units.inchesToMeters(116.5), Units.inchesToMeters(161.62));
+        Translation2d BLUE_STAGE_SOURCE_POINT = new Translation2d(Units.inchesToMeters(230), Units.inchesToMeters(96.12));
+
+        // Red Alliance stage post coordinates
+        Translation2d RED_STAGE_AMP_POINT = new Translation2d(Units.inchesToMeters(412.8), Units.inchesToMeters(227.12));
+        Translation2d RED_STAGE_SPEAKER_POINT = new Translation2d(Units.inchesToMeters(526.25), Units.inchesToMeters(161.62));
+        Translation2d RED_STAGE_SOURCE_POINT = new Translation2d(Units.inchesToMeters(412.8), Units.inchesToMeters(96.12));
+
+        // Blue Alliance Stage sides
+        Line2D BLUE_STAGE_LEFT = new Line2D.Double(BLUE_STAGE_SPEAKER_POINT.getX(), BLUE_STAGE_SPEAKER_POINT.getY(), BLUE_STAGE_AMP_POINT.getX(), BLUE_STAGE_AMP_POINT.getY());
+        Line2D BLUE_CENTER_STAGE = new Line2D.Double(BLUE_STAGE_SOURCE_POINT.getX(), BLUE_STAGE_SOURCE_POINT.getY(), BLUE_STAGE_AMP_POINT.getX(), BLUE_STAGE_AMP_POINT.getY());
+        Line2D BLUE_STAGE_RIGHT = new Line2D.Double(BLUE_STAGE_SPEAKER_POINT.getX(), BLUE_STAGE_SPEAKER_POINT.getY(), BLUE_STAGE_SOURCE_POINT.getX(), BLUE_STAGE_SOURCE_POINT.getY());
+
+        // Red Alliance Stage sides
+        Line2D RED_STAGE_RIGHT = new Line2D.Double(RED_STAGE_SPEAKER_POINT.getX(), RED_STAGE_SPEAKER_POINT.getY(), RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY());
+        Line2D RED_CENTER_STAGE = new Line2D.Double(RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY(), RED_STAGE_SOURCE_POINT.getX(), RED_STAGE_SOURCE_POINT.getY());
+        Line2D RED_STAGE_LEFT = new Line2D.Double(RED_STAGE_SPEAKER_POINT.getX(), RED_STAGE_SPEAKER_POINT.getY(), RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY());
+    }
 
     double FIELD_AMP_OPENING_WIDTH = 0.6096;
     double FIELD_AMP_OPENING_HEIGHT = 0.4572;

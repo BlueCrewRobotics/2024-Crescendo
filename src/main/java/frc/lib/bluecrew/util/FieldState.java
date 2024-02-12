@@ -1,5 +1,6 @@
 package frc.lib.bluecrew.util;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 import java.util.Arrays;
@@ -11,6 +12,7 @@ public class FieldState implements Constants.GameStateConstants {
     private boolean[] centerNotesExist;
     private int centerNoteIndex;
     private boolean centerNotesGone;
+    private boolean onRedAlliance;
 
     private FieldState() {
         centerNotesExist = new boolean[]{
@@ -23,6 +25,9 @@ public class FieldState implements Constants.GameStateConstants {
 
         centerNotesGone = false;
         centerNoteIndex = 0;
+
+        var alliance = DriverStation.getAlliance();
+        onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
     }
 
     public static synchronized FieldState getInstance() {
@@ -65,4 +70,7 @@ public class FieldState implements Constants.GameStateConstants {
         return centerNotesGone;
     }
 
+    public boolean onRedAlliance() {
+        return onRedAlliance;
+    }
 }
