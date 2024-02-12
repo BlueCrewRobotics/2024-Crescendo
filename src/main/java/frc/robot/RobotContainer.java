@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.lib.bluecrew.util.BlinkinValues;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -53,7 +54,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
     {
         // Fire-up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinSubsystem.BLINKIN_SOLID_BLUE);
+        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
 
     }
 
