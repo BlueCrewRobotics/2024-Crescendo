@@ -5,32 +5,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
+import frc.lib.bluecrew.util.BlinkinValues;
 import frc.robot.Constants;
 
 import frc.lib.bluecrew.util.RobotState;
 
-public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, Constants.GameStateConstants {
+public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, Constants.GameStateConstants, BlinkinValues {
 
     private final Spark blinkinOutput;
-
-    public static final double BLINKIN_BREATH_BLUE = -0.15;
-    public static final double BLINKIN_BREATH_RED = -0.17;
-    public static final double BLINKIN_SOLID_RED = 0.61;
-    public static final double BLINKIN_SOLID_ORANGE = 0.65;
-    public static final double BLINKIN_SOLID_BLUE = 0.87;
-    public static final double BLINKIN_SOLID_YELLOW = 0.69;
-    public static final double BLINKIN_STROBE_RED = -0.11;
-    public static final double BLINKIN_STROBE_BLUE = -0.09;
-    public static final double BLINKIN_CONFETTI = -0.87;
-    public static final double BLINKIN_BLUE_CHASE =  -0.29;
-    public static final double BLINKIN_RAINBOW = -0.99;
-    public static final double BLINKIN_FIRE_LARGE = -0.57;
-    public static final double BLINKIN_COLOR_WAVE_FOREST = -0.37;
-    public static final double BLINKIN_SOLID_BLACK = 0.99;
-    public static final double BLINKIN_SOLID_PINK = 0.57;
-    public static final double BLINKIN_SOLID_GREEN = 0.77;
-    public static final double BLINKIN_SOLID_GOLD = 0.67;
-    public static final double BLINKIN_SOLID_VIOLET = 0.91;
 
     RobotState gv = RobotState.getInstance();
 
@@ -58,26 +40,23 @@ public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, 
      * the {@link #getInstance()} method to get the singleton instance.
      */
     private BlinkinSubsystem() {
-
         blinkinOutput = new Spark(BLINKIN_PORT);
     }
 
     @Override
     public void periodic() {
         if(gv.hasNote()  && gv.hasSpeakerTarget())
-            setColorMode(BLINKIN_SOLID_GREEN);
+            setColorMode(GREEN);
         else if(gv.hasNote()) {
-            setColorMode(BLINKIN_SOLID_ORANGE);
+            setColorMode(ORANGE);
         }
         else {
-            setColorMode(BLINKIN_BREATH_BLUE);
+            setColorMode(BREATH_BLUE);
         }
     }
 
     public void setColorMode(double mode) {
         blinkinOutput.set(mode);
     }
-
-
 }
 
