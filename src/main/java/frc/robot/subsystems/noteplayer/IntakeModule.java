@@ -17,9 +17,9 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class IntakeModule {
+public class IntakeModule implements Constants.NotePlayerConstants {
 
-    private TalonFX intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_ID);
+    private TalonFX intakeMotor = new TalonFX(INTAKE_MOTOR_ID);
 
     private final DigitalInput beamBreak;
 

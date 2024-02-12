@@ -10,7 +10,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 
 
-public class ArmModule {
+public class ArmModule implements Constants.NotePlayerConstants {
 
     private final CANSparkMax leftMotor;
     private final CANSparkMax rightMotor;
@@ -28,8 +28,8 @@ public class ArmModule {
 
     public ArmModule() {
         // Set up the motors:
-        leftMotor = new CANSparkMax(Constants.ARM_LEFT_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
-        rightMotor = new CANSparkMax(Constants.ARM_RIGHT_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
+        leftMotor = new CANSparkMax(ARM_LEFT_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
+        rightMotor = new CANSparkMax(ARM_RIGHT_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
 
         // Set up the PID controllers
         leftController = leftMotor.getPIDController();
@@ -40,7 +40,7 @@ public class ArmModule {
         rightEncoder = (SparkRelativeEncoder) rightMotor.getEncoder();
 
         // Set up the CANcoder
-        armCANcoder = new CANcoder(Constants.ARM_CAN_CODER_ID);
+        armCANcoder = new CANcoder(ARM_CAN_CODER_ID);
         // Configure the motors
         configureMotors();
 
@@ -108,8 +108,8 @@ public class ArmModule {
         rightMotor.setSmartCurrentLimit(40);
 
         // Set soft limits
-        leftMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, Constants.ARM_MAX_LIMIT);
-        leftMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, Constants.ARM_MIN_LIMIT);
+        leftMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, ARM_MAX_LIMIT);
+        leftMotor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, ARM_MIN_LIMIT);
         leftMotor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kForward, true);
         leftMotor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, true);
 

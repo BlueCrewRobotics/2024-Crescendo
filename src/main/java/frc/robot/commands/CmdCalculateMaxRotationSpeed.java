@@ -34,7 +34,7 @@ public class CmdCalculateMaxRotationSpeed extends Command {
     @Override
     public void execute() {
         swerveDrive.drive(
-                new Translation2d(0.0, 0.0).times(Constants.Swerve.maxSpeed),
+                new Translation2d(0.0, 0.0),
                 20.0,
                 true,
                 true

@@ -12,13 +12,13 @@ import frc.robot.Constants;
 /**
  *
  */
-public class ClimberSubsystem extends SubsystemBase {
+public class ClimberSubsystem extends SubsystemBase implements Constants.ElevatorConstants {
 
-    private final TalonFX motor1 = new TalonFX(Constants.ELEVATOR_MOTOR_1_ID);
-    private final TalonFX motor2 = new TalonFX(Constants.ELEVATOR_MOTOR_2_ID);
+    private final TalonFX motor1 = new TalonFX(ELEVATOR_MOTOR_1_ID);
+    private final TalonFX motor2 = new TalonFX(ELEVATOR_MOTOR_2_ID);
 
     private final VelocityVoltage shooterVelocity = new VelocityVoltage(1);
-    private final SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
+    //private final SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
 
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
 

@@ -30,7 +30,7 @@ import java.util.function.DoubleSupplier;
 /**
  * Swerve Drive Subsystem -- based on team 364's code
  */
-public class SwerveDrive extends SubsystemBase {
+public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Constants.PathPlannerConstants, Constants.DriverControls {
     public SwerveModule[] swerveMods;
     private final AHRS gyro;
 
@@ -46,10 +46,10 @@ public class SwerveDrive extends SubsystemBase {
         gyro.reset();
 
         swerveMods = new SwerveModule[]{
-                new SwerveModule(0, Constants.Swerve.Mod0.constants),
-                new SwerveModule(1, Constants.Swerve.Mod1.constants),
-                new SwerveModule(2, Constants.Swerve.Mod2.constants),
-                new SwerveModule(3, Constants.Swerve.Mod3.constants)
+                new SwerveModule(0, Mod0.constants),
+                new SwerveModule(1, Mod1.constants),
+                new SwerveModule(2, Mod2.constants),
+                new SwerveModule(3, Mod3.constants)
         };
 
         resetModulesToAbsolute();
@@ -66,7 +66,7 @@ public class SwerveDrive extends SubsystemBase {
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 this::driveRobotRelative,
-                Constants.PathPlannerConstants.pathFollowerConfig,
+                pathFollowerConfig,
                 () -> {
                     // Boolean supplier that controls when the path will be mirrored for the red alliance
                     // This will flip the path being followed to the red side of the field.
@@ -102,7 +102,7 @@ public class SwerveDrive extends SubsystemBase {
      */
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates =
-                Constants.Swerve.swerveKinematics.toSwerveModuleStates(
+                swerveKinematics.toSwerveModuleStates(
                         fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                                 translation.getX(),
                                 translation.getY(),
@@ -114,7 +114,7 @@ public class SwerveDrive extends SubsystemBase {
                                 translation.getY(),
                                 rotation)
                 );
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, maxSpeed);
 
         for (SwerveModule mod : swerveMods) {
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
@@ -127,7 +127,7 @@ public class SwerveDrive extends SubsystemBase {
      * @param desiredStates An array of the {@link SwerveModuleState} for each {@link SwerveModule}
      */
     public void setModuleStates(SwerveModuleState[] desiredStates) {
-        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, maxSpeed);
 
         for (SwerveModule mod : swerveMods) {
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
@@ -184,7 +184,7 @@ public class SwerveDrive extends SubsystemBase {
      * @return The speeds of each {@link SwerveModule} as {@link ChassisSpeeds} Required by Path Planner
      */
     public ChassisSpeeds getRobotRelativeSpeeds() {
-        return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
+        return swerveKinematics.toChassisSpeeds(getModuleStates());
     }
 
     /**
@@ -193,8 +193,8 @@ public class SwerveDrive extends SubsystemBase {
      * @param speeds the ChassisSpeeds to drive the robot with
      */
     public void driveRobotRelative(ChassisSpeeds speeds) {
-        SwerveModuleState[] states = Constants.Swerve.swerveKinematics.toSwerveModuleStates(speeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.Swerve.maxSpeed);
+        SwerveModuleState[] states = swerveKinematics.toSwerveModuleStates(speeds);
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeed);
         setModuleStates(states);
     }
 
@@ -226,14 +226,14 @@ public class SwerveDrive extends SubsystemBase {
      * @return The Robot yaw as reported by the NavX
      */
     public Rotation2d getGyroYaw() {
-        return Constants.Swerve.invertGyro ? (Rotation2d.fromDegrees(-gyro.getYaw())) : Rotation2d.fromDegrees(gyro.getYaw());
+        return invertGyro ? (Rotation2d.fromDegrees(-gyro.getYaw())) : Rotation2d.fromDegrees(gyro.getYaw());
     }
 
     /**
      * @return The angular velocity of the robot as reported by the NavX
      */
     public float getGyroYawSpeed() {
-        return Constants.Swerve.invertGyro ? -gyro.getRawGyroZ() : gyro.getRawGyroZ();
+        return invertGyro ? -gyro.getRawGyroZ() : gyro.getRawGyroZ();
     }
 
     /**
@@ -260,11 +260,11 @@ public class SwerveDrive extends SubsystemBase {
         strafeVal *= (1-slowVal*0.75);
 
 
-        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * Constants.Swerve.maxSpeed, 2)
-                + Math.pow(strafeVal * Constants.Swerve.maxSpeed, 2)));
+        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
+                + Math.pow(strafeVal * maxSpeed, 2)));
 
-        drive(new Translation2d(translationVal, strafeVal).times(Constants.Swerve.maxSpeed),
-                rotationVal * Constants.Swerve.maxAngularVelocity,
+        drive(new Translation2d(translationVal, strafeVal).times(maxSpeed),
+                rotationVal * maxAngularVelocity,
                 !robotCentricSup,
                 false);
     }
@@ -295,8 +295,8 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
-        return () -> (-1 * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), Constants.DriverControls.stickDeadband))
-                , Constants.DriverControls.swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * Constants.DriverControls.swerveSpeedMultiplier);
+        return () -> (-1 * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
+                , swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
 
     // **** Commands ****
@@ -312,10 +312,10 @@ public class SwerveDrive extends SubsystemBase {
     public Command teleopDriveSwerveDriveCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                  DoubleSupplier rawRotationSup, BooleanSupplier robotCentricSup) {
         DoubleSupplier rotationSup = () -> (-1 *
-                Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawRotationSup.getAsDouble(), Constants.DriverControls.stickDeadband))
-                        , Constants.DriverControls.swerveSensitivityExponent), rawRotationSup.getAsDouble()) * Constants.DriverControls.swerveRotationMultiplier);
+                Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawRotationSup.getAsDouble(), stickDeadband))
+                        , swerveSensitivityExponent), rawRotationSup.getAsDouble()) * swerveRotationMultiplier);
 
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         return this.run(() -> teleopDriveSwerveDrive(
                 speedsFromJoysticks(rawTranslationSup).getAsDouble(),
@@ -336,7 +336,7 @@ public class SwerveDrive extends SubsystemBase {
      */
     public Command teleopDriveSwerveDriveAndRotateToAngleCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                                  DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         return this.run(
                 () -> teleopDriveSwerveDrive(
@@ -358,7 +358,7 @@ public class SwerveDrive extends SubsystemBase {
      */
     public Command teleopDriveSwerveDriveAndFacePosition(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                          Translation2d position, BooleanSupplier robotCentricSup) {
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), Constants.DriverControls.stickDeadband);
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         return this.run(
                 () -> teleopDriveSwerveDrive(

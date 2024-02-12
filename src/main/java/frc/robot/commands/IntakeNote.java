@@ -1,7 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.RobotState;
 
 public class IntakeNote extends Command {
 
@@ -19,7 +19,7 @@ public class IntakeNote extends Command {
     @Override
     public void end(boolean interrupted) {
         System.out.println("Intake Note End");
-        GlobalVariables.getInstance().setAutoPieceIsAvailable(false);
+        RobotState.getInstance().setAutoPieceIsAvailable(false);
     }
 
     @Override

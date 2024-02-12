@@ -9,9 +9,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
 
-public class IndexerModule {
+public class IndexerModule implements Constants.NotePlayerConstants {
 
-  private CANSparkMax indexerMotor = new CANSparkMax(Constants.INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
+  private CANSparkMax indexerMotor = new CANSparkMax(INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
   private SparkPIDController indexerController = indexerMotor.getPIDController();
   private SparkRelativeEncoder indexerEncoder = (SparkRelativeEncoder) indexerMotor.getEncoder();
 

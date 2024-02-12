@@ -2,7 +2,8 @@ package frc.robot.autos;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 import frc.robot.commands.IntakeNote;
 
 public class AutoGrabFromCenter extends SequentialCommandGroup {
@@ -25,19 +26,19 @@ public class AutoGrabFromCenter extends SequentialCommandGroup {
         // because this class overrides the custom SequentialCommandGroup class in this package
         addCommands(
                 // Look for a note until we see that one is available
-                new FindCenterPiece(orderOfCenterNotes, comingFrom, autoLane).until(() -> GlobalVariables.getInstance().isAutoPieceIsAvailable()),
+                new FindCenterPiece(orderOfCenterNotes, comingFrom, autoLane).until(() -> RobotState.getInstance().isAutoPieceIsAvailable()),
                 // Follow the path to the note we are in front of until the path ends, or we pick up a note,
                 // but only if AutoPieceIsAvailable is true
-                (new AutoFollowNumberedNotePath("CN", () -> GlobalVariables.getInstance().getCenterNoteIndex(), "Intake")
+                (new AutoFollowNumberedNotePath("CN", () -> FieldState.getInstance().getCenterNoteIndex(), "Intake")
                         // Race with IntakeNote command
                         .raceWith(new IntakeNote())
                         // At the same time, set the piece availability to false
-                        .alongWith(new InstantCommand(() -> GlobalVariables.getInstance().setAutoPieceIsAvailable(false)))
+                        .alongWith(new InstantCommand(() -> RobotState.getInstance().setAutoPieceIsAvailable(false)))
                         // And set that the note we are in front of no longer exists (because we are picking it up
-                        .alongWith(new InstantCommand(() -> GlobalVariables.getInstance().setCenterNoteExists(
-                                GlobalVariables.getInstance().getCenterNoteIndex()-1, false)))
+                        .alongWith(new InstantCommand(() -> FieldState.getInstance().setCenterNoteExists(
+                                FieldState.getInstance().getCenterNoteIndex()-1, false)))
                 // Only if a piece is available
-                ).onlyIf(() -> GlobalVariables.getInstance().isAutoPieceIsAvailable())
+                ).onlyIf(() -> RobotState.getInstance().isAutoPieceIsAvailable())
         );
 
         // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,

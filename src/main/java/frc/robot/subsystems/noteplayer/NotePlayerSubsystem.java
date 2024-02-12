@@ -12,7 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 /**
  *
  */
-public class NotePlayerSubsystem extends SubsystemBase {
+public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants {
 
     private IndexerModule indexer = new IndexerModule();
     private IntakeModule intake = new IntakeModule();
@@ -50,13 +50,13 @@ public class NotePlayerSubsystem extends SubsystemBase {
      * @return The position of the shooter as a {@link Translation2d}, X for distance, Y for height above floor
      */
     public Translation2d calculateShooterTargetRelativePosition(double robotDistance, Rotation2d angle) {
-        double verticalOffset = (-angle.getSin() * Constants.SHOOTER_ARM_LENGTH) +
-                (angle.getCos() * Constants.SHOOTER_ARM_TO_WHEELS_LENGTH) +
-                Constants.SHOOTER_VERTICAL_OFFSET;
+        double verticalOffset = (-angle.getSin() * SHOOTER_ARM_LENGTH) +
+                (angle.getCos() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_VERTICAL_OFFSET;
 
-        double horizontalOffset = (angle.getCos() * Constants.SHOOTER_ARM_LENGTH) +
-                (angle.getSin() * Constants.SHOOTER_ARM_TO_WHEELS_LENGTH) +
-                Constants.SHOOTER_HORIZONTAL_OFFSET;
+        double horizontalOffset = (angle.getCos() * SHOOTER_ARM_LENGTH) +
+                (angle.getSin() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_HORIZONTAL_OFFSET;
 
         return new Translation2d(robotDistance + horizontalOffset, verticalOffset);
     }

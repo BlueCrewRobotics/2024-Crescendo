@@ -1,8 +1,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -25,7 +23,7 @@ import java.util.function.BooleanSupplier;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer {
+public class RobotContainer implements Constants.AutoConstants {
     /* Controllers */
     private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -165,9 +163,9 @@ public class RobotContainer {
         // Choose which lane the robot should travel in
         autoLaneChooser = new SendableChooser<>();
         autoLaneChooser.setDefaultOption("None", null);
-        autoLaneChooser.addOption("AmpSideLane", Constants.AutoConstants.ampLane);
-        autoLaneChooser.addOption("UnderStageLane", Constants.AutoConstants.stageLane);
-        autoLaneChooser.addOption("SourceSideLane", Constants.AutoConstants.sourceLane);
+        autoLaneChooser.addOption("AmpSideLane", ampLane);
+        autoLaneChooser.addOption("UnderStageLane", stageLane);
+        autoLaneChooser.addOption("SourceSideLane", sourceLane);
 
         // Choose how many notes to get from the starting zone
         numOfNotesFromStartChooser = new SendableChooser<>();

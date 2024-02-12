@@ -7,9 +7,9 @@ import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
 import frc.robot.Constants;
 
-import frc.lib.bluecrew.util.GlobalVariables;
+import frc.lib.bluecrew.util.RobotState;
 
-public class BlinkinSubsystem extends SubsystemBase {
+public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, Constants.GameStateConstants {
 
     private final Spark blinkinOutput;
 
@@ -32,7 +32,7 @@ public class BlinkinSubsystem extends SubsystemBase {
     public static final double BLINKIN_SOLID_GOLD = 0.67;
     public static final double BLINKIN_SOLID_VIOLET = 0.91;
 
-    GlobalVariables gv = GlobalVariables.getInstance();
+    RobotState gv = RobotState.getInstance();
 
 
     /**
@@ -59,7 +59,7 @@ public class BlinkinSubsystem extends SubsystemBase {
      */
     private BlinkinSubsystem() {
 
-        blinkinOutput = new Spark(Constants.BLINKIN_PORT);
+        blinkinOutput = new Spark(BLINKIN_PORT);
     }
 
     @Override
