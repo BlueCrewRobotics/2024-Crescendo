@@ -26,6 +26,8 @@ public class SwerveModule implements Constants.Swerve {
     private TalonFX mDriveMotor;
     private CANcoder angleEncoder;
 
+    private SwerveCTREConfigs ctreConfigs = new SwerveCTREConfigs();
+
     private final SimpleMotorFeedforward driveFeedForward = new SimpleMotorFeedforward(driveKS, driveKV, driveKA);
 
     /* drive motor control requests */
@@ -41,16 +43,16 @@ public class SwerveModule implements Constants.Swerve {
         
         /* Angle Encoder Config */
         angleEncoder = new CANcoder(moduleConstants.cancoderID);
-        angleEncoder.getConfigurator().apply(Robot.ctreConfigs.swerveCANcoderConfig);
+        angleEncoder.getConfigurator().apply(ctreConfigs.swerveCANcoderConfig);
 
         /* Angle Motor Config */
         mAngleMotor = new TalonFX(moduleConstants.angleMotorID);
-        mAngleMotor.getConfigurator().apply(Robot.ctreConfigs.swerveAngleFXConfig);
+        mAngleMotor.getConfigurator().apply(ctreConfigs.swerveAngleFXConfig);
         resetToAbsolute();
 
         /* Drive Motor Config */
         mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
-        mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
+        mDriveMotor.getConfigurator().apply(ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.getConfigurator().setPosition(0.0);
 
         mDriveMotor.setSafetyEnabled(true);

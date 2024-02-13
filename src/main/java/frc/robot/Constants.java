@@ -21,7 +21,6 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
 
 /**
  * Contains all the robot constants
@@ -214,19 +213,15 @@ public interface Constants {
     }
 
     interface GameStateConstants {
-
         enum RobotCycleStatus {
             NO_NOTE_CANT_SEE_SPEAKER,
             NO_NOTE_SEES_SPEAKER,
             HAS_NOTE_CANT_SEE_SPEAKER,
             HAS_NOTE_SEES_SPEAKER
         }
-    }
-
-    interface ShooterConstants {
 
         enum ShooterStatus {
-            PRIMED,
+            READY,
             UNREADY
         }
 
@@ -236,7 +231,9 @@ public interface Constants {
             AMP,
             TRAP
         }
+    }
 
+    interface ShooterConstants {
         int SHOOTER_TOP_MOTOR_ID = 10;
         int SHOOTER_BOTTOM_MOTOR_ID = 11;
 
@@ -245,6 +242,8 @@ public interface Constants {
         double shooterKS = 0.01; // TODO: figure out what these should be!
         double shooterKV = 0.348;
         double shooterKA = 0.15;
+
+        double SHOOTER_SPEED_ERROR_TOLERANCE = 1; // The allowed percentage error of the speed (not in decimal form)
     }
 
     interface NotePlayerConstants {
@@ -254,8 +253,10 @@ public interface Constants {
         int ARM_LEFT_MOTOR_ID = 1;
         int ARM_RIGHT_MOTOR_ID = 2;
         int ARM_CAN_CODER_ID = 4;
-        float ARM_MAX_LIMIT = 11.0f;
-        float ARM_MIN_LIMIT = -11.77f;
+        float ARM_MAX_LIMIT = 5.5f;
+        float ARM_MIN_LIMIT = -11f;
+
+        double ARM_BALANCE_DEGREES = -0.106 * 360;
 
         double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
         double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);

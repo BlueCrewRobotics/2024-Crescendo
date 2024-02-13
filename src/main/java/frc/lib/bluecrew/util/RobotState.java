@@ -3,8 +3,6 @@ package frc.lib.bluecrew.util;
 
 import frc.robot.Constants;
 
-import java.util.Arrays;
-
 /**
  * This class is singleton, and contains all the global variables that we use throughout a match.
  */
@@ -15,14 +13,18 @@ public final class RobotState implements Constants.GameStateConstants {
     private int numOfAutoActionsToDo;
     private int numOfAutoActionsAttempted;
 
-    // Probably actually just want two booleans (one for if we have a note, one for if we can score in the speaker)
     private RobotCycleStatus robotCycleStatus;
 
-    private boolean autoPieceIsAvailable;
+    private ShooterMode shooterMode;
+    private ShooterStatus shooterStatus;
+
+    private boolean noteIsAvailable;
 
     private RobotState() {
-        autoPieceIsAvailable = false;
+        noteIsAvailable = false;
         robotCycleStatus = RobotCycleStatus.NO_NOTE_CANT_SEE_SPEAKER;
+        shooterMode = ShooterMode.SPEAKER;
+        shooterStatus = ShooterStatus.UNREADY;
     }
 
     public static synchronized RobotState getInstance() {
@@ -47,14 +49,28 @@ public final class RobotState implements Constants.GameStateConstants {
         return robotCycleStatus;
     }
 
-    public void setAutoPieceIsAvailable(boolean autoPieceIsAvailable) {
-        System.out.println("Setting Auto Piece Availability: " + autoPieceIsAvailable);
-        this.autoPieceIsAvailable = autoPieceIsAvailable;
+    public void setShooterMode(ShooterMode shooterMode) {
+        this.shooterMode = shooterMode;
     }
 
-    public boolean isAutoPieceIsAvailable() {
-        System.out.println("Getting Auto Piece Availability: " + autoPieceIsAvailable);
-        return autoPieceIsAvailable;
+    public ShooterMode getShooterMode() {
+        return shooterMode;
+    }
+
+    public void setShooterStatus(ShooterStatus shooterStatus) {
+        this.shooterStatus = shooterStatus;
+    }
+
+    public ShooterStatus getShooterStatus() {
+        return shooterStatus;
+    }
+
+    public void setNoteIsAvailable(boolean noteIsAvailable) {
+        this.noteIsAvailable = noteIsAvailable;
+    }
+
+    public boolean isNoteIsAvailable() {
+        return noteIsAvailable;
     }
 
     public boolean hasNote() {
