@@ -19,7 +19,7 @@ public class IntakeNote extends Command {
     @Override
     public void end(boolean interrupted) {
         System.out.println("Intake Note End");
-        RobotState.getInstance().setAutoPieceIsAvailable(false);
+        RobotState.getInstance().setNoteIsAvailable(false);
     }
 
     @Override

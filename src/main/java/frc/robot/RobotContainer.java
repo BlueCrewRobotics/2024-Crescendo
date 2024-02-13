@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.*;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.bluecrew.util.BlinkinValues;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
@@ -95,7 +96,7 @@ public class RobotContainer implements Constants.AutoConstants {
         notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
 
 //        /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
+        //zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
 //        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
 //                driver::getLeftY,
 //                driver::getLeftX,
@@ -124,10 +125,10 @@ public class RobotContainer implements Constants.AutoConstants {
 
         //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
         //driver.a().onTrue(notePlayerSubsystem.intakeNote());
-        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
-        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(59));
-        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
-        //driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
+        driver.b().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kForward));
+        driver.a().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kReverse));
+        driver.x().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        driver.y().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
         driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
     }
