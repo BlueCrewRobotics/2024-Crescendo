@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.bluecrew.util.BlinkinValues;
-import frc.robot.commands.CmdFindAndGotoNoteCommand;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -134,7 +133,7 @@ public class RobotContainer implements Constants.AutoConstants {
 //        driver.x().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(2)));
 //        driver.b().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(-10)));
 
-//        driver.x().whileTrue(new CmdFindAndGotoNoteCommand(driver, notePlayerSubsystem, swerveDrive));
+//        driver.x().whileTrue(new FindAndGotoNote(notePlayerSubsystem, swerveDrive));
 
         driver.b().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kForward));
         driver.a().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kReverse));

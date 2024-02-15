@@ -1,8 +1,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.VisionModule;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -11,18 +9,17 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 
-public class CmdFindAndGotoNoteCommand extends Command {
+public class FindAndGotoNote extends Command {
     private final NotePlayerSubsystem notePlayerSubsystem;
     private final SwerveDrive swerveDrive;
 
     private boolean finished = false;
-    private CommandXboxController driverController;
+
     private PhotonCamera notesCamera;
 
-    public CmdFindAndGotoNoteCommand(CommandXboxController driverController, NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive) {
+    public FindAndGotoNote(NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive) {
         this.notePlayerSubsystem = notePlayerSubsystem;
         this.swerveDrive = swerveDrive;
-        this.driverController = driverController;
         // each subsystem used by the command must be passed into the
         // addRequirements() method (which takes a vararg of Subsystem)
         addRequirements(this.notePlayerSubsystem, this.swerveDrive);
@@ -34,8 +31,6 @@ public class CmdFindAndGotoNoteCommand extends Command {
 
     @Override
     public void initialize() {
-        defDriveCommand = swerveDrive.getDefaultCommand();
-        swerveDrive.removeDefaultCommand();
     }
 
     @Override
@@ -129,23 +124,15 @@ public class CmdFindAndGotoNoteCommand extends Command {
         // forward/back (translation), left/right (strafe), slowness, target heading in degrees, robot centric
         swerveDrive.driveSwerveDriveAndRotateToAngle(() -> speed, () -> 0.0 , () -> 0.0, () -> heading + rotation, () -> true);
 
-        // set m_finished to true if x or y aren't pressed
-        if(!driverController.getHID().getXButton()) {
-            finished = true;
-        }
-        else {
-            finished = false;
-        }
 
     }
 
     @Override
     public boolean isFinished() {
-        return finished;
+        return true;
     }
 
     @Override
     public void end(boolean interrupted) {
-        swerveDrive.setDefaultCommand(defDriveCommand);
     }
 }

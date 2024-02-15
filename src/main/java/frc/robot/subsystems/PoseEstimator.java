@@ -135,10 +135,10 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
         if (cam2numTags > cam1numTags) {
             currentCamera = camera2;
             currentPhotonEstimator = photonEstimator2;
-        } else if (cam2AvgDist < cam1AvgDist) {
+        } else if (cam2AvgDist < cam1AvgDist && cam2numTags == cam1numTags) {
             currentCamera = camera2;
             currentPhotonEstimator = photonEstimator2;
-        } else {
+        } else  {
             currentCamera = camera1;
             currentPhotonEstimator = photonEstimator1;
         }
