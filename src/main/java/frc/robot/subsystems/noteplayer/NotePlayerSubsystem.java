@@ -2,9 +2,12 @@ package frc.robot.subsystems.noteplayer;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.*;
+import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.bluecrew.util.FieldState;
-import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -12,6 +15,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 import java.awt.geom.Line2D;
+
+import static edu.wpi.first.units.Units.*;
 
 /**
  *
@@ -23,8 +28,26 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-    public NotePlayerSubsystem() {
+    SysIdRoutine sysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(Volts.of(0.4).per(Second.of(1)), Volts.of(5), Second.of(10)),
+            new SysIdRoutine.Mechanism((Measure<Voltage> volts) -> arm.driveVolts(volts),
+                    log -> {
+                log.motor("leftArmMotor")
+                        .voltage(
+                                arm.getLeftMotorVolts()
+                        )
+                        .angularPosition(arm.getPositionRadians())
+                        .angularVelocity(arm.getSpeedRadians().per(Second));
+                log.motor("rightArmMotor")
+                        .voltage(
+                                arm.getRightMotorVolts()
+                        )
+                        .angularPosition(arm.getPositionRadians())
+                        .angularVelocity(arm.getSpeedRadians().per(Second));
+    }, this)
+    );
 
+    public NotePlayerSubsystem() {
     }
 
     public IntakeModule getIntake() {
@@ -44,9 +67,6 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     @Override
     public void periodic() {
-        if (intake.noteInIntake()) {
-            System.out.println("Intake Beam Broken!!!");
-        }
         arm.periodic();
     }
 
@@ -213,16 +233,16 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public Command spinUpShooter() {
         return ((new RunCommand(
-                () -> shooter.shoot(0.75)
+                () -> shooter.spinPercentage(0.75)
         ).raceWith(Commands.waitSeconds(0.50)).onlyIf(indexer::noteInIndexer)));
 //                .andThen(() -> shooter.shoot(0.50)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command takeShot() {
         return ((new RunCommand(
-                () -> shooter.shoot(0.75)
+                () -> shooter.spinPercentage(0.75)
         ).onlyWhile(indexer::noteInIndexer))
-                .andThen(() -> shooter.shoot(0.75)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+                .andThen(() -> shooter.spinPercentage(0.75)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command aimAtTarget() {
@@ -236,9 +256,20 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command rotateArmToDegrees(double degrees) {
-        System.out.println("Arm going to angle: " + degrees);
         return new RunCommand(
                 () -> arm.rotateToDegrees(degrees)
         );
+    }
+
+    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
+    }
+
+    public void logArm() {
+
     }
 }

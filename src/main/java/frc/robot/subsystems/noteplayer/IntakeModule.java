@@ -21,23 +21,13 @@ public class IntakeModule implements Constants.NotePlayerConstants {
 
     private TalonFX intakeMotor = new TalonFX(INTAKE_MOTOR_ID);
 
+    private final NotePlayerCTREConfigs ctreConfigs = new NotePlayerCTREConfigs();
+    
     private final DigitalInput beamBreak;
 
     public IntakeModule() {
 
-        //TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
-/*
-          .withMotorOutput(new MotorOutputConfigs()
-                  .withInverted(InvertedValue.Clockwise_Positive))
-          .withCurrentLimits(new CurrentLimitsConfigs()
-                  .withSupplyCurrentLimit(15)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentThreshold(10));
-*/
-
-//        motorFXConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-//
-//        intakeMotor.getConfigurator().apply(motorFXConfig);
+        intakeMotor.getConfigurator().apply(ctreConfigs.intakeConfig);
 
         intakeMotor.setSafetyEnabled(true);
 

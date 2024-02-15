@@ -1,6 +1,5 @@
 package frc.robot.subsystems.noteplayer;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -14,6 +13,7 @@ public class ShooterModule implements Constants.ShooterConstants {
     private final TalonFX topShooterMotor = new TalonFX(SHOOTER_TOP_MOTOR_ID);
     private final TalonFX bottomShooterMotor = new TalonFX(SHOOTER_BOTTOM_MOTOR_ID);
 
+    private final NotePlayerCTREConfigs ctreConfigs = new NotePlayerCTREConfigs();
 
     private VelocityVoltage shooterVelocity = new VelocityVoltage(1);
     private SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(shooterKS, shooterKV, shooterKA);
@@ -21,38 +21,10 @@ public class ShooterModule implements Constants.ShooterConstants {
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
 
     public ShooterModule() {
-/*
-        TalonFXConfiguration leftMotorFXConfig = new TalonFXConfiguration()
-                .withMotorOutput(new MotorOutputConfigs()
-                        .withInverted(InvertedValue.Clockwise_Positive))
-                .withCurrentLimits(new CurrentLimitsConfigs()
-                        .withSupplyCurrentLimit(15)
-                        .withStatorCurrentLimitEnable(true)
-                        .withSupplyCurrentThreshold(10));
-
-        TalonFXConfiguration rightMotorFXConfig = new TalonFXConfiguration()
-                .withMotorOutput(new MotorOutputConfigs()
-                        .withInverted(InvertedValue.CounterClockwise_Positive))
-                .withCurrentLimits(new CurrentLimitsConfigs()
-                        .withSupplyCurrentLimit(15)
-                        .withStatorCurrentLimitEnable(true)
-                        .withSupplyCurrentThreshold(10));
-*/
-        TalonFXConfiguration motorFXConfig = new TalonFXConfiguration();
-
-        /*
-        motorFXConfig.MotionMagic.MotionMagicCruiseVelocity = 20; // Target cruise velocity
-        motorFXConfig.MotionMagic.MotionMagicAcceleration = 40; // Target acceleration of  (0.5 seconds)
-        motorFXConfig.MotionMagic.MotionMagicJerk = 200; // Target jerk (0.1 seconds)
-*/
-
-        motorFXConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .75;
-        motorFXConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.75;
-
         topShooterMotor.getConfigurator().clearStickyFaults();
-        topShooterMotor.getConfigurator().apply(motorFXConfig);
+        topShooterMotor.getConfigurator().apply(ctreConfigs.shooterConfig);
         bottomShooterMotor.getConfigurator().clearStickyFaults();
-        bottomShooterMotor.getConfigurator().apply(motorFXConfig);
+        bottomShooterMotor.getConfigurator().apply(ctreConfigs.shooterConfig);
     }
 
     public void stop() {
@@ -60,8 +32,7 @@ public class ShooterModule implements Constants.ShooterConstants {
         bottomShooterMotor.stopMotor();
     }
 
-    public void shoot(double speed) {
-
+    public void spinPercentage(double speed) {
 //        topShooterMotor.setControl(new DutyCycleOut(speed));
 //        bottomShooterMotor.setControl(new DutyCycleOut(speed));
 
@@ -78,8 +49,15 @@ public class ShooterModule implements Constants.ShooterConstants {
 
         // leftShooterMotor.setControl(shooterDutyCycle.withOutput());
         // rightShooterMotor.setControl(shooterDutyCycle.withOutput());
+    }
 
+    public void spinMetersPerSecond(double mps) {
+        shooterVelocity.Velocity = mps/SHOOTER_METERS_PER_ROTATION;
+        shooterVelocity.FeedForward = shooterFeedForward.calculate(mps);
 
+        System.out.println("Shooter Velocity MPS set to: " + mps);
+        topShooterMotor.setControl(shooterVelocity);
+        bottomShooterMotor.setControl(shooterVelocity);
     }
 
     public double getShooterTopVelocity() {
@@ -98,5 +76,23 @@ public class ShooterModule implements Constants.ShooterConstants {
         return (long) (topShooterMotor.getPosition().getValue() * 2048.0d);
     }
 
+    public double getShooterTopVelocityMPS() {
+        return topShooterMotor.getVelocity().getValue() * SHOOTER_METERS_PER_ROTATION;
+    }
 
+    public double getShooterBottomVelocityMPS() {
+        return bottomShooterMotor.getVelocity().getValue() * SHOOTER_METERS_PER_ROTATION;
+    }
+
+    /**
+     *
+     * @return Whether both the shooter motors are within {@value SHOOTER_SPEED_ERROR_TOLERANCE}% of the set velocity
+     */
+    public boolean targetVelocityReached() {
+        double epsilon = SHOOTER_SPEED_ERROR_TOLERANCE/100;
+        return getShooterTopVelocity() > (shooterVelocity.Velocity * (1-epsilon))
+                && getShooterTopVelocity() < (shooterVelocity.Velocity * (1+epsilon))
+                && getShooterBottomVelocity() > (shooterVelocity.Velocity * (1-epsilon))
+                && getShooterBottomVelocity() < (shooterVelocity.Velocity * (1+epsilon));
+    }
 }

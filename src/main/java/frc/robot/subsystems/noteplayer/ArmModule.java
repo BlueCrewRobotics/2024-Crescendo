@@ -6,8 +6,19 @@ package frc.robot.subsystems.noteplayer;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.*;
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotState;
 import frc.robot.Constants;
+
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
 
 
 public class ArmModule implements Constants.NotePlayerConstants {
@@ -19,8 +30,10 @@ public class ArmModule implements Constants.NotePlayerConstants {
     private final SparkPIDController rightController;
     private final SparkRelativeEncoder rightEncoder;
 
+    private final ArmFeedforward armFeedforward;
+    private final ProfiledPIDController armPID;
+
     private final double motorRotationsPerArmDegree = 0.17924558;
-    private final double gravityFF = 0.001;
 
     private Double setPosition = null;
 
@@ -46,6 +59,25 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
         // Reset the motor's integrated encoder based on the CANcoder
         resetMotorEncoderToAbsolute();
+
+        // Feedforward values
+        double kS = 0.0;
+        double kG = 0.0;
+        double kV = 0.0;
+        double kA = 0.0;
+
+        // PID values
+        double kP = 0.0;
+        double kI = 0.0;
+        double kD = 0.0;
+
+        // Constraints, Maximum velocity and acceleration
+        double maxVel = 1;
+        double maxAcc = 0.5;
+
+        armFeedforward = new ArmFeedforward(kS, kG, kV, kA);
+
+        armPID = new ProfiledPIDController(kP, kI, kD, new TrapezoidProfile.Constraints(maxVel, maxAcc), 0.02);
     }
 
     public double armDegreesToMotorRotations(double degrees) {
@@ -59,17 +91,45 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void rotateToDegrees(double degrees) {
-        setPosition = degrees;
+        armPID.setGoal(Units.degreesToRadians(degrees));
+    }
+
+    public void rotateToRadians(double radians) {
+        armPID.setGoal(radians);
     }
 
     public double getCANcoderDegrees() {
         return -armCANcoder.getAbsolutePosition().getValue() * 360;
     }
 
+    public double getCANcoderRadians() {
+        return Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue());
+    }
+
+    public void driveVolts(Measure<Voltage> volts) {
+        leftMotor.setVoltage(volts.magnitude());
+    }
+
+    public Measure<Voltage> getLeftMotorVolts() {
+        return Volts.of(leftMotor.getAppliedOutput() * leftMotor.getBusVoltage());
+    }
+
+    public Measure<Voltage> getRightMotorVolts() {
+        return Volts.of(rightMotor.getAppliedOutput() * rightMotor.getBusVoltage());
+    }
+
+    public Measure<Angle> getSpeedRadians() {
+        return Radians.of(Units.rotationsToRadians(armCANcoder.getVelocity().getValue()));
+    }
+
+    public Measure<Angle> getPositionRadians() {
+        return Radians.of(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()));
+    }
+
     private void configureMotors() {
 
         // PID Values (P, I, D IZone
-        double p = 0.65;
+        double p = 0.6;
         double i = 0.0;
         double d = 0.25;
         double iZ = 0.0;
@@ -126,11 +186,14 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
     public void periodic() {
         if (setPosition != null) {
-            // Calculate feed forward based on angle to counteract gravity
-            double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) + Units.degreesToRadians(35));
-            double feedForward = gravityFF * sineScalar;
-            leftController.setReference(armDegreesToMotorRotations(setPosition),
-                    CANSparkBase.ControlType.kPosition, 0, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+            leftMotor.setVoltage(armPID.calculate(getCANcoderRadians()) + armFeedforward.calculate(armPID.getSetpoint().position, armPID.getSetpoint().velocity));
         }
+
+        if (RobotState.isDisabled()) {
+            setPosition = -getCANcoderDegrees();
+            resetMotorEncoderToAbsolute();
+        }
+
+        //System.out.println("Setpoint Degrees: " + setPosition + ", Setpoint motor rotations: " + armDegreesToMotorRotations(setPosition) + ", Current Position: " + leftMotor.getEncoder().getPosition());
     }
 }

@@ -14,7 +14,7 @@ public class CheckForPieceAvailability extends Command {
     @Override
     public void initialize() {
         System.out.println("Check for piece availability init");
-        RobotState.getInstance().setAutoPieceIsAvailable(true);
+        RobotState.getInstance().setNoteIsAvailable(true);
     }
 
     @Override

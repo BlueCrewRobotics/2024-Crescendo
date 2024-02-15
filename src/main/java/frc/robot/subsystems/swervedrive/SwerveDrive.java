@@ -42,6 +42,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private final PIDController rotationPIDController;
 
+    private final int invertJoystickInputs;
+
     public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
@@ -59,7 +61,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         rotationPIDController = new PIDController(0.01, 0, 0.001);
         rotationPIDController.enableContinuousInput(-180, 180);
-        rotationPIDController.setTolerance(1);
+        rotationPIDController.setTolerance(0.3);
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
@@ -81,6 +83,12 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         });
 
         SmartDashboard.putData("Field", field);
+
+        if (FieldState.getInstance().onRedAlliance()) {
+            invertJoystickInputs = 1;
+        } else {
+            invertJoystickInputs = -1;
+        }
     }
 
     /**
@@ -286,7 +294,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
-        return () -> (-1 * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
+        return () -> (invertJoystickInputs * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
                 , swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
 
