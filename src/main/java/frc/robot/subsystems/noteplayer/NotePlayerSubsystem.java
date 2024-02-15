@@ -38,6 +38,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return indexer;
     }
 
+    public ArmModule getArm() {
+        return arm;
+    }
+
     @Override
     public void periodic() {
         if (intake.noteInIntake()) {
@@ -209,9 +213,16 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public Command spinUpShooter() {
         return ((new RunCommand(
-                () -> shooter.shoot(0.15)
+                () -> shooter.shoot(0.75)
+        ).raceWith(Commands.waitSeconds(0.50)).onlyIf(indexer::noteInIndexer)));
+//                .andThen(() -> shooter.shoot(0.50)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+    }
+
+    public Command takeShot() {
+        return ((new RunCommand(
+                () -> shooter.shoot(0.75)
         ).onlyWhile(indexer::noteInIndexer))
-                .andThen(() -> shooter.shoot(0.15)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+                .andThen(() -> shooter.shoot(0.75)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command aimAtTarget() {
@@ -225,6 +236,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command rotateArmToDegrees(double degrees) {
+        System.out.println("Arm going to angle: " + degrees);
         return new RunCommand(
                 () -> arm.rotateToDegrees(degrees)
         );

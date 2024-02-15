@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.lib.bluecrew.util.BlinkinValues;
+import frc.robot.commands.CmdFindAndGotoNoteCommand;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -124,12 +125,20 @@ public class RobotContainer implements Constants.AutoConstants {
 
         //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
         //driver.a().onTrue(notePlayerSubsystem.intakeNote());
-        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
-        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(59));
-        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
-        //driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
-        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
-        driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
+//        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
+        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(20));
+//        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
+//        driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(20));
+
+//        driver.x().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(2)));
+//        driver.b().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(-10)));
+
+        driver.x().whileTrue(new CmdFindAndGotoNoteCommand(driver, notePlayerSubsystem, swerveDrive));
+
+        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote()); // get it indexed
+        driver.leftBumper().whileTrue(
+                notePlayerSubsystem.spinUpShooter()
+                        .andThen(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.takeShot())));
     }
 
     /**
