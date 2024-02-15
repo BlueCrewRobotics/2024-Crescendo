@@ -335,17 +335,25 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      */
     public Command teleopDriveSwerveDriveAndRotateToAngleCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
                                                                  DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         return this.run(
-                () -> teleopDriveSwerveDrive(
+                () -> driveSwerveDriveAndRotateToAngle(rawTranslationSup, rawStrafeSup, rawSlowSup, targetDegrees, robotCentricSup));
+
+    }
+
+    public void driveSwerveDriveAndRotateToAngle(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
+                                                                 DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
+        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
+
+        teleopDriveSwerveDrive(
                         speedsFromJoysticks(rawTranslationSup).getAsDouble(),
                         speedsFromJoysticks(rawStrafeSup).getAsDouble(),
                         slowSup.getAsDouble(),
                         rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees.getAsDouble())),
                         robotCentricSup.getAsBoolean()
-                ));
+                );
     }
+
 
     /**
      * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
@@ -377,6 +385,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         // Correct pose estimate with vision measurements
 //        poseEstimator.updateWithVision();
 
+/*
         SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
         SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
         SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
@@ -387,5 +396,6 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Angle", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", Math.abs(mod.getState().speedMetersPerSecond));
         }
+*/
     }
 }

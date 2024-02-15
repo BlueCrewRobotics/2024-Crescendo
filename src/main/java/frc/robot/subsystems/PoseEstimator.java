@@ -49,7 +49,10 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
     private final PhotonCamera camera1;
     private final PhotonCamera camera2;
     private PhotonCamera currentCamera;
-    private PhotonPoseEstimator photonEstimator;
+    private PhotonPoseEstimator photonEstimator1;
+    private PhotonPoseEstimator photonEstimator2;
+    private PhotonPoseEstimator currentPhotonEstimator;
+
     private double lastEstTimestamp = 0;
 
     private final SwerveDrivePoseEstimator swervePoseEstimator;
@@ -57,14 +60,13 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
     private static PoseEstimator instance;
 
     private PoseEstimator() {
-        camera1 = new PhotonCamera(aprilTagCamera1);
-        camera2 = new PhotonCamera(aprilTagCamera2);
+        camera1 = VisionModule.getInstance().getAprilTagsFrontRightCamera();
+        camera2 = VisionModule.getInstance().getAprilTagsRearLeftCamera();
         currentCamera = camera1;
 
-        photonEstimator =
-                new PhotonPoseEstimator(
-                        tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, currentCamera, robotToTagCam1);
-        photonEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+        photonEstimator1 = VisionModule.getInstance().getPhotonEstimatorFrontRight();
+        photonEstimator2 = VisionModule.getInstance().getPhotonEstimatorRearLeft();
+        currentPhotonEstimator = photonEstimator1;
 
         var stateStdDevs = VecBuilder.fill(0.1, 0.1, 0.1); // TODO: Tune the standard deviations
         var visionStdDevs = VecBuilder.fill(1, 1, 1);
@@ -90,7 +92,8 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
         }
         return instance;
     }
-    
+
+    /*
     private void setCamera(PhotonCamera camera) {
         currentCamera = camera;
     }
@@ -100,7 +103,8 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
                 tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, currentCamera, robotToCamera
         );
     }
-    
+    */
+
     private void useBestCamera() {
         var cam1Targets = camera1.getLatestResult().getTargets();
         var cam2Targets = camera2.getLatestResult().getTargets();
@@ -112,7 +116,7 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
         Transform3d robotToCamera;
 
         for (var tgt : cam1Targets) {
-            var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+            var tagPose = currentPhotonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
             if (tagPose.isEmpty()) continue;
             cam1numTags++;
             cam1AvgDist +=
@@ -120,7 +124,7 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
         }
         cam1AvgDist /= cam1numTags;
         for (var tgt : cam2Targets) {
-            var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+            var tagPose = currentPhotonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
             if (tagPose.isEmpty()) continue;
             cam2numTags++;
             cam2AvgDist +=
@@ -130,17 +134,14 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
 
         if (cam2numTags > cam1numTags) {
             currentCamera = camera2;
-            robotToCamera = robotToTagCam2;
-        } else if (cam2AvgDist < cam1AvgDist) {
+            currentPhotonEstimator = photonEstimator2;
+        } else if (cam2AvgDist < cam1AvgDist && cam2numTags == cam1numTags) {
             currentCamera = camera2;
-            robotToCamera = robotToTagCam2;
-        } else {
+            currentPhotonEstimator = photonEstimator2;
+        } else  {
             currentCamera = camera1;
-            robotToCamera = robotToTagCam1;
+            currentPhotonEstimator = photonEstimator1;
         }
-        photonEstimator = new PhotonPoseEstimator(
-                tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, currentCamera, robotToCamera
-        );
     }
 
     public PhotonPipelineResult getLatestResult() {
@@ -156,7 +157,7 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
      */
     public Optional<EstimatedRobotPose> getEstimatedVisionGlobalPose() {
         useBestCamera();
-        var visionEst = photonEstimator.update();
+        var visionEst = currentPhotonEstimator.update();
         double latestTimestamp = currentCamera.getLatestResult().getTimestampSeconds();
         boolean newResult = Math.abs(latestTimestamp - lastEstTimestamp) > 1e-5;
         if (newResult) lastEstTimestamp = latestTimestamp;
@@ -176,7 +177,7 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
         int numTags = 0;
         double avgDist = 0;
         for (var tgt : targets) {
-            var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+            var tagPose = currentPhotonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
             if (tagPose.isEmpty()) continue;
             numTags++;
             avgDist +=

@@ -125,12 +125,27 @@ public class RobotContainer implements Constants.AutoConstants {
 
         //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
         //driver.a().onTrue(notePlayerSubsystem.intakeNote());
+//        driver.b().whileTrue(notePlayerSubsystem.rotateArmToDegrees(0));
+//        driver.a().whileTrue(notePlayerSubsystem.rotateArmToDegrees(20));
+//        driver.x().whileTrue(notePlayerSubsystem.rotateArmToDegrees(45));
+//        driver.y().whileTrue(notePlayerSubsystem.rotateArmToDegrees(20));
+
+//        driver.x().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(2)));
+//        driver.b().onTrue(new InstantCommand(() -> notePlayerSubsystem.getArm().moveRelativeDegrees(-10)));
+
+//        driver.x().whileTrue(new FindAndGotoNote(notePlayerSubsystem, swerveDrive));
+
         driver.b().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kForward));
         driver.a().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kReverse));
         driver.x().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
         driver.y().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
         driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
+
+        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote()); // get it indexed
+        driver.leftBumper().whileTrue(
+                notePlayerSubsystem.spinUpShooter()
+                        .andThen(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.takeShot())));
     }
 
     /**

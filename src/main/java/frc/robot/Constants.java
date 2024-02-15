@@ -168,14 +168,20 @@ public interface Constants {
 
     interface PhotonVision {
 
-        String noteCamera = "noteCamera";
-        String aprilTagCamera1 = "aprilTagCamera1";
-        String aprilTagCamera2 = "aprilTagCamera2";
+        String NOTES_INDEXER_CAMERA_NAME = "Indexer_Floor_View";
+        String APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME = "AprilTags_Front_Right";
+        String APRIL_TAGS_REAR_LEFT_CAMERA_NAME = "AprilTags_Rear_Left";
         // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-        Transform3d robotToTagCam1 =
-                new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d(Math.toRadians(32), 0, 0));
-        Transform3d robotToTagCam2 =
-                new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d(Math.toRadians(32), 0, 0));
+
+        String APRIL_TAGS_PIPELINE_NAME = "AprilTags";
+        String NOTES_PIPELINE_NAME = "IdentifyNotes";
+
+        Double NOTES_INDEXER_CAMERA_ANGLE = 74.15d;  // angle from floor
+
+        Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
+                new Transform3d(new Translation3d(0.0d, 0.0d, 0.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
+        Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
+                new Transform3d(new Translation3d(0.0d, 0.0d, 0.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =
@@ -183,8 +189,8 @@ public interface Constants {
 
         // The standard deviations of our vision estimated poses, which affect correction rate
         // (Fake values. Experiment and determine estimation noise on an actual robot.)
-        Matrix<N3, N1> singleTagStdDevs = VecBuilder.fill(4, 4, 8);
-        Matrix<N3, N1> multiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+        Matrix<N3, N1> singleTagStdDevs = VecBuilder.fill(4d, 4d, 8d);
+        Matrix<N3, N1> multiTagStdDevs = VecBuilder.fill(0.5d, 0.5d, 1d);
     }
 
     /**

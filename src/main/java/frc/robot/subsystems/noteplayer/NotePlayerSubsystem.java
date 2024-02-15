@@ -61,6 +61,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return indexer;
     }
 
+    public ArmModule getArm() {
+        return arm;
+    }
+
     @Override
     public void periodic() {
         arm.periodic();
@@ -229,9 +233,16 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public Command spinUpShooter() {
         return ((new RunCommand(
-                () -> shooter.spinPercentage(0.15)
+                () -> shooter.spinPercentage(0.75)
+        ).raceWith(Commands.waitSeconds(0.50)).onlyIf(indexer::noteInIndexer)));
+//                .andThen(() -> shooter.shoot(0.50)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+    }
+
+    public Command takeShot() {
+        return ((new RunCommand(
+                () -> shooter.spinPercentage(0.75)
         ).onlyWhile(indexer::noteInIndexer))
-                .andThen(() -> shooter.spinPercentage(0.15)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+                .andThen(() -> shooter.spinPercentage(0.75)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
     public Command aimAtTarget() {
