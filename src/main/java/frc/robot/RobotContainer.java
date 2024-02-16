@@ -75,12 +75,10 @@ public class RobotContainer implements Constants.AutoConstants {
         NamedCommands.registerCommand("EndPathAction", Commands.print("End of the Path Action"));
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
-/*
-        Thread visionThread = new Thread(new VisionPipelineRunnable(VisionModule.getInstance()), "visionThread");
-        visionThread.setDaemon(true);
-        visionThread.start();
-*/
         setupAutoChoosers();
+
+        // kick the vision module into gear
+        VisionModule.getInstance();
     }
 
     /**
