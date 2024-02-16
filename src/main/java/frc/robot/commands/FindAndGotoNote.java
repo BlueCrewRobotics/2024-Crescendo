@@ -14,13 +14,17 @@ public class FindAndGotoNote extends Command {
     private final NotePlayerSubsystem notePlayerSubsystem;
     private final SwerveDrive swerveDrive;
 
+    private boolean alsoPickupNote;
+
     private boolean finished = false;
 
     private PhotonCamera notesCamera;
 
-    public FindAndGotoNote(NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive) {
+    public FindAndGotoNote(NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive /*, boolean alsoPickupNote*/) {
         this.notePlayerSubsystem = notePlayerSubsystem;
         this.swerveDrive = swerveDrive;
+        this.alsoPickupNote = alsoPickupNote;
+
         // each subsystem used by the command must be passed into the
         // addRequirements() method (which takes a vararg of Subsystem)
         addRequirements(this.notePlayerSubsystem, this.swerveDrive);
@@ -91,17 +95,17 @@ public class FindAndGotoNote extends Command {
             else if(target.getPitch() < 0) {
 //                System.out.println("Note is within a foot");
                 angleTolerance = 1;
-                neededSpeed = 0.38;
+                neededSpeed = 0.40;
             }
             else if(target.getPitch() < 15) {
 //                System.out.println("Note is within 3 feet");
                 angleTolerance = 1;
-                neededSpeed = 0.49;
+                neededSpeed = 0.52;
             }
             else if(target.getPitch() > 15) {
 //                System.out.println("Note is beyond 3 feet");
                 angleTolerance = 2;
-                neededSpeed = 0.59;
+                neededSpeed = 0.63;
             }
 
             neededRotation = angleOffset;
@@ -138,7 +142,7 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public boolean isFinished() {
-        return false;
+        return finished;
     }
 
     @Override
