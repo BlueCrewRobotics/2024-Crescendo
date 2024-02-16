@@ -18,7 +18,6 @@ public class FindAndGotoNote extends Command {
 
     private boolean finished = false;
 
-    private PhotonCamera notesCamera;
 
     public FindAndGotoNote(NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive /*, boolean alsoPickupNote*/) {
         this.notePlayerSubsystem = notePlayerSubsystem;
@@ -29,13 +28,13 @@ public class FindAndGotoNote extends Command {
         // addRequirements() method (which takes a vararg of Subsystem)
         addRequirements(this.notePlayerSubsystem, this.swerveDrive);
 
-        notesCamera = VisionModule.getInstance().getNotesIndexerCamera();
     }
 
     Command defDriveCommand;
 
     @Override
     public void initialize() {
+        VisionModule.getInstance().setStartTrackingNotes(true);
     }
 
     @Override
@@ -48,10 +47,10 @@ public class FindAndGotoNote extends Command {
 
 //        System.out.println("... Looking for a note.");
 
-        PhotonPipelineResult pipelineResult = notesCamera.getLatestResult();
+        PhotonPipelineResult pipelineResult = VisionModule.getInstance().getRecentNoteResult();
 
         // Check if limelight has found a target
-        if (pipelineResult.hasTargets()) {
+        if (pipelineResult != null && pipelineResult.hasTargets()) {
             // blink the blinkin
             RobotState.getInstance().setNoteIsAvailable(true);
 
@@ -122,6 +121,10 @@ public class FindAndGotoNote extends Command {
  */
         }
         else {
+            if(pipelineResult == null) {
+                System.out.println("!!! Note Camera Pipeline had no result !!!!");
+                // TODO: should this also set blinkin to some error color so drivers know?
+            }
             System.out.println("No Note in view...");
             neededSpeed = 0.0;
             neededRotation = 0.0;
@@ -147,6 +150,7 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        VisionModule.getInstance().setStartTrackingNotes(false);
         swerveDrive.resetRotationPIDController();
     }
 }

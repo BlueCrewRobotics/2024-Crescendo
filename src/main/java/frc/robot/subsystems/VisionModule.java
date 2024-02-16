@@ -42,6 +42,8 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class VisionModule implements Constants.PhotonVision, Constants.Swerve {
 
@@ -52,11 +54,12 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
 
 
     private final PhotonCamera notesIndexer;
-    private PhotonPipelineResult lastNoteResult = null;
     private boolean startTrackingNotes = false;
 
 
     private static VisionModule instance;
+
+    private VisionPipelineRunnable notePipelineVisionPoller;
 
     private VisionModule() {
         aprilTagsFrontRight = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
@@ -74,6 +77,10 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
 
         notesIndexer = new PhotonCamera(NOTES_INDEXER_CAMERA_NAME);
 
+
+        Thread notePipelineVisionThread = new Thread(new VisionPipelineRunnable(notesIndexer, 90), "notesVisionThread");
+        notePipelineVisionThread.setDaemon(true);
+        notePipelineVisionThread.start();
     }
 
     public static synchronized VisionModule getInstance() {
@@ -103,13 +110,10 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
         return notesIndexer;
     }
 
-    public PhotonPipelineResult getLastNoteResult() {
-        return lastNoteResult;
+    public PhotonPipelineResult getRecentNoteResult() {
+        return notePipelineVisionPoller.getRecentResult();
     }
 
-    protected void setLastNoteResult(PhotonPipelineResult lastNoteResult) {
-        this.lastNoteResult = lastNoteResult;
-    }
 
     public boolean isStartTrackingNotes() {
         return startTrackingNotes;
@@ -117,9 +121,132 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
 
     public void setStartTrackingNotes(boolean startTrackingNotes) {
         this.startTrackingNotes = startTrackingNotes;
+        notePipelineVisionPoller.setEnabled(startTrackingNotes);
     }
 
-    public void trackPipelineResults() {
+
+    /**
+     * A Thread Runnable that takes a PhotonCamera and continuously
+     * gets its pipeline results (does not select/change pipeline)
+     * and keeps the last seen result available, unless it is older
+     * that the configured (at instantiation time) TTL.
+     *
+     * If it's older than the TTL, then will block until there is
+     * a result available.
+     *
+     * The Runnable also tracks the average time to receive a result,
+     * and if, based upon that, one is expected to arrive 'soon', it
+     * will wait for it.
+     */
+    public class VisionPipelineRunnable implements Runnable {
+
+        PhotonCamera camera;
+
+        long TTLnanos = 100;
+
+        PhotonPipelineResult lastResultAvailable;
+        long lastResultTimestampNanos = 0;
+        long avgResultLatency = 0;
+
+        public static final long TWENTY_MILLIS_IN_NANOS = TimeUnit.MILLISECONDS.toNanos(20);
+
+        private int SAMPLE_SIZE = 8;
+        long[] latencySamples = new long[SAMPLE_SIZE];
+        int lastLatencySampleIndex = -1;
+
+        final AtomicBoolean enabled = new AtomicBoolean();
+
+        public VisionPipelineRunnable(PhotonCamera camera, long TTLinMillis) {
+            this.camera = camera;
+            this.TTLnanos = TimeUnit.MILLISECONDS.toNanos(TTLinMillis);
+        }
+
+
+        public boolean isEnabled() {
+            return enabled.get();
+        }
+
+        public void setEnabled(boolean enabled) {
+            synchronized (this.enabled) {
+                this.enabled.set(enabled);
+                this.enabled.notify();
+            }
+        }
+
+        @Override
+        public void run() {
+
+            while(true) {
+                synchronized (enabled) {
+                    if (!enabled.get()) {
+                        try {
+                            enabled.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        continue;
+                    }
+                }
+
+                // get (wait for) the next result
+                long sTime = System.nanoTime();
+                PhotonPipelineResult newResult = camera.getLatestResult();
+                long eTime = System.nanoTime();
+
+                // calculate new average latency for the past window of time
+                lastLatencySampleIndex = (lastLatencySampleIndex++) % SAMPLE_SIZE;
+                latencySamples[lastLatencySampleIndex] = eTime - sTime;
+                long newAvg = 0;
+                int numSamplesToAvg = 0;
+                for(; numSamplesToAvg < SAMPLE_SIZE; numSamplesToAvg++) {
+                    if(latencySamples[numSamplesToAvg] == 0)
+                        break;
+                    newAvg += latencySamples[numSamplesToAvg];
+                }
+                newAvg = newAvg / numSamplesToAvg;
+
+                synchronized (this) {
+                    avgResultLatency = newAvg;
+                    lastResultTimestampNanos = eTime;
+                    lastResultAvailable = newResult;
+                    notify();
+                }
+
+                // if by slim chance we're going way fast, wait a bit to not overburdden the poor roborio
+                if(latencySamples[lastLatencySampleIndex] < TWENTY_MILLIS_IN_NANOS) {
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+
+        /**
+         * @return the most recent pipeline result.  it is unexpected but
+         * possible for this method to return null, which must be handled by the caller
+         */
+        public PhotonPipelineResult getRecentResult()  {
+
+            synchronized (this) {
+
+                long since = System.nanoTime() - lastResultTimestampNanos;
+
+                // if the last result is too old, or if we're within small % of avg latency,
+                // just wait for the next result
+                if ((since > TTLnanos) || ((since - avgResultLatency) < (avgResultLatency * 0.15)) ){
+                    lastResultAvailable = null;
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        return null;
+                    }
+                }
+                return lastResultAvailable;
+            }
+        }
     }
 
 }
+
