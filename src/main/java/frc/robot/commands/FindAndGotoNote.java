@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.bluecrew.util.RobotState;
 import frc.robot.subsystems.VisionModule;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -36,37 +37,26 @@ public class FindAndGotoNote extends Command {
     @Override
     public void execute() {
 
-        long sTime = System.nanoTime();
-
         // Define rotation needed to center-in on note
         double neededRotation = 0.0d; // in degrees
         double neededSpeed = 0.0d; // 1.0 == 100%
         final double heading = swerveDrive.getHeading().getDegrees();
 
-        System.out.println("... Looking for a note.");
+//        System.out.println("... Looking for a note.");
 
-        long eTime = System.nanoTime();
-        System.out.println("time for init: " + (eTime -sTime));
-
-        sTime = System.nanoTime();
         PhotonPipelineResult pipelineResult = notesCamera.getLatestResult();
-        eTime = System.nanoTime();
-        System.out.println("time for getting pipeline: " + (eTime -sTime));
 
         // Check if limelight has found a target
         if (pipelineResult.hasTargets()) {
-            System.out.println("Note found!  ---------------");
-            sTime = System.nanoTime();
-            PhotonTrackedTarget target = pipelineResult.getBestTarget();
-            eTime = System.nanoTime();
-            System.out.println("time for getting best target: " + (eTime -sTime));
+            // blink the blinkin
+            RobotState.getInstance().setNoteIsAvailable(true);
 
-            sTime = System.nanoTime();
-            System.out.println("Pitch: " + target.getPitch());
-            System.out.println("Yaw: " + target.getYaw());
-            System.out.println("Heading: " + heading);
-            eTime = System.nanoTime();
-            System.out.println("time for printing pitch, yaw, heading: " + (eTime -sTime));
+//            System.out.println("Note found!  ---------------");
+            PhotonTrackedTarget target = pipelineResult.getBestTarget();
+
+//            System.out.println("Pitch: " + target.getPitch());
+//            System.out.println("Yaw: " + target.getYaw());
+//            System.out.println("Heading: " + heading);
 
             /*
                 Observed pitches and yaws from the indexer camera with a note place at the following distances
@@ -89,35 +79,34 @@ public class FindAndGotoNote extends Command {
 
              */
 
-            sTime = System.nanoTime();
-
             // Select the tollerence (in degrees) of the angle toward the target based on distance (in feet, approximated to pitch)
             int angleTolerance = 2;
             double angleOffset = target.getYaw();
 
             if(target.getPitch() < -27) {
-                System.out.println("Note is at intake.");
+//                System.out.println("Note is at intake.");
                 angleTolerance = 1;
                 neededSpeed = 0.00;
             }
             else if(target.getPitch() < 0) {
-                System.out.println("Note is within a foot");
+//                System.out.println("Note is within a foot");
                 angleTolerance = 1;
-                neededSpeed = 0.35;
+                neededSpeed = 0.38;
             }
             else if(target.getPitch() < 15) {
-                System.out.println("Note is within 3 feet");
+//                System.out.println("Note is within 3 feet");
                 angleTolerance = 1;
-                neededSpeed = 0.45;
+                neededSpeed = 0.49;
             }
             else if(target.getPitch() > 15) {
-                System.out.println("Note is beyond 3 feet");
+//                System.out.println("Note is beyond 3 feet");
                 angleTolerance = 2;
-                neededSpeed = 0.55;
+                neededSpeed = 0.59;
             }
 
             neededRotation = angleOffset;
 
+/*
             if(target.getYaw() < -angleTolerance) {
                 System.out.println("moving left to target!");
 //                neededRotation = angleOffset;
@@ -126,25 +115,25 @@ public class FindAndGotoNote extends Command {
                 System.out.println("moving right to target!");
 //                neededRotation = -angleOffset;
             }
+ */
         }
         else {
             System.out.println("No Note in view...");
             neededSpeed = 0.0;
             neededRotation = 0.0;
+            // blink the blinkin
+            RobotState.getInstance().setNoteIsAvailable(false);
         }
-        eTime = System.nanoTime();
-        System.out.println("time for making decisions: " + (eTime -sTime));
 
-        System.out.println("Desired speed: " + neededSpeed);
-        System.out.println("Desired rotation (degrees): " + neededRotation);
-        System.out.println("--------------------------------------");
+//        System.out.println("Desired speed: " + neededSpeed);
+//        System.out.println("Desired rotation (degrees): " + neededRotation);
+//        System.out.println("--------------------------------------");
 
         final double speed = -neededSpeed;
         final double rotation = neededRotation;
 
         // forward/back (translation), left/right (strafe), slowness, target heading in degrees, robot centric
         swerveDrive.driveSwerveDriveAndRotateToAngle(() -> speed, () -> 0.0 , () -> 0.0, () -> heading + rotation, () -> true);
-
     }
 
     @Override
