@@ -7,8 +7,8 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
-import frc.robot.commands.ShootNoteIntoAmp;
-import frc.robot.commands.ShootNoteIntoSpeaker;
+import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 import java.util.Objects;
 
@@ -27,7 +27,8 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
      * @param grabFromCenterFirst {@link Boolean} Whether to grab
      */
     public AutonomousCommandsBuilder(int numOfNotesToScore, int numOfAmpScores, String autoLane,
-                                     int numOfNotesFromStart, String searchDirection, boolean grabFromCenterFirst){
+                                     int numOfNotesFromStart, String searchDirection, boolean grabFromCenterFirst,
+                                     NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive){
 
 
         /*
@@ -61,14 +62,17 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
 
         if (numOfNotesToScore > 0) {
             // Shoot in the speaker firsts thing
-            addCommands(/*new ShootNoteIntoSpeaker()*/Commands.print("ShootIntoSpeaker"));
+            addCommands(notePlayerSubsystem.aimAndSpinUpForSpeaker(),
+                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
+                            .andThen(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting())),
+                    notePlayerSubsystem.prepForPickup());
             System.out.println("Shoot Speaker");
             lastScoredIn = "Sp";
 
             if (numOfNotesToScore == 1) {
                 addCommands(
-                        //AutoBuilder.followPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-SL"))
-                        Commands.print("Following: " + lastScoredIn + "-" + autoLane + "-SL")
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-SL"))
+                        //Commands.print("Following: " + lastScoredIn + "-" + autoLane + "-SL")
                 );
             }
             else {
@@ -80,7 +84,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                     if (((grabFromCenterFirst && i < numOfNotesFromCenter) || (!grabFromCenterFirst && i >= numOfNotesFromStart))) {
                         System.out.println("Grab From Center");
                         addCommands(
-                                new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane)
+                                new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane, notePlayerSubsystem, swerveDrive)
                                         // Unless all the center notes we wanted are gone
                                         .unless(() -> FieldState.getInstance().isCenterNotesGone())
                         );
@@ -89,50 +93,56 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                         if (i < numOfAmpScores) {
                             lastScoredIn = "Amp";
                             addCommands(
-                                    //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Amp"),
-                                    new ShootNoteIntoAmp()
-                                            // Only if we have a note
-                                            .onlyIf(() -> RobotState.getInstance().hasNote())
+                                    notePlayerSubsystem.prepForAmp(),
+                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.scoreAmp(),
+                                    notePlayerSubsystem.prepForPickup()
                             );
                         } else {
                             // Score in the Speaker
                             lastScoredIn = "Sp";
                             addCommands(
                                     // TODO: add command for calculating direction to face and shooter velocity, and spin up the shooter, probably as it follows the path
-                                    //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Sp"),
-                                    new ShootNoteIntoSpeaker()
-                                            // Only if we have a note
-                                            .onlyIf(() -> RobotState.getInstance().hasNote())
+                                    notePlayerSubsystem.aimAndSpinUpForSpeaker(),
+                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.feedNoteToShooter(),
+                                    notePlayerSubsystem.finishShooting(),
+                                    notePlayerSubsystem.prepForPickup()
                             );
                         }
                     } else {
                         // If we aren't supposed to grab from the center, then grab from the start
                         System.out.println("Grabbing From Start");
-                        addCommands(new AutoGrabFromStart(orderOfStartNotes[grabsFromStartAttempted], lastScoredIn, autoLane));
+                        addCommands(new AutoGrabFromStart(orderOfStartNotes[grabsFromStartAttempted], lastScoredIn, autoLane, notePlayerSubsystem));
 
                         // Prioritize scoring in the Amp (not sure if we want it this way)
                         if (i < numOfAmpScores) {
                             lastScoredIn = "Amp";
                             System.out.println("Shoot Amp");
                             addCommands(
-                                    //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints),
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Amp"),
-                                    new ShootNoteIntoAmp()
-                                            // Only if we have a note
-                                            .onlyIf(() -> RobotState.getInstance().hasNote())
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints),
+                                    notePlayerSubsystem.prepForAmp(),
+                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.scoreAmp(),
+                                    notePlayerSubsystem.prepForPickup()
                             );
                         } else {
                             // Score in the Speaker
                             lastScoredIn = "Sp";
                             System.out.println("Shoot Speaker");
                             addCommands(
-                                    //AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Sp"), pathConstraints),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Sp"),
-                                    new ShootNoteIntoSpeaker()
-                                            // Only if we have a note
-                                            .onlyIf(() -> RobotState.getInstance().hasNote())
+                                    notePlayerSubsystem.aimAndSpinUpForSpeaker(),
+                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.feedNoteToShooter(),
+                                    notePlayerSubsystem.finishShooting(),
+                                    notePlayerSubsystem.prepForPickup()
                             );
                         }
                         // Keep track of how many times we have tried to get a note from the center
@@ -144,6 +154,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                 );
             }
         }
+        addCommands(Commands.none());
     }
 
     /**

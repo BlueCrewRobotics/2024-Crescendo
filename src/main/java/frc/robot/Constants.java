@@ -179,9 +179,9 @@ public interface Constants {
         Double NOTES_INDEXER_CAMERA_ANGLE = 74.15d;  // angle from floor
 
         Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
-                new Transform3d(new Translation3d(-10.625d, 10.7d, 10.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
+                new Transform3d(new Translation3d(Units.inchesToMeters(10.625d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(32d), 0d));
         Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
-                new Transform3d(new Translation3d(10.625d, -10.7d, 10.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
+                new Transform3d(new Translation3d(Units.inchesToMeters(-10.625d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(32d), Math.toRadians(180d)));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =
@@ -249,7 +249,7 @@ public interface Constants {
         double shooterKV = 0.348;
         double shooterKA = 0.15;
 
-        double SHOOTER_SPEED_ERROR_TOLERANCE = 1; // The allowed percentage error of the speed (not in decimal form)
+        double SHOOTER_SPEED_ERROR_TOLERANCE = 4; // The allowed percentage error of the speed (not in decimal form)
     }
 
     interface NotePlayerConstants {
@@ -264,12 +264,22 @@ public interface Constants {
 
         double ARM_BALANCE_DEGREES = -0.107666 * 360;
         double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
+        double ARM_PICKUP_ANGLE = 66;
+        double ARM_SHOOTING_ANGLE = 48;
+        double ARM_AMP_ANGLE = -48;
+
+        /** The allowed error of the position in degrees*/
+        double ARM_POSITION_ERROR_TOLERANCE = 1;
 
         double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
         double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);
         double SHOOTER_ARM_LENGTH = Units.inchesToMeters(13);
         double SHOOTER_ARM_TO_WHEELS_LENGTH = Units.inchesToMeters(8);
         double GAME_PIECE_NOTE_DIAMETER = Units.inchesToMeters(14);
+
+        double SHOOTER_TRAJECTORY_SPEED_MULTIPLIER = 2.1;
+        double SHOOTER_TRAJECTORY_ANGLE_MULTIPLIER = 1;
+        double TRAJECTORY_DEFAULT_INITIAL_ANGLE = 21.7;
     }
 
     interface ElevatorConstants {

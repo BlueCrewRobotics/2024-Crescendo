@@ -60,7 +60,7 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
 
     private VisionModule() {
         aprilTagsFrontRight = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
-        aprilTagsRearLeft = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
+        aprilTagsRearLeft = new PhotonCamera(APRIL_TAGS_REAR_LEFT_CAMERA_NAME);
 
         photonEstimatorFrontRight =
                 new PhotonPoseEstimator(

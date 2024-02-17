@@ -6,11 +6,11 @@ package frc.robot.subsystems.noteplayer;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.*;
+
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotState;
 import frc.robot.Constants;
-
-
 
 public class ArmModule implements Constants.NotePlayerConstants {
 
@@ -22,10 +22,15 @@ public class ArmModule implements Constants.NotePlayerConstants {
     private final SparkRelativeEncoder rightEncoder;
 
     private final double motorRotationsPerArmDegree = 0.17924558;
-    private final double gravityFF = 0.043;
+    private final double gravityFF = 0.065;
     private final double positionTolerance = 0.1;
 
     private Double setPosition = null;
+
+    private double percentOut = 0;
+
+    private double pseudoBottomLimit = -10;
+    private double pseudoTopLimit = 5;
 
     private final CANcoder armCANcoder;
 
@@ -52,6 +57,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public double armDegreesToMotorRotations(double degrees) {
+        //System.out.println("Setting Arm Position: " + (-degrees*motorRotationsPerArmDegree));
         return -degrees * motorRotationsPerArmDegree;
     }
 
@@ -73,19 +79,42 @@ public class ArmModule implements Constants.NotePlayerConstants {
         return armCANcoder.getAbsolutePosition().getValue() * 360;
     }
 
+    public void rotatePercentOut(double percentOut) {
+        this.percentOut = percentOut;
+    }
+
+    public void setPseudoLimits(double position) {
+        System.out.println("Setting Arm Position: " + position);
+        double currentPosition = leftEncoder.getPosition();
+        if (currentPosition > position) {
+            pseudoTopLimit = currentPosition;
+            pseudoBottomLimit = position;
+        } else {
+            pseudoBottomLimit = currentPosition;
+            pseudoTopLimit = position;
+        }
+        setPosition = position;
+    }
+
+    /**
+     * @return True if the position of the arm is within {@value ARM_POSITION_ERROR_TOLERANCE} degrees of the setpoint
+     */
     public boolean isAtSetPosition() {
-        return getArmDegrees() > setPosition - positionTolerance && getArmDegrees() < setPosition + positionTolerance;
+        //System.out.println("Arm Lower Bound Tolerance: " + (setPosition-(ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)) + ", Upper Bound: " + (setPosition+(ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)));
+        return getArmDegrees() * motorRotationsPerArmDegree >= setPosition - (ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)
+                && getArmDegrees() * motorRotationsPerArmDegree <= setPosition + (ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree);
     }
 
     private void configureMotors() {
 
-        // PID Values (P, I, D IZone
-        double p = 0.0001;
+
+        double p = 0.2;
         double i = 0.0;
-        double d = 0.0;
+        double d = 0.3;
         double iZ = 0.0;
         // Output range
-        double outPutRange = 0.48;
+        double maxOutput = 0.48;
+        double minOutput = -0.48;
 
         leftMotor.restoreFactoryDefaults();
         rightMotor.restoreFactoryDefaults();
@@ -94,7 +123,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
         leftController.setI(i);
         leftController.setD(d);
         leftController.setIZone(iZ);
-        leftController.setOutputRange(-outPutRange, outPutRange);
+        leftController.setOutputRange(minOutput, maxOutput);
 
         // Voltage Compensation and current limits
         leftMotor.enableVoltageCompensation(12);
@@ -119,17 +148,31 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void periodic() {
-        if (setPosition != null) {
-            // Calculate feed forward based on angle to counteract gravity
-            double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
-            double feedForward = gravityFF * sineScalar;
-            leftController.setReference(setPosition,
-                    CANSparkBase.ControlType.kPosition, 0, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+//        if (setPosition != null) { // TODO: add && !isAtSetPosition()
+//            // Calculate feed forward based on angle to counteract gravity
+//            double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+//            double feedForward = gravityFF * sineScalar;
+//            leftController.setReference(setPosition,
+//                    CANSparkBase.ControlType.kPosition, 0, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+//        }
+
+        // Calculate feed forward based on angle to counteract gravity
+        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+        double feedForward = gravityFF * sineScalar;
+        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
+            leftMotor.set(percentOut + feedForward);
+        } else {
+            leftMotor.set(feedForward);
         }
         if (RobotState.isDisabled()) {
             resetMotorEncoderToAbsolute();
             setPosition = getArmDegrees() * motorRotationsPerArmDegree;
         }
-        System.out.println("Arm set position: " + setPosition + ", Actual: " + leftEncoder.getPosition());
+        //System.out.println("Shooter Angle: " + getShooterDegrees());
+//        if (isAtSetPosition()) {
+//            System.out.println("Arm at set position!");
+//        } else {
+//            System.out.println("Arm set position: " + setPosition + ", Actual: " + leftEncoder.getPosition() + ", Arm Degrees: " + getArmDegrees() * motorRotationsPerArmDegree);
+//        }
     }
 }

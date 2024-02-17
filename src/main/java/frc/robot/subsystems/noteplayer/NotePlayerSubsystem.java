@@ -2,11 +2,7 @@ package frc.robot.subsystems.noteplayer;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.*;
-import edu.wpi.first.util.datalog.DoubleLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.*;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
@@ -17,8 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.subsystems.PoseEstimator;
 
 import java.awt.geom.Line2D;
-
-import static edu.wpi.first.units.Units.*;
+import java.util.function.DoubleSupplier;
 
 /**
  *
@@ -30,26 +25,19 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-//    SysIdRoutine sysIdRoutine = new SysIdRoutine(
-//            new SysIdRoutine.Config(Volts.of(0.4).per(Second.of(1)), Volts.of(5), Second.of(10)),
-//            new SysIdRoutine.Mechanism((Measure<Voltage> volts) -> arm.driveVolts(volts),
-//                    log -> {
-//                        log.motor("leftArmMotor")
-//                                .voltage(
-//                                        arm.getLeftMotorVolts()
-//                                )
-//                                .angularPosition(arm.getPositionRadians())
-//                                .angularVelocity(arm.getSpeedRadians().per(Second));
-//                        log.motor("rightArmMotor")
-//                                .voltage(
-//                                        arm.getRightMotorVolts()
-//                                )
-//                                .angularPosition(arm.getPositionRadians())
-//                                .angularVelocity(arm.getSpeedRadians().per(Second));
-//                    }, this)
-//    );
+
+    private final Translation3d speakerCoords;
+    private double nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
+
+    private double shootingAngle = 90;
+    private double shootingSpeed = 1;
 
     public NotePlayerSubsystem() {
+        if (FieldState.getInstance().onRedAlliance()) {
+            speakerCoords = RED_SPEAKER;
+        } else {
+            speakerCoords = BLUE_SPEAKER;
+        }
     }
 
     public IntakeModule getIntake() {
@@ -71,6 +59,15 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     @Override
     public void periodic() {
         arm.periodic();
+        setRobotStates();
+    }
+
+    public double getShootingAngle() {
+        return shootingAngle;
+    }
+
+    public double getShootingSpeed() {
+        return shootingSpeed;
     }
 
     /**
@@ -100,14 +97,14 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
      * @param targetCoords The coordinates of the target as a {@link Translation3d} in meters
      * @return The target speed and angle as a {@link Translation2d} (use the getNorm method for the speed, and the getAngle method for the angle)
      */
-    public Translation2d calculateShootingParameters(Pose2d robotPose, Translation3d targetCoords) { // The brute force calculations
+    public double[] calculateShootingParameters(Pose2d robotPose, Translation3d targetCoords, double initialGuessAngle) { // The brute force calculations
 
         // Get the horizontal distance from the robot to the target
         double robotToTargetDistance = robotPose.getTranslation().getDistance(targetCoords.toTranslation2d());
 
         // The shooter angle, We tested every angle incremented by 0.1 between 1 and 66, 21.7 gave
         // the lowest average number of loops before finding the optimal parameters
-        Rotation2d shooterAngle = Rotation2d.fromDegrees(25);
+        Rotation2d shooterAngle = Rotation2d.fromDegrees(initialGuessAngle);
 
         // Pose2d representing the position of the shooter.
         // X for distance to target, Y for height above ground, Rotation2d for the angle
@@ -129,8 +126,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         // Calculate the error of the expected launch distance from the target  launch distance
         double distanceError = shooterPose.getX() - launchDistance;
 
+        int loops  = 1;
         // Do all of that over and over again until the distance error is less than a centimeter
-        while (distanceError > 0.01 || distanceError < -0.01) {
+        while ((distanceError > 0.01 || distanceError < -0.01) && loops < 10) {
             // Adjust the shooter angle according to how for off the distance is.
             // The distance error must be divided by at least 2, any less than that and the
             // angle will end up oscillating too much, the while loop will take to long, and the code will crash.
@@ -159,6 +157,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
             launchDistance = launchSpeed * shooterAngle.getCos() * timeToApex;
 
             distanceError = shooterPose.getX() - launchDistance;
+
+            // Increment the number of loops we've taken to make sure the code doesn't hang
+            loops++;
         }
 
         /*
@@ -173,7 +174,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
          */
 
         // Return the shooting parameters as a vector in Translation2d form
-        return new Translation2d(launchSpeed, shooterAngle);
+
+//        System.out.println("CALCULATED LAUNCH SPEED: " + launchSpeed + ", CALCULATED LAUNCH ANGLE: " + shooterAngle.getDegrees());
+        return new double[] {launchSpeed * SHOOTER_TRAJECTORY_SPEED_MULTIPLIER, shooterAngle.getDegrees() * SHOOTER_TRAJECTORY_ANGLE_MULTIPLIER};
     }
 
     /**
@@ -203,7 +206,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public void setRobotStates() {
-        // TODO: Implement the rest of the logic
+//         TODO: Implement the rest of the logic
         switch (RobotState.getInstance().getShooterMode()) {
             case SPEAKER:
                 RobotState.getInstance().setHasSpeakerTarget(
@@ -211,9 +214,19 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                                 FieldState.getInstance().onRedAlliance() ? RED_SPEAKER.toTranslation2d() : BLUE_SPEAKER.toTranslation2d()));
                 RobotState.getInstance().setShooterStatus(
                         (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
+            case AMP:
+                RobotState.getInstance().setShooterStatus( ShooterStatus.READY
+                        //arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY
+                );
+            case PICKUP:
+                RobotState.getInstance().setHasNote(intake.noteInIntake()|| indexer.noteInIndexer());
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
+    }
+
+    public Translation3d getSpeakerCoords() {
+        return speakerCoords;
     }
 
     /**
@@ -244,7 +257,36 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 .until(intake::noteInIntake).andThen(
                         new RunCommand(() -> intake.spin(0.15))
                                 .raceWith(pullNoteIntoIndexer())))
-        );
+        ).withName("IntakeNote");
+    }
+
+    public Command positionNote() {
+        if (!(intake.noteInIntake() || indexer.noteInIndexer()) || (intake.noteInIntake() && !indexer.noteInIndexer())) {
+            return new RunCommand(
+                    () -> {
+                        indexer.spin(0.5);
+                        intake.spin(0.075);
+                    }
+            ).until(indexer::noteInIndexer)
+                    .withTimeout(5)
+                    .finallyDo(
+                            () -> {
+                                indexer.stop();
+                                intake.stopSpinning();
+                            }
+                    ).withName("PositionNote");
+        } else if (!intake.noteInIntake() && indexer.noteInIndexer()) {
+            return (new RunCommand(
+                    () -> indexer.spin(-0.5)
+            ).until(intake::noteInIntake))
+                    .andThen(() -> indexer.spin(0.5))
+                    .until(indexer::noteInIndexer)
+                    .unless(indexer::noteInIndexer)
+                    .withTimeout(5)
+                    .finallyDo(
+                            () -> indexer.stop()
+                    ).withName("PositionNote");
+        } else return Commands.none();
     }
 
     public Command pullNoteIntoIndexer() {
@@ -256,7 +298,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command feedNoteToShooter() {
         return new RunCommand(
                 () -> indexer.spin(1))
-                .onlyWhile(indexer::noteInIndexer);
+                .onlyWhile(indexer::noteInIndexer)
+                .andThen(indexer::stop)
+                .handleInterrupt(indexer::stop);
     }
 
     public Command spinUpShooter() {
@@ -266,27 +310,92 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 //                .andThen(() -> shooter.shoot(0.50)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
     }
 
-    public Command takeShot() {
-        return ((new RunCommand(
-                () -> shooter.spinPercentage(0.75)
-        ).onlyWhile(indexer::noteInIndexer))
-                .andThen(() -> shooter.spinPercentage(0.75)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
+    public Command finishShooting() {
+        return (new RunCommand(() -> shooter.spinPercentage(shootingSpeed)).raceWith(Commands.waitSeconds(0.1))).andThen(() -> shooter.stop());
     }
 
-    public Command aimAtTarget() {
-        Translation3d targetCoords = new Translation3d(
-                Units.inchesToMeters(-1.5),
-                Units.inchesToMeters(218.42),
-                Units.inchesToMeters(80)
-        );
+    public void setShootingParameters() {
+        double[] shootingParameters = calculateShootingParameters(PoseEstimator.getInstance().getPose(), speakerCoords, nextGuessAngle);
+        shootingAngle = shootingParameters[1];
+        shootingSpeed = shootingParameters[0];
+//        System.out.println("Shooter Speed: " + shootingSpeed + ", Shooting Angle: " + shootingAngle);
+    }
 
-        return new InstantCommand(() -> this.calculateShootingParameters(generateRandomBotPose(), targetCoords));
+    public Command prepForPickup() {
+        return (new InstantCommand(
+                () -> RobotState.getInstance().setShooterMode(ShooterMode.PICKUP))
+                .alongWith(setArmPosition(ARM_PICKUP_ANGLE)))
+                .andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_PICKUP_ANGLE ? 0.125 : -0.125)));
+    }
+
+    public Command aimAndSpinUpForSpeaker() {
+        return (setArmPosition(ARM_SHOOTING_ANGLE).andThen(new RunCommand(
+                () -> {
+                    RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER);
+                    setShootingParameters();
+                    nextGuessAngle = shootingAngle;
+                    shooter.spinMetersPerSecond(shootingSpeed);
+                }
+        ).alongWith(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_SHOOTING_ANGLE ? 0.125 : -0.125))))).finallyDo(() -> {
+                    nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
+                    shooter.stop();
+                    //setArmPosition(ARM_PICKUP_ANGLE);
+                }
+        ).onlyIf(indexer::noteInIndexer).onlyWhile(indexer::noteInIndexer)
+                .withName("AimAndSpinUpForSpeaker");
+    }
+
+    public Command scoreNote() {
+        switch (RobotState.getInstance().getShooterMode()) {
+            case SPEAKER -> {
+                return feedNoteToShooter().andThen(finishShooting());
+            }
+            case AMP -> {
+                return scoreAmp();
+            }
+            default -> {
+                return Commands.none();
+            }
+        }
+    }
+
+    public Command prepForAmp() {
+        return setArmPosition(ARM_AMP_ANGLE)
+                .andThen(new InstantCommand(
+                        () -> RobotState.getInstance().setShooterMode(ShooterMode.AMP)))
+                .andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_AMP_ANGLE ? 0.125 : -0.125)))
+                .onlyIf(indexer::noteInIndexer)
+                .onlyWhile(indexer::noteInIndexer)
+                .withName("PrepForAmp");
+    }
+
+    public Command scoreAmp() {
+        return new RunCommand(
+                () -> {
+                    shooter.spinPercentage(0.15);
+                    indexer.spin(1);
+                }
+        ).onlyWhile(indexer::noteInIndexer).onlyIf(indexer::noteInIndexer)
+                .finallyDo(() -> {
+                    shooter.stop();
+                    indexer.stop();
+                });
     }
 
     public Command rotateArmToDegrees(double degrees) {
         return new RunCommand(
                 () -> arm.rotateToDegrees(degrees)
         );
+    }
+
+    public Command driveArmPercent(DoubleSupplier percent) {
+        return (new RunCommand(
+                () -> arm.rotatePercentOut(percent.getAsDouble()))
+                .finallyDo(() -> arm.rotatePercentOut(0)));
+    }
+
+    public Command setArmPosition(double position) {
+        return new InstantCommand(() -> arm.setPseudoLimits(arm.armDegreesToMotorRotations(position)));
     }
 
 //    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {

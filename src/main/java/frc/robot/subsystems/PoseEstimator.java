@@ -174,7 +174,7 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
      */
     public Matrix<N3, N1> getVisionEstimationStdDevs(Pose2d estimatedPose) {
         if (DriverStation.isDisabled()) {
-            return VecBuilder.fill(0.05d, 0.05d, 0.05d);
+            return VecBuilder.fill(0.001d, 0.001d, 0.001d);
         }
         var estStdDevs = singleTagStdDevs;
         var targets = getLatestResult().getTargets();

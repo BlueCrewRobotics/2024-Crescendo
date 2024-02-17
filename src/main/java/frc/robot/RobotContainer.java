@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.lib.bluecrew.util.BlinkinValues;
 import frc.lib.bluecrew.util.RobotState;
+import frc.robot.autos.AutonomousCommandsBuilder;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
@@ -31,6 +32,7 @@ import frc.robot.commands.*;
 public class RobotContainer implements Constants.AutoConstants {
     /* Controllers */
     private final CommandXboxController driver = new CommandXboxController(0);
+    private final CommandXboxController auxDriver = new CommandXboxController(1);
 
     /* Driver Buttons */
     private final JoystickButton zeroGyro = new JoystickButton(driver.getHID(), XboxController.Button.kY.value);
@@ -103,7 +105,7 @@ public class RobotContainer implements Constants.AutoConstants {
         notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
 
 //        /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
+        //zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
 //        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
 //                driver::getLeftY,
 //                driver::getLeftX,
@@ -116,39 +118,24 @@ public class RobotContainer implements Constants.AutoConstants {
 //                driver::getLeftY,
 //                driver::getLeftX,
 //                driver::getRightTriggerAxis,
-//                new Translation2d(Units.inchesToMeters(-1.5), Units.inchesToMeters(218.42)),
+//                notePlayerSubsystem.getSpeakerCoords().toTranslation2d(),
 //                robotCentric
 //        ).until(cancelAutoRotation));
 
 //        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
-//        driver.a().onTrue(notePlayerSubsystem.intakeNote());
 
-//        driver.x().onTrue(new StartIndexer(notePlayerSubsystem.getIndexer()));
-//        driver.a().onTrue(new StopIndexer(notePlayerSubsystem.getIndexer()));
-//        driver.x().onTrue(new StartShooter(notePlayerSubsystem.getShooter()));
-//        driver.a().onTrue(new StopShooter(notePlayerSubsystem.getShooter()));
-//        driver.povUp().onTrue(new StartInTake(notePlayerSubsystem.getIntake()));
-//        driver.povDown().onTrue(new StopInTake(notePlayerSubsystem.getIntake()));
 
-        //driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
-        //driver.a().onTrue(notePlayerSubsystem.intakeNote());
+        driver.x().whileTrue((new FindAndGotoNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake))
+                .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote())));
+        driver.back().onTrue(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting()));
+        driver.start().onTrue(notePlayerSubsystem.scoreAmp());
 
-        driver.x().whileTrue(new FindAndGotoNote(notePlayerSubsystem, swerveDrive)
-                .andThen(notePlayerSubsystem.intakeNote().onlyIf(() -> RobotState.getInstance().isNoteIsAvailable())));
-
-        /*
-        driver.b().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kForward));
-        driver.a().whileTrue(notePlayerSubsystem.sysIdQuasiStatic(SysIdRoutine.Direction.kReverse));
-        driver.x().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        driver.y().whileTrue(notePlayerSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote());
-        driver.leftBumper().whileTrue(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.spinUpShooter()));
-
-        driver.rightBumper().whileTrue(notePlayerSubsystem.intakeNote()); // get it indexed
-        driver.leftBumper().whileTrue(
-                notePlayerSubsystem.spinUpShooter()
-                        .andThen(notePlayerSubsystem.feedNoteToShooter().alongWith(notePlayerSubsystem.takeShot())));
-                        */
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.125));
+        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
+        auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
+        auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
+        auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
+        auxDriver.x().whileTrue(notePlayerSubsystem.positionNote());
     }
 
     /**
@@ -157,10 +144,11 @@ public class RobotContainer implements Constants.AutoConstants {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-//        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
-//                autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
-//                directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected());
-        return notePlayerSubsystem.aimAtTarget().repeatedly();
+        return new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+                autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
+                directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected(),
+                notePlayerSubsystem, swerveDrive);
+        //return Commands.none();//notePlayerSubsystem.aimAtTarget().repeatedly();
     }
 
     /**
