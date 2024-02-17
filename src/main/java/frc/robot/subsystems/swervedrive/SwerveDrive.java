@@ -298,8 +298,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         return poseEstimator.getPose().getTranslation().minus(coords).getAngle().minus(poseEstimator.getPose().getRotation());
     }
 
-    private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
-        return () -> (invertJoystickInputs * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
+    private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup, BooleanSupplier robotCentric) {
+        return () -> ((FieldState.getInstance().onRedAlliance()&&!robotCentric.getAsBoolean() ? 1 : -1) * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
                 , swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
 
@@ -322,8 +322,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         return this.run(() -> teleopDriveSwerveDrive(
-                speedsFromJoysticks(rawTranslationSup).getAsDouble(),
-                speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                speedsFromJoysticks(rawTranslationSup, robotCentricSup).getAsDouble(),
+                speedsFromJoysticks(rawStrafeSup, robotCentricSup).getAsDouble(),
                 slowSup.getAsDouble(),
                 rotationSup.getAsDouble(),
                 robotCentricSup.getAsBoolean()
@@ -351,8 +351,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
 
         teleopDriveSwerveDrive(
-                        speedsFromJoysticks(rawTranslationSup).getAsDouble(),
-                        speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                        speedsFromJoysticks(rawTranslationSup, robotCentricSup).getAsDouble(),
+                        speedsFromJoysticks(rawStrafeSup, robotCentricSup).getAsDouble(),
                         slowSup.getAsDouble(),
                         rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees.getAsDouble())),
                         robotCentricSup.getAsBoolean()
@@ -374,8 +374,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         return this.run(
                 () -> teleopDriveSwerveDrive(
-                        speedsFromJoysticks(rawTranslationSup).getAsDouble(),
-                        speedsFromJoysticks(rawStrafeSup).getAsDouble(),
+                        speedsFromJoysticks(rawTranslationSup, robotCentricSup).getAsDouble(),
+                        speedsFromJoysticks(rawStrafeSup, robotCentricSup).getAsDouble(),
                         slowSup.getAsDouble(),
                         rotationPercentageFromTargetAngle(
                                 getAngleToPose(position)),

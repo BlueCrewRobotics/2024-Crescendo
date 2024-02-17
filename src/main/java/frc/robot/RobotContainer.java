@@ -1,6 +1,8 @@
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -99,7 +101,7 @@ public class RobotContainer implements Constants.AutoConstants {
                         driver::getLeftX,
                         driver::getRightTriggerAxis,
                         driver::getRightX,
-                        () -> driver.leftBumper().getAsBoolean()
+                        () -> false//driver.leftBumper().getAsBoolean()
                 ));
 
         notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
@@ -122,20 +124,21 @@ public class RobotContainer implements Constants.AutoConstants {
 //                robotCentric
 //        ).until(cancelAutoRotation));
 
-//        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        driver.start().whileTrue(AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("AlignAmp"), Constants.PathPlannerConstants.pathConstraints));
 
-
-        driver.x().whileTrue((new FindAndGotoNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake))
+        driver.rightBumper().whileTrue((new FindAndGotoNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake))
                 .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote())));
-        driver.back().onTrue(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting()));
-        driver.start().onTrue(notePlayerSubsystem.scoreAmp());
+        driver.leftBumper().onTrue(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting()));
+        driver.a().onTrue(notePlayerSubsystem.scoreAmp());
 
-        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.125));
+
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
         auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
         auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
-        auxDriver.x().whileTrue(notePlayerSubsystem.positionNote());
+        auxDriver.x().whileTrue(notePlayerSubsystem.eject());
     }
 
     /**

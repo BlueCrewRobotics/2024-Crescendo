@@ -67,7 +67,8 @@ public class FindCenterPiece extends SequentialCommandGroup {
                             // After we follow the paths, check if the note we are in front of is available/exists,
                             // at the same time as setting the global note index
                             Commands.print("FindingNote"),
-                            new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive)
+                            new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
+                                    .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote()))
                     )
             );
 
@@ -86,7 +87,8 @@ public class FindCenterPiece extends SequentialCommandGroup {
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
                         // Set the global note index, and check for piece availability
                         new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex2)),
-                        new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive)
+                        new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
+                                .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote()))
                 );
             }
 
@@ -98,12 +100,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
             );
 
             // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,
-            // this is normally done automatically with WPILib's SequentialCommandGroup,
-            // but since we are using the custom one, we have to manually do this
-            this.m_currentCommandIndex = 0;
-            if (!this.m_commands.isEmpty()) {
-                ((Command) this.m_commands.get(0)).initialize();
-            }
+            super.initialize();
         }
     }
 }

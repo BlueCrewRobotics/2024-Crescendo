@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.function.LongConsumer;
 
 public class SequentialCommandGroup extends Command {
-    final List<Command> m_commands = new ArrayList();
+    final List<Command> m_commands = new ArrayList<>();
     int m_currentCommandIndex = -1;
     private boolean m_runWhenDisabled = true;
     private Command.InterruptionBehavior m_interruptBehavior;
@@ -50,7 +50,6 @@ public class SequentialCommandGroup extends Command {
         if (!this.m_commands.isEmpty()) {
             ((Command)this.m_commands.get(0)).initialize();
         }
-
     }
 
     public final void execute() {

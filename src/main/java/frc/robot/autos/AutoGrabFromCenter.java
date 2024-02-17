@@ -51,11 +51,6 @@ public class AutoGrabFromCenter extends SequentialCommandGroup {
         );
 
         // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,
-        // this is normally done automatically with WPILib's SequentialCommandGroup,
-        // but since we are using the custom one, we have to manually do this
-        this.m_currentCommandIndex = 0;
-        if (!this.m_commands.isEmpty()) {
-            ((Command)this.m_commands.get(0)).initialize();
-        }
+        super.initialize();
     }
 }

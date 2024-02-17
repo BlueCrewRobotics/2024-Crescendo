@@ -199,13 +199,13 @@ public interface Constants {
     interface PathPlannerConstants {
 
         PathConstraints pathConstraints =
-                new PathConstraints(1.5, 1,
+                new PathConstraints(4, 3,
                         2 * Math.PI, 1.5 * Math.PI);
 
         HolonomicPathFollowerConfig pathFollowerConfig = new HolonomicPathFollowerConfig(
                 new PIDConstants(5.0, 0, 0), // Translation PID
                 new PIDConstants(5.0, 0, 0), // Rotation PID
-                4.8, // Max Speed Meters per second
+                4, // Max Speed Meters per second
                 Math.sqrt(Swerve.trackWidth * Swerve.trackWidth +
                         Swerve.wheelBase * Swerve.wheelBase) / 2, // Drive base radius in meters. Distance from robot center to furthest module.
                 new ReplanningConfig()
@@ -269,7 +269,7 @@ public interface Constants {
         double ARM_AMP_ANGLE = -48;
 
         /** The allowed error of the position in degrees*/
-        double ARM_POSITION_ERROR_TOLERANCE = 1;
+        double ARM_POSITION_ERROR_TOLERANCE = 2;
 
         double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
         double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);
