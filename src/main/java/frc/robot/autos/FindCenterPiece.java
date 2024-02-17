@@ -1,8 +1,13 @@
 package frc.robot.autos;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
+import frc.robot.commands.FindAndGotoNote;
+import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
+import frc.robot.subsystems.swervedrive.SwerveDrive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +17,16 @@ public class FindCenterPiece extends SequentialCommandGroup {
     private final int[] orderOfCenterNotes;
     private final String autoLane;
     private final String comingFrom;
+    private final NotePlayerSubsystem notePlayerSubsystem;
+    private final SwerveDrive swerveDrive;
 
-    public FindCenterPiece(int[] orderOfCenterNotes, String comingFrom,  String autoLane) {
+    public FindCenterPiece(int[] orderOfCenterNotes, String comingFrom, String autoLane, NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive) {
         // Save inputs for later
         this.orderOfCenterNotes = orderOfCenterNotes;
         this.comingFrom = comingFrom;
         this.autoLane = autoLane;
+        this.notePlayerSubsystem = notePlayerSubsystem;
+        this.swerveDrive = swerveDrive;
     }
 
     public final void initialize() {
@@ -45,20 +54,20 @@ public class FindCenterPiece extends SequentialCommandGroup {
 
             // first thing to do
             addCommands(
+                    Commands.print("Following: " + comingFrom + "-" + autoLane + "-CL"),
                     // Follow the path from where we just scored, through the auto lane, to the center line (actually a bit behind it)
-//                    AutoBuilder.followPath(PathPlannerPath.fromPathFile(comingFrom + "-" + autoLane + "-CL")),
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile(comingFrom + "-" + autoLane + "-CL")),
                     // Follow the path from where we stopped behind the center line to in front of the next note,
                     // using the .alongWith decorator to make its own sequential command group,
                     // which seemed to help with other things run at the right time
-//                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-CN" + nextNote)).andThen(
+                    Commands.print("Following: CL-" + autoLane + "-CN" + nextNote),
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-CN" + nextNote)).andThen(
 
-                    // But actually just print that we're doing that
-                    Commands.print("Following: " + comingFrom + "-" + autoLane + "-CL"),
-                    Commands.print("Following: CL-" + autoLane + "-CN" + nextNote).andThen(
+                            // But actually just print that we're doing that
                             // After we follow the paths, check if the note we are in front of is available/exists,
                             // at the same time as setting the global note index
-                            new CheckForPieceAvailability()).alongWith(
-                            new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex))
+                            Commands.print("FindingNote"),
+                            new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive)
                     )
             );
 
@@ -73,11 +82,11 @@ public class FindCenterPiece extends SequentialCommandGroup {
                 final int noteIndex2 = nextNote;
                 addCommands(
                         // Follow the path from the note we are currently at to the next one
-                        //AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
                         Commands.print("Following: CN" + centerNotesToGet.get(i - 1) + "-CN" + nextNote),
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
                         // Set the global note index, and check for piece availability
                         new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex2)),
-                        new CheckForPieceAvailability()
+                        new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive)
                 );
             }
 

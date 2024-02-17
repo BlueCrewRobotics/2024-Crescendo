@@ -15,7 +15,8 @@ public class ShooterModule implements Constants.ShooterConstants {
 
     private final NotePlayerCTREConfigs ctreConfigs = new NotePlayerCTREConfigs();
 
-    private VelocityVoltage shooterVelocity = new VelocityVoltage(1);
+    private VelocityVoltage topShooterVelocity = new VelocityVoltage(1);
+    private VelocityVoltage bottomShooterVelocity = new VelocityVoltage(1);
     private SimpleMotorFeedforward shooterFeedForward = new SimpleMotorFeedforward(shooterKS, shooterKV, shooterKA);
 
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
@@ -36,28 +37,53 @@ public class ShooterModule implements Constants.ShooterConstants {
 //        topShooterMotor.setControl(new DutyCycleOut(speed));
 //        bottomShooterMotor.setControl(new DutyCycleOut(speed));
 
-        shooterVelocity = new VelocityVoltage(SHOOTER_MAX_ROTATIONS_PER_SECOND * speed);
+        topShooterVelocity = new VelocityVoltage(SHOOTER_MAX_ROTATIONS_PER_SECOND * speed);
         shooterFeedForward = new SimpleMotorFeedforward(shooterKS, shooterKV, shooterKA);
 
 //        shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
-        shooterVelocity.FeedForward = shooterFeedForward.calculate(shooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
+        topShooterVelocity.FeedForward = shooterFeedForward.calculate(topShooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
         //shooterVelocity.withAcceleration(25);
 
-        System.out.println(("Shooter velocity set to: " + shooterVelocity.Velocity));
-        topShooterMotor.setControl(shooterVelocity);
-        bottomShooterMotor.setControl(shooterVelocity);
+        System.out.println(("Shooter velocity set to: " + topShooterVelocity.Velocity));
+        topShooterMotor.setControl(topShooterVelocity);
+        bottomShooterMotor.setControl(topShooterVelocity);
+
+        // leftShooterMotor.setControl(shooterDutyCycle.withOutput());
+        // rightShooterMotor.setControl(shooterDutyCycle.withOutput());
+    }
+
+    public void spinPercentage(double topSpeed, double bottomSpeed) {
+//        topShooterMotor.setControl(new DutyCycleOut(speed));
+//        bottomShooterMotor.setControl(new DutyCycleOut(speed));
+
+        topShooterVelocity = new VelocityVoltage(SHOOTER_MAX_ROTATIONS_PER_SECOND * topSpeed);
+        shooterFeedForward = new SimpleMotorFeedforward(shooterKS, shooterKV, shooterKA);
+
+//        shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
+        topShooterVelocity.FeedForward = shooterFeedForward.calculate(topShooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
+
+        bottomShooterVelocity = new VelocityVoltage(SHOOTER_MAX_ROTATIONS_PER_SECOND * bottomSpeed);
+        shooterFeedForward = new SimpleMotorFeedforward(shooterKS, shooterKV, shooterKA);
+
+//        shooterVelocity.Velocity = SHOOTER_MAX_ROTATIONS_PER_SECOND * speed;
+        bottomShooterVelocity.FeedForward = shooterFeedForward.calculate(bottomShooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
+        //shooterVelocity.withAcceleration(25);
+
+//        System.out.println(("Shooter velocity set to: " + shooterVelocity.Velocity));
+        topShooterMotor.setControl(topShooterVelocity);
+        bottomShooterMotor.setControl(bottomShooterVelocity);
 
         // leftShooterMotor.setControl(shooterDutyCycle.withOutput());
         // rightShooterMotor.setControl(shooterDutyCycle.withOutput());
     }
 
     public void spinMetersPerSecond(double mps) {
-        shooterVelocity.Velocity = mps/SHOOTER_METERS_PER_ROTATION;
-        shooterVelocity.FeedForward = shooterFeedForward.calculate(mps);
+        topShooterVelocity.Velocity = mps/SHOOTER_METERS_PER_ROTATION;
+        topShooterVelocity.FeedForward = shooterFeedForward.calculate(mps);
 
         System.out.println("Shooter Velocity MPS set to: " + mps);
-        topShooterMotor.setControl(shooterVelocity);
-        bottomShooterMotor.setControl(shooterVelocity);
+        topShooterMotor.setControl(topShooterVelocity);
+        bottomShooterMotor.setControl(topShooterVelocity);
     }
 
     public double getShooterTopVelocity() {
@@ -90,9 +116,9 @@ public class ShooterModule implements Constants.ShooterConstants {
      */
     public boolean targetVelocityReached() {
         double epsilon = SHOOTER_SPEED_ERROR_TOLERANCE/100;
-        return getShooterTopVelocity() > (shooterVelocity.Velocity * (1-epsilon))
-                && getShooterTopVelocity() < (shooterVelocity.Velocity * (1+epsilon))
-                && getShooterBottomVelocity() > (shooterVelocity.Velocity * (1-epsilon))
-                && getShooterBottomVelocity() < (shooterVelocity.Velocity * (1+epsilon));
+        return getShooterTopVelocity() > (topShooterVelocity.Velocity * (1-epsilon))
+                && getShooterTopVelocity() < (topShooterVelocity.Velocity * (1+epsilon))
+                && getShooterBottomVelocity() > (bottomShooterVelocity.Velocity * (1-epsilon))
+                && getShooterBottomVelocity() < (bottomShooterVelocity.Velocity * (1+epsilon));
     }
 }

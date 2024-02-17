@@ -7,6 +7,8 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -37,8 +39,10 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private final PoseEstimator poseEstimator;
 
-
     private final Field2d field = new Field2d();
+
+    private final StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("RobotPose", Pose2d.struct).publish();
 
     private final PIDController rotationPIDController;
 
@@ -59,7 +63,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         poseEstimator = PoseEstimator.getInstance();
 
-        rotationPIDController = new PIDController(0.04d, 0d, 0.003d);
+        rotationPIDController = new PIDController(0.04d, 0d, 0.004d);
         rotationPIDController.enableContinuousInput(-180, 180);
         rotationPIDController.setTolerance(0.1);
 
@@ -291,9 +295,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      * @return The angle from your current position to the given coordinates
      */
     public Rotation2d getAngleToPose(Translation2d coords) {
-        return Rotation2d.fromRadians(Math.atan(
-                (coords.getX() - poseEstimator.getPose().getX()) / (coords.getY() - poseEstimator.getPose().getY())
-        ));
+        return poseEstimator.getPose().getTranslation().minus(coords).getAngle().minus(poseEstimator.getPose().getRotation());
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup) {
@@ -386,13 +388,16 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-//        poseEstimator.updateWithVision();
+        poseEstimator.updateWithVision();
 
+        posePublisher.set(poseEstimator.getPose());
+
+//        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
+//        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
+//        SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
+//
+//        System.out.println("Swerve Pose: " + poseEstimator.getPose());
 /*
-        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
-        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
-        SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
-
         for (SwerveModule mod : swerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
