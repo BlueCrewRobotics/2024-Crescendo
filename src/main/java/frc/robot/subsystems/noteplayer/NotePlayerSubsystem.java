@@ -215,11 +215,11 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 RobotState.getInstance().setShooterStatus(
                         (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
             case AMP:
-                RobotState.getInstance().setShooterStatus( ShooterStatus.READY
-                        //arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY
-                );
+                RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
             case PICKUP:
                 RobotState.getInstance().setHasNote(intake.noteInIntake()|| indexer.noteInIndexer());
+                RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
+
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
@@ -261,32 +261,42 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command positionNote() {
-        if (!(intake.noteInIntake() || indexer.noteInIndexer()) || (intake.noteInIntake() && !indexer.noteInIndexer())) {
+        if ((!intake.noteInIntake() || !indexer.noteInIndexer()) || (intake.noteInIntake() && !indexer.noteInIndexer())) {
             return new RunCommand(
                     () -> {
-                        indexer.spin(0.5);
-                        intake.spin(0.075);
+                        indexer.spin(0.75);
+                        intake.spin(0.1125);
                     }
             ).until(indexer::noteInIndexer)
-                    .withTimeout(5)
+                    .withTimeout(2)
                     .finallyDo(
                             () -> {
                                 indexer.stop();
                                 intake.stopSpinning();
                             }
                     ).withName("PositionNote");
-        } else if (!intake.noteInIntake() && indexer.noteInIndexer()) {
+        } else if ((!intake.noteInIntake()) && indexer.noteInIndexer()) {
             return (new RunCommand(
                     () -> indexer.spin(-0.5)
             ).until(intake::noteInIntake))
-                    .andThen(() -> indexer.spin(0.5))
+                    .andThen(() -> indexer.spin(0.75))
                     .until(indexer::noteInIndexer)
                     .unless(indexer::noteInIndexer)
-                    .withTimeout(5)
+                    .withTimeout(2)
                     .finallyDo(
                             () -> indexer.stop()
                     ).withName("PositionNote");
         } else return Commands.none();
+    }
+
+    public Command eject() {
+        return new RunCommand(
+                () -> {
+                    indexer.spin(-0.75);
+                    intake.spin(-0.4);
+                    shooter.spinPercentage(-0.01);
+                }
+        );
     }
 
     public Command pullNoteIntoIndexer() {
@@ -325,7 +335,8 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return (new InstantCommand(
                 () -> RobotState.getInstance().setShooterMode(ShooterMode.PICKUP))
                 .alongWith(setArmPosition(ARM_PICKUP_ANGLE)))
-                .andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_PICKUP_ANGLE ? 0.125 : -0.125)));
+                //.andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_PICKUP_ANGLE ? 0.125 : -0.125))
+        ;
     }
 
     public Command aimAndSpinUpForSpeaker() {
@@ -336,7 +347,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                     nextGuessAngle = shootingAngle;
                     shooter.spinMetersPerSecond(shootingSpeed);
                 }
-        ).alongWith(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_SHOOTING_ANGLE ? 0.125 : -0.125))))).finallyDo(() -> {
+        )/*.alongWith(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_SHOOTING_ANGLE ? 0.125 : -0.125))*/)).finallyDo(() -> {
                     nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
                     shooter.stop();
                     //setArmPosition(ARM_PICKUP_ANGLE);
@@ -363,7 +374,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return setArmPosition(ARM_AMP_ANGLE)
                 .andThen(new InstantCommand(
                         () -> RobotState.getInstance().setShooterMode(ShooterMode.AMP)))
-                .andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_AMP_ANGLE ? 0.125 : -0.125)))
+                //.andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_AMP_ANGLE ? 0.125 : -0.125)))
                 .onlyIf(indexer::noteInIndexer)
                 .onlyWhile(indexer::noteInIndexer)
                 .withName("PrepForAmp");
@@ -372,7 +383,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command scoreAmp() {
         return new RunCommand(
                 () -> {
-                    shooter.spinPercentage(0.15);
+                    shooter.spinPercentage(0.2);
                     indexer.spin(1);
                 }
         ).onlyWhile(indexer::noteInIndexer).onlyIf(indexer::noteInIndexer)

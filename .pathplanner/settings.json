@@ -3,8 +3,9 @@
   "robotLength": 1.016,
   "holonomicMode": true,
   "pathFolders": [
-    "CenterLine-Other",
     "Amp-Other",
+    "CenterLine-Other",
+    "TeleopPaths",
     "Speaker-Other",
     "Stage-Other",
     "StartingNotes-Other",

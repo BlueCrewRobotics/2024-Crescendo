@@ -73,4 +73,8 @@ public class FieldState implements Constants.GameStateConstants {
     public boolean onRedAlliance() {
         return onRedAlliance;
     }
+
+    public void setOnRedAlliance(boolean onRedAlliance) {
+        this.onRedAlliance = onRedAlliance;
+    }
 }

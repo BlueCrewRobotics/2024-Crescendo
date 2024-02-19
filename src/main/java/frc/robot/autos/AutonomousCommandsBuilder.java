@@ -62,15 +62,18 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
 
         if (numOfNotesToScore > 0) {
             // Shoot in the speaker firsts thing
-            addCommands(notePlayerSubsystem.aimAndSpinUpForSpeaker(),
-                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
-                            .andThen(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting())),
+            addCommands(
+                    Commands.print("Shooting Into Speaker!"),
+                    notePlayerSubsystem.aimAndSpinUpForSpeaker()
+                            .alongWith(notePlayerSubsystem.driveArmPercent(() -> 0.15)).withTimeout(2),
+                    //.until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
                     notePlayerSubsystem.prepForPickup());
             System.out.println("Shoot Speaker");
             lastScoredIn = "Sp";
 
             if (numOfNotesToScore == 1) {
                 addCommands(
+                        Commands.print("Only 1 Action Chosen! Leaving Starting Zone!"),
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-SL"))
                         //Commands.print("Following: " + lastScoredIn + "-" + autoLane + "-SL")
                 );
@@ -84,6 +87,9 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                     if (((grabFromCenterFirst && i < numOfNotesFromCenter) || (!grabFromCenterFirst && i >= numOfNotesFromStart))) {
                         System.out.println("Grab From Center");
                         addCommands(
+                                Commands.print("Grabbing From Center!"),
+                                notePlayerSubsystem.prepForPickup(),
+                                notePlayerSubsystem.driveArmPercent(() -> -0.125).until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
                                 new AutoGrabFromCenter(orderOfCenterNotes, lastScoredIn, autoLane, notePlayerSubsystem, swerveDrive)
                                         // Unless all the center notes we wanted are gone
                                         .unless(() -> FieldState.getInstance().isCenterNotesGone())
@@ -93,10 +99,10 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                         if (i < numOfAmpScores) {
                             lastScoredIn = "Amp";
                             addCommands(
-                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Amp"),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints),
                                     notePlayerSubsystem.prepForAmp(),
-                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.driveArmPercent(() -> 0.15).raceWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)),
                                     notePlayerSubsystem.scoreAmp(),
                                     notePlayerSubsystem.prepForPickup()
                             );
@@ -105,19 +111,24 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                             lastScoredIn = "Sp";
                             addCommands(
                                     // TODO: add command for calculating direction to face and shooter velocity, and spin up the shooter, probably as it follows the path
-                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: CL-" + autoLane + "-Sp"),
-                                    notePlayerSubsystem.aimAndSpinUpForSpeaker(),
-                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
-                                    notePlayerSubsystem.feedNoteToShooter(),
-                                    notePlayerSubsystem.finishShooting(),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp"), pathConstraints),
+                                    notePlayerSubsystem.aimAndSpinUpForSpeaker()
+                                            .alongWith(notePlayerSubsystem.driveArmPercent(() -> 0.15)).withTimeout(2)
+                                            //.until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
+                                            .andThen(notePlayerSubsystem.feedNoteToShooter().raceWith(notePlayerSubsystem.aimAndSpinUpForSpeaker()).andThen(notePlayerSubsystem.finishShooting())),
                                     notePlayerSubsystem.prepForPickup()
                             );
                         }
                     } else {
                         // If we aren't supposed to grab from the center, then grab from the start
                         System.out.println("Grabbing From Start");
-                        addCommands(new AutoGrabFromStart(orderOfStartNotes[grabsFromStartAttempted], lastScoredIn, autoLane, notePlayerSubsystem));
+                        addCommands(
+                                Commands.print("Grabbing from start!"),
+                                notePlayerSubsystem.prepForPickup(),
+                                notePlayerSubsystem.driveArmPercent(() -> -0.125).raceWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)),
+                                new AutoGrabFromStart(orderOfStartNotes[grabsFromStartAttempted], lastScoredIn, autoLane, notePlayerSubsystem, swerveDrive)
+                        );
 
                         // Prioritize scoring in the Amp (not sure if we want it this way)
                         if (i < numOfAmpScores) {
@@ -125,9 +136,10 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                             System.out.println("Shoot Amp");
                             addCommands(
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Amp"),
-                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints)
+                                            .alongWith(notePlayerSubsystem.positionNote()),
                                     notePlayerSubsystem.prepForAmp(),
-                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
+                                    notePlayerSubsystem.driveArmPercent(() -> 0.15).raceWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)),
                                     notePlayerSubsystem.scoreAmp(),
                                     notePlayerSubsystem.prepForPickup()
                             );
@@ -136,12 +148,12 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                             lastScoredIn = "Sp";
                             System.out.println("Shoot Speaker");
                             addCommands(
-                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Sp"), pathConstraints),
                                     Commands.print("Path Find To and Following: SL-" + autoLane + "-Sp"),
-                                    notePlayerSubsystem.aimAndSpinUpForSpeaker(),
-                                    Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
-                                    notePlayerSubsystem.feedNoteToShooter(),
-                                    notePlayerSubsystem.finishShooting(),
+                                    AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Sp"), pathConstraints),
+                                    notePlayerSubsystem.aimAndSpinUpForSpeaker()
+                                            .alongWith(notePlayerSubsystem.driveArmPercent(() -> 0.15))
+                                            .until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
+                                            .andThen(notePlayerSubsystem.feedNoteToShooter().raceWith(notePlayerSubsystem.aimAndSpinUpForSpeaker()).andThen(notePlayerSubsystem.finishShooting())),
                                     notePlayerSubsystem.prepForPickup()
                             );
                         }
@@ -150,7 +162,9 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                     }
                 }
                 addCommands(
-                        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-CL"), pathConstraints)
+                        Commands.print("Done Scoring! Driving to Center Line!"),
+                        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-CL"), pathConstraints),
+                        Commands.print("Autonomous Routine is Complete!")
                 );
             }
         }

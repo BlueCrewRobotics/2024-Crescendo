@@ -6,9 +6,11 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.lib.bluecrew.util.FieldState;
 import org.littletonrobotics.urcl.URCL;
 
 /**
@@ -63,6 +65,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
+        var alliance = DriverStation.getAlliance();
+        boolean onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
+        FieldState.getInstance().setOnRedAlliance(onRedAlliance);
     }
 
     /**

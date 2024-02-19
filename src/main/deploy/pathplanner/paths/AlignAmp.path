@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.9381797651676699,
-        "y": 6.787084781776153
+        "x": 1.801793490941633,
+        "y": 6.82333477070055
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.8073655963203399,
-        "y": 6.3019359662750345
+        "x": 1.801793490941633,
+        "y": 7.372972520175544
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.173997608654132,
-        "y": 6.053758149182966
+        "x": 1.801793490941633,
+        "y": 7.578448961403737
       },
       "prevControl": {
-        "x": 1.4608150522554038,
-        "y": 6.5531339512930264
+        "x": 1.801793490941633,
+        "y": 7.020825603323332
       },
       "nextControl": null,
       "isLocked": false,
@@ -38,12 +38,15 @@
     "maxAngularAcceleration": 270.0
   },
   "goalEndState": {
-    "velocity": 1.5,
-    "rotation": -35.0,
+    "velocity": 0,
+    "rotation": -90.0,
     "rotateFast": true
   },
   "reversed": false,
-  "folder": "Speaker-Other",
-  "previewStartingState": null,
+  "folder": "TeleopPaths",
+  "previewStartingState": {
+    "rotation": -90.70773343249279,
+    "velocity": 0
+  },
   "useDefaultConstraints": true
 }
