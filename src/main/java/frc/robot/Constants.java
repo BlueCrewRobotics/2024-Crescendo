@@ -244,8 +244,8 @@ public interface Constants {
         int SHOOTER_BOTTOM_MOTOR_ID = 11;
 
         double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
-        double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // TODO: account for any gear ratio (currently is exactly 1:1 for 4" wheel)
-        double shooterKS = 0.01; // TODO: figure out what these should be!
+        double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // currently is exactly gear ratio is 1:1 with 4" wheel
+        double shooterKS = 0.01;
         double shooterKV = 0.348;
         double shooterKA = 0.15;
 
@@ -285,6 +285,16 @@ public interface Constants {
     interface ElevatorConstants {
         int ELEVATOR_MOTOR_1_ID = 8;
         int ELEVATOR_MOTOR_2_ID = 9;
+
+        double MOTOR_LOWER_LIMIT_POS = 0.0;
+        double MOTOR_UPPER_LIMIT_POS = 28.0;
+
+        double ELEVATOR_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
+
+        double elevatorKS = 0.01;
+        double elevatorKV = 0.348;
+        double elevatorKA = 0.15;
+
     }
 
     interface Misc {
