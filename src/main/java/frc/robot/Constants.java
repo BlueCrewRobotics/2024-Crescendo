@@ -33,7 +33,7 @@ public interface Constants {
     interface DriverControls {
         double stickDeadband = 0.1;
         double swerveSensitivityExponent = 1.8; // Should to be >= 1
-        double swerveSpeedMultiplier = 0.7; // Should be <= 1
+        double swerveSpeedMultiplier = 1; // Should be <= 1
         double swerveRotationMultiplier = 0.6; // Should be <= 1
     }
     /**
