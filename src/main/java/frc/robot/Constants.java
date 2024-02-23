@@ -387,37 +387,4 @@ public interface Constants {
     double FIELD_SOURCE_APRIL_TAG_HEIGHT_BOTTOM = 1.2224;
     double FIELD_SOURCE_APRIL_TAG_DISTANCE_BETWEEN = 0.98425 + 0.2667;
 
-
-    /*
-
-      Shooter numbers...
-
-      Distance: 1.5 (subwoofer)
-      Speed: 13.5
-      Angle: 49.2 (was 48)
-
-      Distance: 3.0
-      Speed: 17.3
-      Angle: 30.75 (was 30)
-
-      Distance: 4.0
-      Speed: 19
-      Angle: 23
-
-      Distance: 5.0
-      Speed: 21.2
-      Angle: 22.75 (was 22.2)
-
-
-23
-24.6
-24.6
-24.6
-
-30
-31.2
-31.2
-31.2
-
-     */
 }
