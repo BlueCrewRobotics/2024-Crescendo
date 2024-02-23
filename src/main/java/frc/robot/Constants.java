@@ -323,8 +323,8 @@ public interface Constants {
         int ELEVATOR_MOTOR_1_ID = 8;
         int ELEVATOR_MOTOR_2_ID = 9;
 
-        double MOTOR_LOWER_LIMIT_POS = 0.0;
-        double MOTOR_UPPER_LIMIT_POS = 28.0;
+        double ELEVATOR_MOTOR_LOWER_LIMIT_POS = 0.0;
+        double ELEVATOR_MOTOR_UPPER_LIMIT_POS = 28.5;
 
         double ELEVATOR_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
 
