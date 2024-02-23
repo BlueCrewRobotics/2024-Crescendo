@@ -323,8 +323,8 @@ public interface Constants {
         int ELEVATOR_MOTOR_1_ID = 8;
         int ELEVATOR_MOTOR_2_ID = 9;
 
-        double MOTOR_LOWER_LIMIT_POS = 0.0;
-        double MOTOR_UPPER_LIMIT_POS = 28.0;
+        double ELEVATOR_MOTOR_LOWER_LIMIT_POS = 0.0;
+        double ELEVATOR_MOTOR_UPPER_LIMIT_POS = 28.5;
 
         double ELEVATOR_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
 
@@ -387,4 +387,37 @@ public interface Constants {
     double FIELD_SOURCE_APRIL_TAG_HEIGHT_BOTTOM = 1.2224;
     double FIELD_SOURCE_APRIL_TAG_DISTANCE_BETWEEN = 0.98425 + 0.2667;
 
+
+    /*
+
+      Shooter numbers...
+
+      Distance: 1.5 (subwoofer)
+      Speed: 13.5
+      Angle: 49.2 (was 48)
+
+      Distance: 3.0
+      Speed: 17.3
+      Angle: 30.75 (was 30)
+
+      Distance: 4.0
+      Speed: 19
+      Angle: 23
+
+      Distance: 5.0
+      Speed: 21.2
+      Angle: 22.75 (was 22.2)
+
+
+23
+24.6
+24.6
+24.6
+
+30
+31.2
+31.2
+31.2
+
+     */
 }

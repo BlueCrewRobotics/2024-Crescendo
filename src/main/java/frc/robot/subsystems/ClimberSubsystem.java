@@ -4,6 +4,8 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -29,6 +31,8 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     private SimpleMotorFeedforward climberFeedForward = new SimpleMotorFeedforward(elevatorKS, elevatorKV, elevatorKA);
 
+    private PositionVoltage climberPositionVoltage = new PositionVoltage(0);
+
     private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
 
     private static final ClimberSubsystem climberInstance = new ClimberSubsystem();
@@ -53,19 +57,32 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         SoftwareLimitSwitchConfigs limitSwitchConfigs = new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
                         .withReverseSoftLimitEnable(true)
-                                .withForwardSoftLimitThreshold(MOTOR_UPPER_LIMIT_POS)
-                                        .withReverseSoftLimitThreshold(MOTOR_LOWER_LIMIT_POS);
+                                .withForwardSoftLimitThreshold(ELEVATOR_MOTOR_UPPER_LIMIT_POS)
+                                        .withReverseSoftLimitThreshold(ELEVATOR_MOTOR_LOWER_LIMIT_POS);
         motor1FXConfig.withSoftwareLimitSwitch(limitSwitchConfigs);
         motor1FXConfig.withCurrentLimits(new CurrentLimitsConfigs()
                 .withSupplyCurrentLimit(40.0)
                 .withStatorCurrentLimit(40.0)
                 .withStatorCurrentLimitEnable(true)
                 .withStatorCurrentLimitEnable(true));
+
+
+        motor1FXConfig.Slot0.kP = 0.3;
+        motor1FXConfig.Slot0.kI = 0.005;
+        motor1FXConfig.Slot0.kD = 0.0;
+        motor1FXConfig.Slot0.kG = 0.25;
+
+
+        // brakes are important - when match ends the bot will be the on the chain,
+        // we don't want it to drop hard when the bot is disabled.
         motor1.setNeutralMode(NeutralModeValue.Brake);
         motor2.setNeutralMode(NeutralModeValue.Brake);
 
+
+
         motor1.getConfigurator().apply(motor1FXConfig);
         motor2.getConfigurator().apply(motor1FXConfig);
+        motor2.setControl(new Follower(ELEVATOR_MOTOR_1_ID, false));
     }
 
     public static ClimberSubsystem getInstance() {
@@ -90,6 +107,17 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         runElevator(speed);
     }
 
+    public void prepForClimb() {
+
+        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS));
+//        motor1.setPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS);
+    }
+
+    public void doClimb() {
+        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS));
+//        motor1.setPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS);
+    }
+
     private void runElevator(double speed) {
 
         climberVelocity = new VelocityVoltage(ELEVATOR_MAX_ROTATIONS_PER_SECOND * speed);
@@ -99,43 +127,41 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
         System.out.println(("Climber velocity set to: " + climberVelocity.Velocity));
         motor1.setControl(climberVelocity);
-        motor2.setControl(climberVelocity);
     }
 
     public void stopElevator() {
         motor1.stopMotor();
-        motor2.stopMotor();
         System.out.println("motor1 pos: " + getClimberEncoderPos());
     }
 
 
+    public Command prepForClimbCommand() {
+        return this.run(
+                this::prepForClimb);
+    }
+
+    public Command doClimbClimbCommand() {
+        return this.run(
+                this::doClimb);
+    }
+
     public Command runClimberUpCommand() {
 
         return this.run(
-                () -> runElevatorUp(0.03)).finallyDo(new Runnable() {
-            @Override
-            public void run() {
-                stopElevator();
-            }
-        });
-
+                () -> runElevatorUp(0.03)).finallyDo(this::stopElevator);
     }
+
 
     public Command runClimberDownCommand() {
 
         return this.run(
-                () -> runElevatorDown(-0.03)).finallyDo(new Runnable() {
-            @Override
-            public void run() {
-                stopElevator();
-            }
-        });
+                () -> runElevatorDown(-0.03)).finallyDo(this::stopElevator);
     }
 
     public Command stopClimberCommand() {
 
         return this.run(
-                () -> stopElevator());
+                this::stopElevator);
 
     }
 

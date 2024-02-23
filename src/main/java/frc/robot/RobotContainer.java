@@ -128,8 +128,8 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.x().whileTrue(notePlayerSubsystem.eject());
 
-        auxDriver.povUp().whileTrue(climberSubsystem.runClimberUpCommand());
-        auxDriver.povDown().whileTrue(climberSubsystem.runClimberDownCommand());
+        auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
+        auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
     }
 
     /**
