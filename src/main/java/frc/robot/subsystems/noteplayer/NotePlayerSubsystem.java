@@ -1,7 +1,13 @@
 package frc.robot.subsystems.noteplayer;
 
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
@@ -13,6 +19,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.subsystems.PoseEstimator;
 
 import java.awt.geom.Line2D;
+import java.util.Map;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -25,19 +32,33 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-
-    private final Translation3d speakerCoords;
     private double nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
 
     private double shootingAngle = 90;
     private double shootingSpeed = 1;
 
+    private ShuffleboardTab teleopTab = Shuffleboard.getTab("Teleoperated");
+    private GenericEntry shooterSpeed =
+            teleopTab.add("Shooter Speed", 0)
+                    .getEntry();
+
+    private GenericEntry shooterAngle =
+            teleopTab.add("Shooter Angle", 0)
+                    .withWidget(BuiltInWidgets.kNumberSlider)
+                    .withProperties(Map.of("min", 0, "max", 48))
+                    .getEntry();
+
+    private final InterpolatingDoubleTreeMap speedInterpolator = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
+
     public NotePlayerSubsystem() {
-        if (FieldState.getInstance().onRedAlliance()) {
-            speakerCoords = RED_SPEAKER;
-        } else {
-            speakerCoords = BLUE_SPEAKER;
-        }
+        speedInterpolator.put(1.5d, 13d);
+        speedInterpolator.put(3d, 17.3d);
+        speedInterpolator.put(4d, 19d);
+
+        angleInterpolator.put(1.5d, 49.2d);
+        angleInterpolator.put(3d, 30.75d);
+        angleInterpolator.put(4d, 23d);
     }
 
     public IntakeModule getIntake() {
@@ -62,12 +83,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         setRobotStates();
     }
 
-    public double getShootingAngle() {
-        return shootingAngle;
+    public InterpolatingDoubleTreeMap getAngleInterpolator() {
+        return angleInterpolator;
     }
 
-    public double getShootingSpeed() {
-        return shootingSpeed;
+    public InterpolatingDoubleTreeMap getSpeedInterpolator() {
+        return speedInterpolator;
     }
 
     /**
@@ -208,25 +229,24 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public void setRobotStates() {
 //         TODO: Implement the rest of the logic
         switch (RobotState.getInstance().getShooterMode()) {
-            case SPEAKER:
+            case SPEAKER -> {
                 RobotState.getInstance().setHasSpeakerTarget(
                         hasLineOfSight(PoseEstimator.getInstance().getPose().getTranslation(),
                                 FieldState.getInstance().onRedAlliance() ? RED_SPEAKER.toTranslation2d() : BLUE_SPEAKER.toTranslation2d()));
                 RobotState.getInstance().setShooterStatus(
                         (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
-            case AMP:
+            }
+            case AMP -> {
                 RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
-            case PICKUP:
-                RobotState.getInstance().setHasNote(intake.noteInIntake()|| indexer.noteInIndexer());
+            }
+            case PICKUP -> {
+                RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
                 RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
-
+            }
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
-    }
-
-    public Translation3d getSpeakerCoords() {
-        return speakerCoords;
+        SmartDashboard.putString("Shooter Mode", RobotState.getInstance().getShooterMode().toString());
     }
 
     /**
@@ -325,7 +345,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public void setShootingParameters() {
-        double[] shootingParameters = calculateShootingParameters(PoseEstimator.getInstance().getPose(), speakerCoords, nextGuessAngle);
+        double[] shootingParameters = calculateShootingParameters(PoseEstimator.getInstance().getPose(), FieldState.getInstance().getSpeakerCoords(), nextGuessAngle);
         shootingAngle = shootingParameters[1];
         shootingSpeed = shootingParameters[0];
 //        System.out.println("Shooter Speed: " + shootingSpeed + ", Shooting Angle: " + shootingAngle);
@@ -334,21 +354,21 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command prepForPickup() {
         return (new InstantCommand(
                 () -> RobotState.getInstance().setShooterMode(ShooterMode.PICKUP))
-                .alongWith(setArmPosition(ARM_PICKUP_ANGLE)))
+                .alongWith(rotateArmToDegrees(ARM_PICKUP_ANGLE)))
                 //.andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_PICKUP_ANGLE ? 0.125 : -0.125))
         ;
     }
 
     public Command aimAndSpinUpForSpeaker() {
-        return (setArmPosition(ARM_SHOOTING_ANGLE).andThen(new RunCommand(
+        return (new RunCommand(
                 () -> {
                     RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER);
-                    setShootingParameters();
-                    nextGuessAngle = shootingAngle;
-                    shooter.spinMetersPerSecond(shootingSpeed);
+                    shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+                    arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+                    System.out.println("Gotten Shooter Speed: " + Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())) +
+                            ", Gotten Shooter Angle: " + Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
                 }
-        )/*.alongWith(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_SHOOTING_ANGLE ? 0.125 : -0.125))*/)).finallyDo(() -> {
-                    nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
+        )/*.alongWith(rotateArmToDegrees(*//*shooterAngle.getDouble(0)*//*48))*/).finallyDo(() -> {
                     shooter.stop();
                     //setArmPosition(ARM_PICKUP_ANGLE);
                 }
@@ -357,24 +377,27 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command scoreNote() {
-        switch (RobotState.getInstance().getShooterMode()) {
-            case SPEAKER -> {
-                return feedNoteToShooter().andThen(finishShooting());
+        return new InstantCommand(() -> {
+            switch (RobotState.getInstance().getShooterMode()) {
+                case SPEAKER -> {
+                    System.out.println("Scoring Speaker");
+                    CommandScheduler.getInstance().schedule(feedNoteToShooter().andThen(finishShooting()));
+                }
+                case AMP -> {
+                    System.out.println("Scoring Amp");
+                    CommandScheduler.getInstance().schedule(scoreAmp());
+                }
+                default -> {
+                    System.out.println("Scoring Nothing");
+                }
             }
-            case AMP -> {
-                return scoreAmp();
-            }
-            default -> {
-                return Commands.none();
-            }
-        }
+        });
     }
 
     public Command prepForAmp() {
-        return setArmPosition(ARM_AMP_ANGLE)
-                .andThen(new InstantCommand(
+        return rotateArmToDegrees(ARM_AMP_ANGLE)
+                .alongWith(new InstantCommand(
                         () -> RobotState.getInstance().setShooterMode(ShooterMode.AMP)))
-                //.andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_AMP_ANGLE ? 0.125 : -0.125)))
                 .onlyIf(indexer::noteInIndexer)
                 .onlyWhile(indexer::noteInIndexer)
                 .withName("PrepForAmp");
@@ -394,7 +417,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command rotateArmToDegrees(double degrees) {
-        return new RunCommand(
+        return new InstantCommand(
                 () -> arm.rotateToDegrees(degrees)
         );
     }
@@ -406,7 +429,11 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command setArmPosition(double position) {
-        return new InstantCommand(() -> arm.setPseudoLimits(arm.armDegreesToMotorRotations(position)));
+        return new InstantCommand(() -> arm.setPseudoLimits(arm.shooterDegreesToMotorRotations(position)));
+    }
+
+    public Command incrementArmPosition(double increment) {
+        return new InstantCommand(() -> arm.rotateToDegrees(arm.getShooterDegrees() + increment));
     }
 
 //    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
