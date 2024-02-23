@@ -46,6 +46,8 @@ public class RobotContainer implements Constants.AutoConstants {
     private final SwerveDrive swerveDrive = new SwerveDrive();
     private final NotePlayerSubsystem notePlayerSubsystem = new NotePlayerSubsystem();
 
+    private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
+
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
     private SendableChooser<Integer> numOfNotesToScoreChooser;
@@ -138,7 +140,12 @@ public class RobotContainer implements Constants.AutoConstants {
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
         auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
+
         auxDriver.x().whileTrue(notePlayerSubsystem.eject());
+        //auxDriver.x().whileTrue(notePlayerSubsystem.positionNote());
+
+        auxDriver.povUp().whileTrue(climberSubsystem.runClimberUpCommand());
+        auxDriver.povDown().whileTrue(climberSubsystem.runClimberDownCommand());
     }
 
     /**
