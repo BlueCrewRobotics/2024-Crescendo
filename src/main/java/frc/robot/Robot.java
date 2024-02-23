@@ -7,11 +7,17 @@ package frc.robot;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
 import org.littletonrobotics.urcl.URCL;
+
+import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
+import static frc.robot.Constants.FieldCoordinates.RED_SPEAKER;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -24,6 +30,8 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
+
+    private PowerDistribution pdh = new PowerDistribution(10, PowerDistribution.ModuleType.kRev);
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -54,6 +62,10 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
+        Shuffleboard.getTab("Teleoperated")
+                .add("Power Distribution", pdh)
+                .withWidget(BuiltInWidgets.kPowerDistribution);
     }
 
     /**
@@ -68,6 +80,12 @@ public class Robot extends TimedRobot {
         var alliance = DriverStation.getAlliance();
         boolean onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
         FieldState.getInstance().setOnRedAlliance(onRedAlliance);
+
+        if (onRedAlliance) {
+            FieldState.getInstance().setSpeakerCoords(RED_SPEAKER);
+        } else {
+            FieldState.getInstance().setSpeakerCoords(BLUE_SPEAKER);
+        }
     }
 
     /**

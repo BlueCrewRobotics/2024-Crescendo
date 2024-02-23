@@ -9,6 +9,7 @@ import com.revrobotics.*;
 
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardComponent;
@@ -25,7 +26,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
     private final SparkPIDController rightController;
     private final SparkRelativeEncoder rightEncoder;
 
-    private final double motorRotationsPerArmDegree = 0.17924558;
+    private final double motorRotationsPerArmDegree = 0.174927053995;
     private final double gravityFF = 0.065;
     private final double positionTolerance = 0.1;
 
