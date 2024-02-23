@@ -85,21 +85,38 @@ public class FindAndGotoNote extends Command {
 
             double angleOffset = target.getYaw();
 
-            if(target.getPitch() < -27) {
+            if(target.getPitch() < -20 && angleOffset > 10) {
+                // back up if note is well off center and we are close to it
+                neededSpeed = - 0.15;
+            }
+            else if(target.getPitch() < -15 && angleOffset > 10) {
+                // slow down forward movement if note is well off center and we are close to it
+                neededSpeed = 0.05;
+            }
+            else if(target.getPitch() < -27) {
 //                System.out.println("Note is at intake.");
-                neededSpeed = 0.00;
+                neededSpeed = 0.02;
             }
             else if(target.getPitch() < 0) {
 //                System.out.println("Note is within a foot");
-                neededSpeed = 0.19;
+                neededSpeed = 0.24;
+                if(angleOffset < 5) {
+                    neededSpeed += 0.1;
+                }
             }
             else if(target.getPitch() < 15) {
 //                System.out.println("Note is within 3 feet");
-                neededSpeed = 0.3;
+                neededSpeed = 0.35;
+                if(angleOffset < 15) {
+                    neededSpeed += 0.1;
+                }
             }
             else if(target.getPitch() > 15) {
 //                System.out.println("Note is beyond 3 feet");
-                neededSpeed = 0.44;
+                neededSpeed = 0.49;
+                if(angleOffset < 15) {
+                    neededSpeed += 0.1;
+                }
             }
 
             neededRotation = angleOffset;
