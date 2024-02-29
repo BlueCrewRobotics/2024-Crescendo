@@ -38,16 +38,16 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private double shootingAngle = 90;
     private double shootingSpeed = 1;
 
-    private ShuffleboardTab teleopTab = Shuffleboard.getTab("Teleoperated");
-    private GenericEntry shooterSpeed =
-            teleopTab.add("Shooter Speed", 0)
-                    .getEntry();
-
-    private GenericEntry shooterAngle =
-            teleopTab.add("Shooter Angle", 0)
-                    .withWidget(BuiltInWidgets.kNumberSlider)
-                    .withProperties(Map.of("min", 0, "max", 48))
-                    .getEntry();
+//    private ShuffleboardTab teleopTab = Shuffleboard.getTab("Teleoperated");
+//    private GenericEntry shooterSpeed =
+//            teleopTab.add("Shooter Speed", 0)
+//                    .getEntry();
+//
+//    private GenericEntry shooterAngle =
+//            teleopTab.add("Shooter Angle", 0)
+//                    .withWidget(BuiltInWidgets.kNumberSlider)
+//                    .withProperties(Map.of("min", 0, "max", 48))
+//                    .getEntry();
 
     private final InterpolatingDoubleTreeMap speedInterpolator = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
