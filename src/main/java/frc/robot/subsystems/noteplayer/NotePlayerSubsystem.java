@@ -16,6 +16,7 @@ import frc.robot.Constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.autos.AutoLog;
 import frc.robot.subsystems.PoseEstimator;
 
 import java.awt.geom.Line2D;
@@ -53,12 +54,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public NotePlayerSubsystem() {
         speedInterpolator.put(1.5d, 13d);
-        speedInterpolator.put(3d, 17.3d);
-        speedInterpolator.put(4d, 19d);
+        speedInterpolator.put(3d, 17.8d);
+        speedInterpolator.put(4d, 20.5d);
 
-        angleInterpolator.put(1.5d, 49.2d);
-        angleInterpolator.put(3d, 30.75d);
-        angleInterpolator.put(4d, 23d);
+        angleInterpolator.put(1.5d, 47d);
+        angleInterpolator.put(3d, 26.55d);
+        angleInterpolator.put(4d, 18.8d);
     }
 
     public IntakeModule getIntake() {
@@ -81,6 +82,13 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public void periodic() {
         arm.periodic();
         setRobotStates();
+
+        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
+//        SmartDashboard.putBoolean("Shooter At Set Speed", shooter.targetVelocityReached());
+//        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putNumber("Top Shooter Speed", shooter.getShooterTopVelocityMPS());
+//        SmartDashboard.putNumber("Bottom Shooter Speed", shooter.getShooterBottomVelocityMPS());
     }
 
     public InterpolatingDoubleTreeMap getAngleInterpolator() {
@@ -246,7 +254,6 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
-        SmartDashboard.putString("Shooter Mode", RobotState.getInstance().getShooterMode().toString());
     }
 
     /**
@@ -267,46 +274,24 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public Command allStop() {
         return this.run(() -> {
-            intake.stopSpinning();
+            intake.stop();
             indexer.stop();
         });
     }
 
     public Command intakeNote() {
-        return ((new RunCommand(() -> intake.spin(0.3))
-                .until(intake::noteInIntake).andThen(
-                        new RunCommand(() -> intake.spin(0.15))
-                                .raceWith(pullNoteIntoIndexer())))
-        ).withName("IntakeNote");
-    }
+        return new AutoLog("*****\n******\n*******\n****** INTAKING NOTE ******\n*******\n******\n*****").andThen((new RunCommand(() -> intake.spin(0.4))
+                .until(intake::noteInIntake).andThen((
+                        new RunCommand(() -> intake.spin(0.15)).withTimeout(0.6)
+                                .andThen(new RunCommand(() -> intake.spin(0.1))))
+                                .alongWith(pullNoteIntoIndexer())))
+                .until(indexer::noteInIndexer)//.andThen(new RunCommand(() -> indexer.spin(0.5)).withTimeout(0.2))
+                .finallyDo(() -> {
+                    intake.stop();
+                    indexer.stop();
 
-    public Command positionNote() {
-        if ((!intake.noteInIntake() || !indexer.noteInIndexer()) || (intake.noteInIntake() && !indexer.noteInIndexer())) {
-            return new RunCommand(
-                    () -> {
-                        indexer.spin(0.75);
-                        intake.spin(0.1125);
-                    }
-            ).until(indexer::noteInIndexer)
-                    .withTimeout(2)
-                    .finallyDo(
-                            () -> {
-                                indexer.stop();
-                                intake.stopSpinning();
-                            }
-                    ).withName("PositionNote");
-        } else if ((!intake.noteInIntake()) && indexer.noteInIndexer()) {
-            return (new RunCommand(
-                    () -> indexer.spin(-0.5)
-            ).until(intake::noteInIntake))
-                    .andThen(() -> indexer.spin(0.75))
-                    .until(indexer::noteInIndexer)
-                    .unless(indexer::noteInIndexer)
-                    .withTimeout(2)
-                    .finallyDo(
-                            () -> indexer.stop()
-                    ).withName("PositionNote");
-        } else return Commands.none();
+                })
+        ).withName("IntakeNote");
     }
 
     public Command eject() {
@@ -314,7 +299,13 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 () -> {
                     indexer.spin(-0.75);
                     intake.spin(-0.4);
-                    shooter.spinPercentage(-0.01);
+                    shooter.spinPercentage(-0.03);
+                }
+        ).finallyDo(
+                () -> {
+                    indexer.stop();
+                    intake.stop();
+                    shooter.stop();
                 }
         );
     }
@@ -322,7 +313,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command pullNoteIntoIndexer() {
         return new RunCommand(
                 () -> indexer.spin(1)
-        ).until(indexer::noteInIndexer);
+        ).withTimeout(0.6).andThen(new RunCommand(() -> indexer.spin(0.65))).until(indexer::noteInIndexer);
     }
 
     public Command feedNoteToShooter() {
@@ -333,44 +324,29 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 .handleInterrupt(indexer::stop);
     }
 
-    public Command spinUpShooter() {
-        return ((new RunCommand(
-                () -> shooter.spinPercentage(0.75)
-        ).raceWith(Commands.waitSeconds(0.50)).onlyIf(indexer::noteInIndexer)));
-//                .andThen(() -> shooter.shoot(0.50)).raceWith(Commands.waitSeconds(0.25))).andThen(() -> shooter.stop());
-    }
-
     public Command finishShooting() {
-        return (new RunCommand(() -> shooter.spinPercentage(shootingSpeed)).raceWith(Commands.waitSeconds(0.1))).andThen(() -> shooter.stop());
-    }
-
-    public void setShootingParameters() {
-        double[] shootingParameters = calculateShootingParameters(PoseEstimator.getInstance().getPose(), FieldState.getInstance().getSpeakerCoords(), nextGuessAngle);
-        shootingAngle = shootingParameters[1];
-        shootingSpeed = shootingParameters[0];
-//        System.out.println("Shooter Speed: " + shootingSpeed + ", Shooting Angle: " + shootingAngle);
+        return (new RunCommand(() -> shooter.spinMetersPerSecond(speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())))).raceWith(Commands.waitSeconds(0.1))).andThen(() -> shooter.stop());
     }
 
     public Command prepForPickup() {
         return (new InstantCommand(
-                () -> RobotState.getInstance().setShooterMode(ShooterMode.PICKUP))
-                .alongWith(rotateArmToDegrees(ARM_PICKUP_ANGLE)))
-                //.andThen(driveArmPercent(() -> (arm.getShooterDegrees() > ARM_PICKUP_ANGLE ? 0.125 : -0.125))
-        ;
+                () -> {
+                    RobotState.getInstance().setShooterMode(ShooterMode.PICKUP);
+                    indexer.setEnableHardLimit(true);
+                })
+                .alongWith(rotateArmToDegrees(ARM_PICKUP_ANGLE)));
     }
 
     public Command aimAndSpinUpForSpeaker() {
         return (new RunCommand(
                 () -> {
                     RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER);
+                    indexer.setEnableHardLimit(false);
                     shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
                     arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
-                    System.out.println("Gotten Shooter Speed: " + Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())) +
-                            ", Gotten Shooter Angle: " + Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
                 }
-        )/*.alongWith(rotateArmToDegrees(*//*shooterAngle.getDouble(0)*//*48))*/).finallyDo(() -> {
+        )).finallyDo(() -> {
                     shooter.stop();
-                    //setArmPosition(ARM_PICKUP_ANGLE);
                 }
         ).onlyIf(indexer::noteInIndexer).onlyWhile(indexer::noteInIndexer)
                 .withName("AimAndSpinUpForSpeaker");
@@ -397,7 +373,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command prepForAmp() {
         return rotateArmToDegrees(ARM_AMP_ANGLE)
                 .alongWith(new InstantCommand(
-                        () -> RobotState.getInstance().setShooterMode(ShooterMode.AMP)))
+                        () -> {
+                            RobotState.getInstance().setShooterMode(ShooterMode.AMP);
+                            indexer.setEnableHardLimit(false);
+                        }))
                 .onlyIf(indexer::noteInIndexer)
                 .onlyWhile(indexer::noteInIndexer)
                 .withName("PrepForAmp");
@@ -427,20 +406,4 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 () -> arm.rotatePercentOut(percent.getAsDouble()))
                 .finallyDo(() -> arm.rotatePercentOut(0)));
     }
-
-    public Command setArmPosition(double position) {
-        return new InstantCommand(() -> arm.setPseudoLimits(arm.shooterDegreesToMotorRotations(position)));
-    }
-
-    public Command incrementArmPosition(double increment) {
-        return new InstantCommand(() -> arm.rotateToDegrees(arm.getShooterDegrees() + increment));
-    }
-
-//    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
-//        return sysIdRoutine.quasistatic(direction);
-//    }
-//
-//    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-//        return sysIdRoutine.dynamic(direction);
-//    }
 }

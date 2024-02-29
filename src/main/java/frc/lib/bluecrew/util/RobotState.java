@@ -20,11 +20,14 @@ public final class RobotState implements Constants.GameStateConstants {
 
     private boolean noteIsAvailable;
 
+    private boolean isAutonomous;
+
     private RobotState() {
         noteIsAvailable = false;
         robotCycleStatus = RobotCycleStatus.NO_NOTE_CANT_SEE_SPEAKER;
         shooterMode = ShooterMode.SPEAKER;
         shooterStatus = ShooterStatus.UNREADY;
+        isAutonomous = false;
     }
 
     public static synchronized RobotState getInstance() {
@@ -75,8 +78,7 @@ public final class RobotState implements Constants.GameStateConstants {
 
     public boolean hasNote() {
         return switch (robotCycleStatus) {
-            case HAS_NOTE_CANT_SEE_SPEAKER -> true;
-            case HAS_NOTE_SEES_SPEAKER -> true;
+            case HAS_NOTE_CANT_SEE_SPEAKER, HAS_NOTE_SEES_SPEAKER -> true;
             default -> false;
         };
     }
@@ -97,8 +99,7 @@ public final class RobotState implements Constants.GameStateConstants {
 
     public boolean hasSpeakerTarget() {
         return switch (robotCycleStatus) {
-            case HAS_NOTE_SEES_SPEAKER -> true;
-            case NO_NOTE_SEES_SPEAKER -> true;
+            case HAS_NOTE_SEES_SPEAKER, NO_NOTE_SEES_SPEAKER -> true;
             default -> false;
         };
     }
@@ -115,5 +116,13 @@ public final class RobotState implements Constants.GameStateConstants {
                 case NO_NOTE_SEES_SPEAKER -> robotCycleStatus = RobotCycleStatus.NO_NOTE_CANT_SEE_SPEAKER;
             }
         }
+    }
+
+    public boolean isAutonomous() {
+        return isAutonomous;
+    }
+
+    public void setIsAutonomous(boolean autonomous) {
+        isAutonomous = autonomous;
     }
 }

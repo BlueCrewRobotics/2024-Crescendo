@@ -11,34 +11,49 @@ import frc.robot.Constants;
 
 public class IndexerModule implements Constants.NotePlayerConstants {
 
-  private CANSparkMax indexerMotor = new CANSparkMax(INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
-  private SparkPIDController indexerController = indexerMotor.getPIDController();
-  private SparkRelativeEncoder indexerEncoder = (SparkRelativeEncoder) indexerMotor.getEncoder();
+    private final CANSparkMax indexerMotor = new CANSparkMax(INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
+//    private final SparkLimitSwitch limitSwitch = indexerMotor.getForwardLimitSwitch(SparkLimitSwitch.Type.kNormallyOpen);
 
-  private DigitalInput beamBreak = new DigitalInput(9);
+    private final DigitalInput beamBreak = new DigitalInput(9);
 
-  public IndexerModule() {
-    indexerMotor.setSmartCurrentLimit(20);
-  }
+    private boolean limitSwitchState;
 
-  public void spin(double speed) {
-    indexerMotor.set(speed);
-  }
+    public IndexerModule() {
+        indexerMotor.setSmartCurrentLimit(20);
+        indexerMotor.setIdleMode(CANSparkBase.IdleMode.kCoast);
+        indexerMotor.enableVoltageCompensation(12);
+//        limitSwitch.enableLimitSwitch(false);
+        limitSwitchState = false;
+    }
 
-  public void stop() {
-    indexerMotor.stopMotor();
-  }
+    public void spin(double speed) {
+//        System.out.println("Spinning Indexer: " + speed);
+        indexerMotor.set(speed);
+    }
 
-  public double getEncoderPosition() {
-    return indexerMotor.getEncoder().getPosition();
-  }
+    public void stop() {
+        indexerMotor.stopMotor();
+    }
 
-  /**
-   * @return whether or not we "see" a note in the indexer (via beam-break)
-   */
-  public boolean noteInIndexer() {
-    return !beamBreak.get();
-  }
+    public double getEncoderPosition() {
+        return indexerMotor.getEncoder().getPosition();
+    }
 
-  // TODO: Set GlobalVariables.hasNote using noteInIndexer
+    /**
+     * @return whether or not we "see" a note in the indexer (via beam-break)
+     */
+    public boolean noteInIndexer() {
+        return !beamBreak.get();
+    }
+
+    public void setEnableHardLimit(boolean enableHardLimit) {
+        if (limitSwitchState != enableHardLimit) {
+//            limitSwitch.enableLimitSwitch(enableHardLimit);
+            limitSwitchState = enableHardLimit;
+        }
+    }
+
+    public boolean isLimitSwitchEnabled() {
+        return limitSwitchState;
+    }
 }

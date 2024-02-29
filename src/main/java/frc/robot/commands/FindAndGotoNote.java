@@ -1,41 +1,37 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
+import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.VisionModule;
-import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import java.util.List;
+
 
 public class FindAndGotoNote extends Command {
-    private final NotePlayerSubsystem notePlayerSubsystem;
     private final SwerveDrive swerveDrive;
-
-    private boolean alsoPickupNote;
-
-    private boolean finished = false;
 
     private PhotonCamera notesCamera;
 
-    public FindAndGotoNote(NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive /*, boolean alsoPickupNote*/) {
-        this.notePlayerSubsystem = notePlayerSubsystem;
+    public FindAndGotoNote(SwerveDrive swerveDrive) {
         this.swerveDrive = swerveDrive;
-        this.alsoPickupNote = alsoPickupNote;
 
         // each subsystem used by the command must be passed into the
         // addRequirements() method (which takes a vararg of Subsystem)
-        addRequirements(this.notePlayerSubsystem, this.swerveDrive);
+        addRequirements(this.swerveDrive);
 
         notesCamera = VisionModule.getInstance().getNotesIndexerCamera();
     }
 
-    Command defDriveCommand;
-
     @Override
     public void initialize() {
+        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        System.out.println("*****\n******\n*******\n******** FINDING AND GOING TO NOTE ********\n*******\n*******\n*****");
     }
 
     @Override
@@ -52,11 +48,9 @@ public class FindAndGotoNote extends Command {
 
         // Check if limelight has found a target
         if (pipelineResult.hasTargets()) {
-            // blink the blinkin
-            RobotState.getInstance().setNoteIsAvailable(true);
 
 //            System.out.println("Note found!  ---------------");
-            PhotonTrackedTarget target = pipelineResult.getBestTarget();
+            PhotonTrackedTarget target = getBestTarget(pipelineResult);
 
 //            System.out.println("Pitch: " + target.getPitch());
 //            System.out.println("Yaw: " + target.getYaw());
@@ -83,43 +77,48 @@ public class FindAndGotoNote extends Command {
 
              */
 
-            double angleOffset = target.getYaw();
+            // Don't go for the note if we're in autonomous, we're getting a center note,
+            // and the pitch to the target is greater than we expect
+            if (!(RobotState.getInstance().isAutonomous() && target.getPitch() > 17 &&
+                    ((PoseEstimator.getInstance().getPose().getX() > 6 && !FieldState.getInstance().onRedAlliance()) ||
+                            (PoseEstimator.getInstance().getPose().getX() < 10 && FieldState.getInstance().onRedAlliance())))) {
 
-            if(target.getPitch() < -20 && angleOffset > 10) {
-                // back up if note is well off center and we are close to it
-                neededSpeed = - 0.15;
-            }
-            else if(target.getPitch() < -15 && angleOffset > 10) {
-                // slow down forward movement if note is well off center and we are close to it
-                neededSpeed = 0.05;
-            }
-            else if(target.getPitch() < -27) {
+//                System.out.println("Finding Note");
+                // Set that a note is available to pickup
+                RobotState.getInstance().setNoteIsAvailable(true);
+
+                // TODO: Remove 1 degree offset once note is being centered / shooter is centered
+                neededRotation = target.getYaw()-1;
+                double angleOffset = Math.abs(neededRotation);
+
+                if (target.getPitch() < -20 && angleOffset > 10) {
+                    // back up if note is well off center and we are close to it
+                    neededSpeed = -0.15;
+                } else if (target.getPitch() < -15 && angleOffset > 10) {
+                    // slow down forward movement if note is well off center and we are close to it
+                    neededSpeed = 0.05;
+                } else if (target.getPitch() < -27) {
 //                System.out.println("Note is at intake.");
-                neededSpeed = 0.02;
-            }
-            else if(target.getPitch() < 0) {
+                    neededSpeed = 0.02;
+                } else if (target.getPitch() < 0) {
 //                System.out.println("Note is within a foot");
-                neededSpeed = 0.24;
-                if(angleOffset < 5) {
-                    neededSpeed += 0.1;
-                }
-            }
-            else if(target.getPitch() < 15) {
+                    neededSpeed = 0.24;
+                    if (angleOffset < 5) {
+                        neededSpeed += 0.1;
+                    }
+                } else if (target.getPitch() < 15) {
 //                System.out.println("Note is within 3 feet");
-                neededSpeed = 0.35;
-                if(angleOffset < 15) {
-                    neededSpeed += 0.1;
-                }
-            }
-            else if(target.getPitch() > 15) {
+                    neededSpeed = 0.35;
+                    if (angleOffset < 15) {
+                        neededSpeed += 0.1;
+                    }
+                } else if (target.getPitch() > 15) {
 //                System.out.println("Note is beyond 3 feet");
-                neededSpeed = 0.49;
-                if(angleOffset < 15) {
-                    neededSpeed += 0.1;
+                    neededSpeed = 0.49;
+                    if (angleOffset < 15) {
+                        neededSpeed += 0.1;
+                    }
                 }
-            }
-
-            neededRotation = angleOffset;
 
 /*
             if(target.getYaw() < -angleTolerance) {
@@ -131,9 +130,14 @@ public class FindAndGotoNote extends Command {
 //                neededRotation = -angleOffset;
             }
  */
+            }
+
+            else {
+//                System.out.println("Autonomous Not Getting Note");
+            }
         }
         else {
-            System.out.println("No Note in view...");
+//            System.out.println("No Note in view...");
             neededSpeed = 0.0;
             neededRotation = 0.0;
             // blink the blinkin
@@ -144,7 +148,7 @@ public class FindAndGotoNote extends Command {
 //        System.out.println("Desired rotation (degrees): " + neededRotation);
 //        System.out.println("--------------------------------------");
 
-        final double speed = -neededSpeed;
+        final double speed = neededSpeed;
         final double rotation = neededRotation;
 
         // forward/back (translation), left/right (strafe), target heading in degrees
@@ -153,11 +157,53 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public boolean isFinished() {
-        return finished;
+
+        //        Finish if we're in autonomous and:
+        return          (RobotState.getInstance().isAutonomous() && (
+                //      There's not a note available
+                        !RobotState.getInstance().isNoteIsAvailable() ||
+                //      We're on Red Alliance and we're past the center line
+                        (FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() < 8.29) ||
+                //      or We're on Blue Alliance and we're past the center line
+                        (!FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() > 8.29)));
     }
 
     @Override
     public void end(boolean interrupted) {
+        System.out.println("Finished Finding Note");
+        RobotState.getInstance().setNoteIsAvailable(false);
+        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         swerveDrive.resetRotationPIDController();
+        swerveDrive.setHoldHeading(swerveDrive.getHeading());
+    }
+
+    private PhotonTrackedTarget getBestTarget(PhotonPipelineResult pipelineResult) {
+
+        if(!pipelineResult.hasTargets())
+            return null;
+
+        PhotonTrackedTarget bestPitch = null;
+        PhotonTrackedTarget bestYaw = null;
+        List<PhotonTrackedTarget> targets = pipelineResult.getTargets();
+        for(PhotonTrackedTarget t: targets) {
+            if(bestPitch == null) {
+                bestPitch = t;
+                bestYaw = t;
+            }
+            else {
+                if (t.getPitch() < bestPitch.getPitch()) {
+                    bestPitch = t;
+                }
+                if(Math.abs(t.getYaw()) < Math.abs(bestYaw.getYaw())) {
+                    bestYaw = t;
+                }
+            }
+        }
+
+        // identify and return the note that has the least yaw, unless another one is considerably closer
+        if(Math.abs(bestPitch.getPitch() - bestYaw.getPitch()) > 12)
+            return  bestPitch;
+
+        return bestYaw;
     }
 }

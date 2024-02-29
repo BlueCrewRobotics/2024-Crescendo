@@ -37,11 +37,11 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     private static final ClimberSubsystem climberInstance = new ClimberSubsystem();
 
+    private TalonFXConfiguration climberConfig = new TalonFXConfiguration();
+
     private ClimberSubsystem() {
         motor1.clearStickyFaults();
         motor2.clearStickyFaults();
-
-        TalonFXConfiguration motor1FXConfig = new TalonFXConfiguration();
 
         /*
           .withMotorOutput(new MotorOutputConfigs()
@@ -52,36 +52,31 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
                   .withSupplyCurrentThreshold(10));
 */
 
-        motor1FXConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        SoftwareLimitSwitchConfigs limitSwitchConfigs = new SoftwareLimitSwitchConfigs()
-                .withForwardSoftLimitEnable(true)
-                        .withReverseSoftLimitEnable(true)
-                                .withForwardSoftLimitThreshold(ELEVATOR_MOTOR_UPPER_LIMIT_POS)
-                                        .withReverseSoftLimitThreshold(ELEVATOR_MOTOR_LOWER_LIMIT_POS);
-        motor1FXConfig.withSoftwareLimitSwitch(limitSwitchConfigs);
-        motor1FXConfig.withCurrentLimits(new CurrentLimitsConfigs()
-                .withSupplyCurrentLimit(40.0)
-                .withStatorCurrentLimit(40.0)
-                .withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimitEnable(true));
+        climberConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
+        climberConfig.CurrentLimits.SupplyCurrentLimit = 40;
+        climberConfig.CurrentLimits.SupplyCurrentThreshold = 60;
+        climberConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        motor1FXConfig.Slot0.kP = 0.3;
-        motor1FXConfig.Slot0.kI = 0.005;
-        motor1FXConfig.Slot0.kD = 0.0;
-        motor1FXConfig.Slot0.kG = 0.25;
+        climberConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ELEVATOR_MOTOR_UPPER_LIMIT_POS;
+        climberConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ELEVATOR_MOTOR_LOWER_LIMIT_POS;
+        climberConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        climberConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
+        climberConfig.Slot0.kP = 0.3;
+        climberConfig.Slot0.kI = 0.005;
+        climberConfig.Slot0.kD = 0.0;
+        climberConfig.Slot0.kG = 0.3;
 
-        // brakes are important - when match ends the bot will be the on the chain,
-        // we don't want it to drop hard when the bot is disabled.
-        motor1.setNeutralMode(NeutralModeValue.Brake);
-        motor2.setNeutralMode(NeutralModeValue.Brake);
+        climberConfig.Slot1.kP = 0.3;
+        climberConfig.Slot1.kI = 0.005;
+        climberConfig.Slot1.kD = 0.0;
+        climberConfig.Slot1.kG = 0.25;
 
-
-
-        motor1.getConfigurator().apply(motor1FXConfig);
-        motor2.getConfigurator().apply(motor1FXConfig);
+        motor1.getConfigurator().apply(climberConfig);
+        motor2.getConfigurator().apply(climberConfig);
         motor2.setControl(new Follower(ELEVATOR_MOTOR_1_ID, false));
     }
 

@@ -34,20 +34,10 @@ public class AutoGrabFromCenter extends SequentialCommandGroup {
         addCommands(
                 // Look for a note until we see that one is available
                 new FindCenterPiece(orderOfCenterNotes, comingFrom, autoLane, notePlayerSubsystem, swerveDrive)
-                        // End half a second after we have a note
-                        .raceWith(Commands.waitUntil(notePlayerSubsystem.getIndexer()::noteInIndexer)),
-                // Follow the path to the note we are in front of until the path ends, or we pick up a note,
-                // but only if AutoPieceIsAvailable is true
-//                (new AutoFollowNumberedNotePath("CN", () -> FieldState.getInstance().getCenterNoteIndex(), "Intake")
-//                        // Race with IntakeNote command
-//                        .raceWith(new IntakeNote())
-                        // At the same time, set the piece availability to false
-                        new InstantCommand(() -> RobotState.getInstance().setNoteIsAvailable(false))
-                        // And set that the note we are in front of no longer exists (because we are picking it up
-                        .alongWith(new InstantCommand(() -> FieldState.getInstance().setCenterNoteExists(
-                                FieldState.getInstance().getCenterNoteIndex()-1, false)))
-                // Only if a piece is available
-                .onlyIf(() -> RobotState.getInstance().isNoteIsAvailable())
+                        // End a clock cycle after we have a note
+                        .raceWith(Commands.waitUntil(notePlayerSubsystem.getIntake()::noteInIntake).andThen(Commands.waitSeconds(0.025))),
+                // And then set the note availability to false
+                new InstantCommand(() -> RobotState.getInstance().setNoteIsAvailable(false))
         );
 
         // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,

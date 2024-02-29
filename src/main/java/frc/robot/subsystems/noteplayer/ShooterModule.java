@@ -44,7 +44,6 @@ public class ShooterModule implements Constants.ShooterConstants {
         topShooterVelocity.FeedForward = shooterFeedForward.calculate(topShooterVelocity.Velocity * SHOOTER_METERS_PER_ROTATION);
         //shooterVelocity.withAcceleration(25);
 
-        System.out.println(("Shooter velocity set to: " + topShooterVelocity.Velocity));
         topShooterMotor.setControl(topShooterVelocity);
         bottomShooterMotor.setControl(topShooterVelocity);
 
@@ -112,13 +111,12 @@ public class ShooterModule implements Constants.ShooterConstants {
 
     /**
      *
-     * @return Whether both the shooter motors are within {@value SHOOTER_SPEED_ERROR_TOLERANCE}% of the set velocity
+     * @return Whether both the shooter motors are within {@value SHOOTER_SPEED_ERROR_TOLERANCE} rotations of the set velocity
      */
     public boolean targetVelocityReached() {
-        double epsilon = SHOOTER_SPEED_ERROR_TOLERANCE/100;
-        return getShooterTopVelocity() > (topShooterVelocity.Velocity * (1-epsilon))
-                && getShooterTopVelocity() < (topShooterVelocity.Velocity * (1+epsilon))
-                && getShooterBottomVelocity() > (bottomShooterVelocity.Velocity * (1-epsilon))
-                && getShooterBottomVelocity() < (bottomShooterVelocity.Velocity * (1+epsilon));
+        return  Math.abs(topShooterMotor.getClosedLoopError().getValue())    <  SHOOTER_SPEED_ERROR_TOLERANCE &&
+                Math.abs(topShooterMotor.getClosedLoopError().getValue())    > -SHOOTER_SPEED_ERROR_TOLERANCE &&
+                Math.abs(bottomShooterMotor.getClosedLoopError().getValue()) <  SHOOTER_SPEED_ERROR_TOLERANCE &&
+                Math.abs(bottomShooterMotor.getClosedLoopError().getValue()) > -SHOOTER_SPEED_ERROR_TOLERANCE;
     }
 }

@@ -2,6 +2,7 @@ package frc.robot.subsystems.noteplayer;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import frc.robot.Constants;
@@ -27,9 +28,9 @@ public class NotePlayerCTREConfigs implements Constants.NotePlayerConstants, Con
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // PID
-        shooterConfig.Slot0.kP = 0.0;
-        shooterConfig.Slot0.kI = 0.0;
-        shooterConfig.Slot0.kD = 0.0;
+        shooterConfig.Slot0.kP = 2.0;
+        shooterConfig.Slot0.kI = 0.001;
+        shooterConfig.Slot0.kD = 0.1;
 
         // Closed-Loop ramps
         shooterConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0.75;
@@ -38,6 +39,9 @@ public class NotePlayerCTREConfigs implements Constants.NotePlayerConstants, Con
         // Open-Loop ramps
         shooterConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.75;
         shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.75;
+
+        // Inverted
+        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         /* *** Intake Configs *** */
         // Current Limits

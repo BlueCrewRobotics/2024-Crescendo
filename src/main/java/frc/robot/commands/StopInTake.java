@@ -27,7 +27,7 @@ public class StopInTake extends Command {
      */
     @Override
     public void execute() {
-   Intake.stopSpinning();
+   Intake.stop();
     }
 
     /**

@@ -57,23 +57,17 @@ public class FindCenterPiece extends SequentialCommandGroup {
                     Commands.print("Following: " + comingFrom + "-" + autoLane + "-CL"),
                     // Follow the path from where we just scored, through the auto lane, to the center line (actually a bit behind it)
                     AutoBuilder.followPath(PathPlannerPath.fromPathFile(comingFrom + "-" + autoLane + "-CL")),
-                    // Follow the path from where we stopped behind the center line to in front of the next note,
-                    // using the .alongWith decorator to make its own sequential command group,
-                    // which seemed to help with other things run at the right time
                     Commands.print("Following: CL-" + autoLane + "-CN" + nextNote),
                     AutoBuilder.followPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-CN" + nextNote)).andThen(
-
-                            // But actually just print that we're doing that
-                            // After we follow the paths, check if the note we are in front of is available/exists,
-                            // at the same time as setting the global note index
+                            // After we follow the paths, try to grab the note in front of us, unless it doesn't exist
                             Commands.print("FindingNote"),
-                            new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
-                                    .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote()))
+                            new FindAndGotoNote(swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
+                                    .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).withTimeout(0.06)
+                                            .andThen(notePlayerSubsystem.intakeNote().onlyIf(RobotState.getInstance()::isNoteIsAvailable)))
                     )
             );
 
-            // Then do other stuff. Remember this command runs only until the CheckForPieceAvailability
-            // command sets the global availability to true
+            // Then do other stuff. This command is interrupted as soon as there's a note in the intake
             for (int i = 1; i < centerNotesToGet.size(); i++) {
                 // The next note is the next note
                 nextNote = centerNotesToGet.get(i);
@@ -85,22 +79,21 @@ public class FindCenterPiece extends SequentialCommandGroup {
                         // Follow the path from the note we are currently at to the next one
                         Commands.print("Following: CN" + centerNotesToGet.get(i - 1) + "-CN" + nextNote),
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
-                        // Set the global note index, and check for piece availability
-                        new InstantCommand(() -> FieldState.getInstance().setCenterNoteIndex(noteIndex2)),
-                        new AutoFindAndGoToNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
-                                .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote()))
+                        // Try to grab the note in front of us
+                        new FindAndGotoNote(swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
+                                .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).withTimeout(0.06)
+                                        .andThen(notePlayerSubsystem.intakeNote().onlyIf(RobotState.getInstance()::isNoteIsAvailable))),
+                        // Either we got it, or it wasn't there, so save that it's gone
+                        new InstantCommand(() -> FieldState.getInstance().setCenterNoteExists(noteIndex2, false))
                 );
             }
-
-            addCommands(
-                    // Wait for it to clock through every thing (waiting 30ms, runs every 20ms),
-                    // so we don't accidentally trigger this if we got the last piece
-                    Commands.waitSeconds(0.03),
-                    new InstantCommand(() -> FieldState.getInstance().setCenterNotesGone(true))
-            );
-
-            // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,
-            super.initialize();
         }
+        // Lastly, set that all the notes we want are gone, this command will be interrupted before this if we get a note
+        addCommands(
+                new InstantCommand(() -> FieldState.getInstance().setCenterNotesGone(true))
+        );
+
+        // THIS IS SUPER IMPORTANT, this code is needed to start the commands going,
+        super.initialize();
     }
 }

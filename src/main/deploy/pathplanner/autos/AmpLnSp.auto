@@ -1,0 +1,61 @@
+{
+  "version": 1.0,
+  "startingPose": null,
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-AmpLn-SN1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SN1-SN2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SN2-SN3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-AmpLn-CL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CL-AmpLn-CN1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CL-AmpLn-Sp"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-AmpLn-CL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CL-AmpLn-CN2"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "AmpLn",
+  "choreoAuto": false
+}

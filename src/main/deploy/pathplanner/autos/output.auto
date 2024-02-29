@@ -11,15 +11,4 @@
     "type": "sequential",
     "data": {
       "commands": [
-        {
-          "type": "named",
-          "data": {
-            "name": "EndNoteAction"
-          }
-        }
-      ]
-    }
-  },
-  "folder": null,
-  "choreoAuto": false
-}
+    "type":"path","data":{"pathName":"Sp-AmpLn-SN1"}},{"type":"path","data":{"pathName":"SN1-SN2"}]}},"folder":"Generated","choreoAuto":false}
