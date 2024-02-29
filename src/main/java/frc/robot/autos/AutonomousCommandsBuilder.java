@@ -65,7 +65,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                         notePlayerSubsystem.getShooter().stop();
                         notePlayerSubsystem.getIndexer().stop();
                         }),
-                    new AutoLog("Finished Shooting Into Speaker!"),
+//                    new AutoLog("Finished Shooting Into Speaker!"),
                     // Make sure we're not trying to face the speaker while we aren't scoring
                     new InstantCommand(() -> swerveDrive.setFaceSpeaker(false))
             );
@@ -188,7 +188,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
 //                                                    Commands.waitUntil(notePlayerSubsystem.getIndexer()::noteInIndexer)
 //                                                            .andThen(() -> notePlayerSubsystem.getArm().rotateToDegrees(notePlayerSubsystem.getAngleInterpolator().get(distanceToSpeakerAtEndOfPath)))
                                             ),
-                                            new AutoLog("Finished intaking and following path"),
+//                                            new AutoLog("Finished intaking and following path"),
                                             new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.65)).until(notePlayerSubsystem.getIndexer()::noteInIndexer).unless(notePlayerSubsystem.getIndexer()::noteInIndexer),
                                             new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
                                                 notePlayerSubsystem.getShooter().stop();

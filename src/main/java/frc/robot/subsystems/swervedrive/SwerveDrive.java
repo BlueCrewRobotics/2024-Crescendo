@@ -10,6 +10,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -100,7 +101,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             field.getObject("path").setPoses(poses);
         });
 
-        SmartDashboard.putData("Field", field);
+//        SmartDashboard.putData("Field", field);
 
         if (FieldState.getInstance().onRedAlliance()) {
             invertJoystickInputs = 1;
@@ -310,7 +311,15 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         translationVal *= (1 - (slowVal * 0.75));
         strafeVal *= (1 - slowVal * 0.75);
         double rotationVal;
-        if (faceSpeaker) holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+        if (faceSpeaker) {
+//            Rotation2d offsetAngleToSpeaker = getAngleToPose(speakerCoords.toTranslation2d());
+//            if (FieldState.getInstance().onRedAlliance()) {
+//                offsetAngleToSpeaker = Rotation2d.fromDegrees(180).minus(offsetAngleToSpeaker);
+//            }
+//            offsetAngleToSpeaker = offsetAngleToSpeaker.plus(Rotation2d.fromDegrees(60));
+
+            holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+        }
         if (manualRotationVal != 0) {
             rotationVal = manualRotationVal;
             holdHeading = getHeading();
@@ -319,8 +328,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             rotationVal = rotationPercentageFromTargetAngle(holdHeading);
         }
 
-        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
-                + Math.pow(strafeVal * maxSpeed, 2)));
+//        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
+//                + Math.pow(strafeVal * maxSpeed, 2)));
 
         drive(new Translation2d(translationVal, strafeVal).times(maxSpeed),
                 rotationVal * maxAngularVelocity,
@@ -436,9 +445,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         posePublisher.set(poseEstimator.getPose());
 
-        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
-        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
-        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
+//        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
+//        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
 
         if (RobotState.isDisabled()) {
             setHoldHeading(getHeading());

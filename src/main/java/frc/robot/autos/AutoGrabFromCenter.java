@@ -1,11 +1,8 @@
 package frc.robot.autos;
 
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
-import frc.robot.commands.IntakeNote;
 import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDrive;
 

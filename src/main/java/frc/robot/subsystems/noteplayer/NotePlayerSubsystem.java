@@ -54,12 +54,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     public NotePlayerSubsystem() {
         speedInterpolator.put(1.5d, 13d);
-        speedInterpolator.put(3d, 17.8d);
+        speedInterpolator.put(3d, 18.2d);
         speedInterpolator.put(4d, 20.5d);
 
         angleInterpolator.put(1.5d, 47d);
-        angleInterpolator.put(3d, 26.55d);
-        angleInterpolator.put(4d, 18.8d);
+        angleInterpolator.put(3d, 26.25d);
+        angleInterpolator.put(4d, 18.5d);
     }
 
     public IntakeModule getIntake() {
@@ -83,8 +83,8 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         arm.periodic();
         setRobotStates();
 
-        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
-        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
+//        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
 //        SmartDashboard.putBoolean("Shooter At Set Speed", shooter.targetVelocityReached());
 //        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putNumber("Top Shooter Speed", shooter.getShooterTopVelocityMPS());
@@ -242,7 +242,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                         hasLineOfSight(PoseEstimator.getInstance().getPose().getTranslation(),
                                 FieldState.getInstance().onRedAlliance() ? RED_SPEAKER.toTranslation2d() : BLUE_SPEAKER.toTranslation2d()));
                 RobotState.getInstance().setShooterStatus(
-                        (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
+                        (arm.isAtSetPosition() && shooter.targetVelocityReached() && PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()) < 2.7) ? ShooterStatus.READY : ShooterStatus.UNREADY);
             }
             case AMP -> {
                 RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
@@ -280,9 +280,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command intakeNote() {
-        return new AutoLog("*****\n******\n*******\n****** INTAKING NOTE ******\n*******\n******\n*****").andThen((new RunCommand(() -> intake.spin(0.4))
+        return /*new AutoLog("*****\n******\n*******\n****** INTAKING NOTE ******\n*******\n******\n*****").andThen(*/(new RunCommand(() -> intake.spin(0.4))
                 .until(intake::noteInIntake).andThen((
-                        new RunCommand(() -> intake.spin(0.15)).withTimeout(0.6)
+                        new RunCommand(() -> intake.spin(0.15)).withTimeout(0.4)
                                 .andThen(new RunCommand(() -> intake.spin(0.1))))
                                 .alongWith(pullNoteIntoIndexer())))
                 .until(indexer::noteInIndexer)//.andThen(new RunCommand(() -> indexer.spin(0.5)).withTimeout(0.2))
@@ -291,7 +291,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                     indexer.stop();
 
                 })
-        ).withName("IntakeNote");
+        /*)*/.withName("IntakeNote");
     }
 
     public Command eject() {
@@ -313,7 +313,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command pullNoteIntoIndexer() {
         return new RunCommand(
                 () -> indexer.spin(1)
-        ).withTimeout(0.6).andThen(new RunCommand(() -> indexer.spin(0.65))).until(indexer::noteInIndexer);
+        ).withTimeout(0.4).andThen(new RunCommand(() -> indexer.spin(0.65))).until(indexer::noteInIndexer);
     }
 
     public Command feedNoteToShooter() {

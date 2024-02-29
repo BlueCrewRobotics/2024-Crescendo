@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
 
         startTime = System.nanoTime();
 
-        DataLogManager.start();
+//        DataLogManager.start();
 
         shouldUpdateAutoCommand = false;
         //URCL.start();

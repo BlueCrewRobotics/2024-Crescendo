@@ -15,15 +15,15 @@ public class AutoScoreInSpeaker extends SequentialCommandGroup {
         double distanceToSpeaker = PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
         addCommands(
                 new InstantCommand(() -> RobotState.getInstance().setShooterMode(Constants.GameStateConstants.ShooterMode.SPEAKER)),
-                new AutoLog("Starting Scoring!"),
+//                new AutoLog("Starting Scoring!"),
                 Commands.run(() -> {
                     notePlayerSubsystem.getShooter().spinMetersPerSecond(notePlayerSubsystem.getSpeedInterpolator().get(distanceToSpeaker));
                     notePlayerSubsystem.getArm().rotateToDegrees(notePlayerSubsystem.getAngleInterpolator().get(distanceToSpeaker));
                         })
                         .alongWith((Commands.waitSeconds(0.025)
                                 .andThen(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)))
-                                .andThen(new AutoLog("Scoring!"), notePlayerSubsystem.scoreNote()))
+                                /*.andThen(new AutoLog("Scoring!"), notePlayerSubsystem.scoreNote())*/)
                         .raceWith(Commands.waitUntil(() -> !RobotState.getInstance().hasNote())
-                                .andThen(Commands.waitSeconds(0.1), new AutoLog("Finished Scoring!"))));
+                                /*.andThen(Commands.waitSeconds(0.1), new AutoLog("Finished Scoring!"))*/));
     }
 }

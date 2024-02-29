@@ -17,9 +17,9 @@ public class AutoGrabFromStart extends SequentialCommandGroup {
         // Follow the path from where we last scored to the starting note we want to get
         // until we get to the end of the path, or we pick up a note
         addCommands(
-                new AutoLog("Starting Path To Note!"),
+//                new AutoLog("Starting Path To Note!"),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile(lastScoredIn + "-" + autoLane + "-SN" + noteToGet)),
-                new AutoLog("Done Following Path To Note, Starting Intake!"),
+//                new AutoLog("Done Following Path To Note, Starting Intake!"),
                 Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY),
                 new FindAndGotoNote(swerveDrive).alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable)
                         .andThen(new RunCommand(() -> notePlayerSubsystem.getIntake().spin(0.4)))).until(notePlayerSubsystem.getIntake()::noteInIntake)

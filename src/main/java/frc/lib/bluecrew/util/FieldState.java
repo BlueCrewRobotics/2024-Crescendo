@@ -43,27 +43,22 @@ public class FieldState implements Constants.GameStateConstants {
     }
 
     public boolean[] getCenterNotesExist() {
-        System.out.println("Getting Center Notes Exist: " + Arrays.toString(centerNotesExist));
         return centerNotesExist;
     }
 
     public void setCenterNotesExist(boolean[] centerNotesExist) {
-        System.out.println("Setting Center Notes Exist: " + Arrays.toString(centerNotesExist));
         this.centerNotesExist = centerNotesExist;
     }
 
     public void setCenterNoteExists(int index, boolean val) {
-        System.out.println("Setting Center Note Exists: " + index + " to: " + val);
         if (index < centerNotesExist.length) centerNotesExist[index] = val;
     }
 
     public void setCenterNoteIndex(int centerNoteIndex) {
-        System.out.println("Setting Center Note Index: " + centerNoteIndex);
         this.centerNoteIndex = centerNoteIndex;
     }
 
     public int getCenterNoteIndex() {
-        System.out.println("Getting Center Note Index: " + centerNoteIndex);
         return centerNoteIndex;
     }
 

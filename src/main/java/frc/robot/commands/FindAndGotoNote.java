@@ -30,8 +30,8 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public void initialize() {
-        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-        System.out.println("*****\n******\n*******\n******** FINDING AND GOING TO NOTE ********\n*******\n*******\n*****");
+//        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+//        System.out.println("*****\n******\n*******\n******** FINDING AND GOING TO NOTE ********\n*******\n*******\n*****");
     }
 
     @Override
@@ -170,9 +170,9 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        System.out.println("Finished Finding Note");
+//        System.out.println("Finished Finding Note");
         RobotState.getInstance().setNoteIsAvailable(false);
-        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+//        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         swerveDrive.resetRotationPIDController();
         swerveDrive.setHoldHeading(swerveDrive.getHeading());
     }

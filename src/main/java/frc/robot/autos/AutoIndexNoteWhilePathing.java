@@ -10,7 +10,7 @@ public class AutoIndexNoteWhilePathing extends ParallelCommandGroup {
 
     public AutoIndexNoteWhilePathing(NotePlayerSubsystem notePlayerSubsystem, String pathName, PathConstraints constraints) {
         addCommands(
-                new AutoLog("Starting Indexing while driving!"),
+//                new AutoLog("Starting Indexing while driving!"),
                 AutoBuilder.buildAuto(pathName),
                 notePlayerSubsystem.intakeNote()
         );

@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.bluecrew.util.BlinkinValues;
+import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.autos.AutonomousCommandsBuilder;
 import frc.robot.subsystems.*;
@@ -25,6 +26,8 @@ import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
 import frc.robot.commands.*;
+
+import static frc.robot.Constants.NotePlayerConstants.ARM_UNDER_STAGE_ANGLE_THRESHOLD;
 
 
 /**
@@ -127,8 +130,6 @@ public class RobotContainer implements Constants.AutoConstants {
                         () -> false//driver.leftBumper().getAsBoolean()
                 ));
 
-//        notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
-
 //        /* Driver Buttons */
 //        driver.povCenter().onFalse(Commands.waitSeconds(0.1).andThen(swerveDrive.setHoldHeading(-driver.getHID().getPOV()).until(cancelAutoRotation)));
 
@@ -159,6 +160,19 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.rightTrigger(0.1).whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(auxDriver.getRightTriggerAxis())));
         auxDriver.leftTrigger(0.1).whileTrue(new RunCommand(() -> notePlayerSubsystem.getIntake().spin(auxDriver.getLeftTriggerAxis())));
+
+        // Robot Status Triggers
+
+        new Trigger(() -> notePlayerSubsystem.getArm().getShooterDegrees() < ARM_UNDER_STAGE_ANGLE_THRESHOLD)
+                .onTrue(new RumbleController(driver.getHID(), 0.25)
+                        .andThen(Commands.waitSeconds(0.1))
+                        .andThen(new RumbleController(driver.getHID(), 0.25)));
+
+        new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer)
+                .onTrue(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kLeftRumble, 0.1)
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kRightRumble, 0.1))
+                        .andThen(Commands.waitSeconds(0.1))
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kBothRumble, 0.1)));
     }
 
     /**

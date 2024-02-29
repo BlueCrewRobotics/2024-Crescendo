@@ -120,13 +120,11 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         climberVelocity.FeedForward = climberFeedForward.calculate(climberVelocity.Velocity);
         //shooterVelocity.withAcceleration(25);
 
-        System.out.println(("Climber velocity set to: " + climberVelocity.Velocity));
         motor1.setControl(climberVelocity);
     }
 
     public void stopElevator() {
         motor1.stopMotor();
-        System.out.println("motor1 pos: " + getClimberEncoderPos());
     }
 
 

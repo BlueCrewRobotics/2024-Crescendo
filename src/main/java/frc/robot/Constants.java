@@ -263,10 +263,11 @@ public interface Constants {
         float ARM_MIN_LIMIT = -12f;
 
         double ARM_BALANCE_DEGREES = -39.6;
-        double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
+        double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES + 90;
         double ARM_PICKUP_ANGLE = 64;
         double ARM_SHOOTING_ANGLE = 48;
         double ARM_AMP_ANGLE = -48;
+        double ARM_UNDER_STAGE_ANGLE_THRESHOLD = 50;
         double ARM_MOTOR_ROTATIONS_PER_SHOOTER_DEGREE = -0.176225568;
 
         /** The allowed error of the position in degrees*/
@@ -301,13 +302,13 @@ public interface Constants {
             double minOutput = -0.2;
         }
         interface ArmDownwardsHighGravityPID {
-            double p = 0.065;
+            double p = 0.12;
             double i = 0.0001;
-            double d = 0.0;
+            double d = 0.02;
             double iZ = 1.5;
 
             double maxOutput = 0.1;
-            double minOutput = -0.1;
+            double minOutput = -0.175;
         }
         interface ArmDownwardsLowGravityPID {
             double p = 0.04;
@@ -316,7 +317,7 @@ public interface Constants {
             double iZ = 0.0;
 
             double maxOutput = 0.1;
-            double minOutput = -0.1;
+            double minOutput = -0.135;
         }
     }
 
