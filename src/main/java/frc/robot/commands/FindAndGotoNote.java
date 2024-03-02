@@ -4,7 +4,9 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.subsystems.PoseEstimator;
@@ -160,10 +162,9 @@ public class FindAndGotoNote extends Command {
                 DataLogManager.log("Autonomous Not Getting Note");
             }
 
-//            DataLogManager.log("Needed Speed: " + neededSpeed + ", Needed Rotation: " + neededRotation);
         }
         else {
-            System.out.println("No Note in view...");
+            DataLogManager.log("No Note in view. Time Stamp: " + pipelineResult.getTimestampSeconds());
             neededSpeed = 0.0;
             neededRotation = 0.0;
             // blink the blinkin
@@ -207,9 +208,14 @@ public class FindAndGotoNote extends Command {
         DataLogManager.log("Is Note Available: " + RobotState.getInstance().isNoteIsAvailable());
         DataLogManager.log("Is Autonomous: " + RobotState.getInstance().isAutonomous());
         DataLogManager.log("Shouldn't get Note In Autonomous: " + ((FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() < 8.29) ||
-                //      or We're on Blue Alliance and we're past the center line
+//                      or We're on Blue Alliance and we're past the center line
                 (!FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() > 8.29)));
-        RobotState.getInstance().setNoteIsAvailable(false);
+
+        if (finished) {
+            Commands.waitSeconds(0.025).andThen(() -> RobotState.getInstance().setNoteIsAvailable(false)).schedule();
+        } else {
+            RobotState.getInstance().setNoteIsAvailable(false);
+        }
 //        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         swerveDrive.resetRotationPIDController();
         swerveDrive.setHoldHeading(swerveDrive.getHeading());

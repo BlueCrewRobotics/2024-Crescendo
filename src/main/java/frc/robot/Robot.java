@@ -8,24 +8,19 @@ import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.subsystems.VisionModule;
-import org.littletonrobotics.urcl.URCL;
-import org.photonvision.PhotonPoseEstimator;
 
 import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
 import static frc.robot.Constants.FieldCoordinates.RED_SPEAKER;
 import static frc.robot.Constants.PhotonVision.ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS;
-import static frc.robot.Constants.PhotonVision.tagLayout;
 import static frc.robot.Constants.PhotonVision.ROBOT_TO_TAG_REAR_LEFT_CAM_POS;
 
 /**
@@ -39,8 +34,6 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
-
-    private PowerDistribution pdh = new PowerDistribution(10, PowerDistribution.ModuleType.kRev);
 
     private boolean shouldUpdateAutoCommand = false;
 
@@ -63,7 +56,7 @@ public class Robot extends TimedRobot {
 
         startTime = System.nanoTime();
 
-//        DataLogManager.start();
+        DataLogManager.start();
 
         shouldUpdateAutoCommand = false;
         //URCL.start();
