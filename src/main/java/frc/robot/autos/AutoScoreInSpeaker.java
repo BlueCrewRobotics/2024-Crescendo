@@ -22,7 +22,7 @@ public class AutoScoreInSpeaker extends SequentialCommandGroup {
                         })
                         .alongWith((Commands.waitSeconds(0.025)
                                 .andThen(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)))
-                                /*.andThen(new AutoLog("Scoring!"), notePlayerSubsystem.scoreNote())*/)
+                                .andThen(/*new AutoLog("Scoring!"),*/ notePlayerSubsystem.scoreNote()))
                         .raceWith(Commands.waitUntil(() -> !RobotState.getInstance().hasNote())
                                 /*.andThen(Commands.waitSeconds(0.1), new AutoLog("Finished Scoring!"))*/));
     }

@@ -49,15 +49,21 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 //                    .withProperties(Map.of("min", 0, "max", 48))
 //                    .getEntry();
 
+    private GenericEntry distanceToSpeaker = Shuffleboard.getTab("Teleoperated")
+            .add("Distance To Speaker", 2d)
+            .withWidget(BuiltInWidgets.kNumberSlider)
+            .withProperties(Map.of("min", 0, "max", 4))
+            .getEntry();
+
     private final InterpolatingDoubleTreeMap speedInterpolator = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
 
     public NotePlayerSubsystem() {
-        speedInterpolator.put(1.5d, 13d);
+        speedInterpolator.put(1.5d, 14.75d);
         speedInterpolator.put(3d, 18.2d);
         speedInterpolator.put(4d, 20.5d);
 
-        angleInterpolator.put(1.5d, 47d);
+        angleInterpolator.put(1.5d, 48d);
         angleInterpolator.put(3d, 26.25d);
         angleInterpolator.put(4d, 18.5d);
     }
@@ -342,8 +348,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 () -> {
                     RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER);
                     indexer.setEnableHardLimit(false);
-                    shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
-                    arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+//                    shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+//                    arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+                    shooter.spinMetersPerSecond(speedInterpolator.get(distanceToSpeaker.getDouble(1.5)));
+                    arm.rotateToDegrees(angleInterpolator.get(distanceToSpeaker.getDouble(1.5)));
                 }
         )).finallyDo(() -> {
                     shooter.stop();

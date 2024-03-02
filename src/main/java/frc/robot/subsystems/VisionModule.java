@@ -89,6 +89,18 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
         return aprilTagsFrontRight;
     }
 
+    public void setPhotonEstimatorFrontRight(Transform3d transform3d) {
+        this.photonEstimatorFrontRight = new PhotonPoseEstimator(
+                tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, transform3d);
+        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    }
+
+    public void setPhotonEstimatorRearLeft(Transform3d transform3d) {
+        this.photonEstimatorRearLeft = new PhotonPoseEstimator(
+                tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsRearLeft, transform3d);
+        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    }
+
     public PhotonCamera getAprilTagsRearLeftCamera() {
         return aprilTagsRearLeft;
     }

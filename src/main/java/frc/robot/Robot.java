@@ -5,20 +5,28 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
+import frc.robot.subsystems.VisionModule;
 import org.littletonrobotics.urcl.URCL;
+import org.photonvision.PhotonPoseEstimator;
 
 import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
 import static frc.robot.Constants.FieldCoordinates.RED_SPEAKER;
+import static frc.robot.Constants.PhotonVision.ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS;
+import static frc.robot.Constants.PhotonVision.tagLayout;
+import static frc.robot.Constants.PhotonVision.ROBOT_TO_TAG_REAR_LEFT_CAM_POS;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -37,6 +45,11 @@ public class Robot extends TimedRobot {
     private boolean shouldUpdateAutoCommand = false;
 
     private long startTime;
+
+    private final GenericEntry cameraToggle = Shuffleboard.getTab("Autonomous")
+            .add("Camera Toggle", false)
+            .withWidget(BuiltInWidgets.kToggleSwitch)
+            .getEntry();
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -71,6 +84,8 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
+        SmartDashboard.putBoolean("On Red Alliance", FieldState.getInstance().onRedAlliance());
     }
 
     /**
@@ -85,6 +100,14 @@ public class Robot extends TimedRobot {
         var alliance = DriverStation.getAlliance();
         boolean onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
         FieldState.getInstance().setOnRedAlliance(onRedAlliance);
+
+        if (cameraToggle.getBoolean(false)) {
+            VisionModule.getInstance().setPhotonEstimatorFrontRight(ROBOT_TO_TAG_REAR_LEFT_CAM_POS);
+            VisionModule.getInstance().setPhotonEstimatorRearLeft(ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
+        } else {
+            VisionModule.getInstance().setPhotonEstimatorFrontRight(ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
+            VisionModule.getInstance().setPhotonEstimatorRearLeft(ROBOT_TO_TAG_REAR_LEFT_CAM_POS);
+        }
 
         if (onRedAlliance) {
             FieldState.getInstance().setSpeakerCoords(RED_SPEAKER);

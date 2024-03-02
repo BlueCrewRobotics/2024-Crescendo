@@ -136,6 +136,9 @@ public class RobotContainer implements Constants.AutoConstants {
         driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
         driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+
+        driver.a().onTrue(swerveDrive.invertControls());
+
         driver.start().whileTrue(swerveDrive.alignWithAmp());
 
         driver.rightBumper().whileTrue(new FindAndGotoNote(swerveDrive)
@@ -158,8 +161,9 @@ public class RobotContainer implements Constants.AutoConstants {
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
 
-        auxDriver.rightTrigger(0.1).whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(auxDriver.getRightTriggerAxis())));
-        auxDriver.leftTrigger(0.1).whileTrue(new RunCommand(() -> notePlayerSubsystem.getIntake().spin(auxDriver.getLeftTriggerAxis())));
+        auxDriver.rightTrigger().whileTrue(notePlayerSubsystem.intakeNote());
+
+        auxDriver.rightStick().onTrue(notePlayerSubsystem.rotateArmToDegrees(50));
 
         // Robot Status Triggers
 
@@ -217,10 +221,10 @@ public class RobotContainer implements Constants.AutoConstants {
 
         // Choose how many notes to get from the starting zone
         numOfNotesFromStartChooser = new SendableChooser<>();
-        numOfNotesFromStartChooser.setDefaultOption("0", 0);
+        numOfNotesFromStartChooser.setDefaultOption("3", 3);
+        numOfNotesFromStartChooser.addOption("0", 0);
         numOfNotesFromStartChooser.addOption("1", 1);
         numOfNotesFromStartChooser.addOption("2", 2);
-        numOfNotesFromStartChooser.addOption("3", 3);
 
         // Choose Which direction the robot will search for notes in
         directionToSearchInChooser = new SendableChooser<>();
@@ -230,8 +234,8 @@ public class RobotContainer implements Constants.AutoConstants {
 
         // Choose whether to grab notes from the center or the start first
         grabFromCenterFirstChooser = new SendableChooser<>();
-        grabFromCenterFirstChooser.setDefaultOption("GrabFromCenterFirst", true);
-        grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
+        grabFromCenterFirstChooser.setDefaultOption("GrabFromStartFirst", false);
+        grabFromCenterFirstChooser.addOption("GrabFromCenterFirst", true);
 
         autonomousTab.add("Number Of Auto Actions", numOfNotesToScoreChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Number Of Amp Scores", numOfAmpScoresChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);

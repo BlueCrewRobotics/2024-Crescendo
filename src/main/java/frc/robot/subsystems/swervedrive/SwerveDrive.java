@@ -53,12 +53,14 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private final PIDController rotationPIDController;
 
-    private final int invertJoystickInputs;
+    private int invertJoystickInputs;
 
     private Rotation2d holdHeading;
     private boolean faceSpeaker = false;
 
     private Translation3d speakerCoords = FieldState.getInstance().getSpeakerCoords();
+
+    private int controlsInvert;
 
     public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
@@ -108,6 +110,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         } else {
             invertJoystickInputs = -1;
         }
+
+        controlsInvert = 1;
 
         holdHeading = getHeading();
     }
@@ -300,11 +304,11 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     /**
      * Used for driving the robot during teleop
      *
-     * @param translationVal  {@link Double} for the forwards/backwards speed as a percentage
-     * @param strafeVal       {@link Double} for the left/right speed as a percentage
-     * @param slowVal         {@link Double} for the amount to slow the robot by
-     * @param manualRotationVal     {@link Double} for the angular velocity as a percentage
-     * @param robotCentricSup {@link Double} for driving in robot or field centric mode
+     * @param translationVal  A double for the forwards/backwards speed as a percentage
+     * @param strafeVal       A double for the left/right speed as a percentage
+     * @param slowVal         A double for the amount to slow the robot by
+     * @param manualRotationVal     A double for the angular velocity as a percentage
+     * @param robotCentricSup A double for driving in robot or field centric mode
      */
     public void teleopDriveSwerveDrive(double translationVal, double strafeVal, double slowVal,
                                        double manualRotationVal, boolean robotCentricSup) {
@@ -312,20 +316,26 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         strafeVal *= (1 - slowVal * 0.75);
         double rotationVal;
         if (faceSpeaker) {
-//            Rotation2d offsetAngleToSpeaker = getAngleToPose(speakerCoords.toTranslation2d());
-//            if (FieldState.getInstance().onRedAlliance()) {
-//                offsetAngleToSpeaker = Rotation2d.fromDegrees(180).minus(offsetAngleToSpeaker);
-//            }
-//            offsetAngleToSpeaker = offsetAngleToSpeaker.plus(Rotation2d.fromDegrees(60));
+            Rotation2d offsetAngleToSpeaker = getAngleToPose(speakerCoords.toTranslation2d());
+            if (FieldState.getInstance().onRedAlliance()) {
+                if (offsetAngleToSpeaker.getRadians() < 0) offsetAngleToSpeaker = Rotation2d.fromDegrees(180).plus(offsetAngleToSpeaker);
 
-            holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+                else offsetAngleToSpeaker = Rotation2d.fromDegrees(180).minus(offsetAngleToSpeaker);
+            }
+
+            // TODO: find the actual angle
+            offsetAngleToSpeaker = offsetAngleToSpeaker.div((50d/2d)).plus(Rotation2d.fromDegrees(4.5));
+
+            holdHeading = getAngleToPose(speakerCoords.toTranslation2d()).plus(offsetAngleToSpeaker);
         }
         if (manualRotationVal != 0) {
             rotationVal = manualRotationVal;
             holdHeading = getHeading();
         }
-        else {
+        else if (translationVal > 0.12 || strafeVal > 0.12) {
             rotationVal = rotationPercentageFromTargetAngle(holdHeading);
+        } else {
+            rotationVal = manualRotationVal;
         }
 
 //        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
@@ -363,7 +373,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup, BooleanSupplier robotCentric) {
-        return () -> ((FieldState.getInstance().onRedAlliance()&&!robotCentric.getAsBoolean() ? 1 : -1)
+        return () -> (((FieldState.getInstance().onRedAlliance()&&!robotCentric.getAsBoolean()) ? 1 : -1) * controlsInvert
                 * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband)),
                 swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
@@ -436,6 +446,10 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         return Commands.startEnd(() -> faceSpeaker=true, () -> faceSpeaker=false).withName("faceSpeaker");
     }
 
+    public Command invertControls() {
+        return new InstantCommand(() -> controlsInvert *= -1);
+    }
+
     @Override
     public void periodic() {
         poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
@@ -452,11 +466,13 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         if (RobotState.isDisabled()) {
             setHoldHeading(getHeading());
             speakerCoords = FieldState.getInstance().getSpeakerCoords();
+
+            invertJoystickInputs = FieldState.getInstance().onRedAlliance() ? 1 : -1;
+            SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
         }
 
 //        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
 //        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
-//        SmartDashboard.putNumber("Rotation", getHeading().getDegrees());
 //
 //        System.out.println("Swerve Pose: " + poseEstimator.getPose());
 /*
