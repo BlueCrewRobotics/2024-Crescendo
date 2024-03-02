@@ -104,8 +104,8 @@ public class ArmModule implements Constants.NotePlayerConstants {
      * @return True if the position of the arm is within {@value ARM_POSITION_ERROR_TOLERANCE} degrees of the setpoint
      */
     public boolean isAtSetPosition() {
-        return leftEncoder.getPosition() >= setPosition - 0.5
-                && leftEncoder.getPosition() <= setPosition + 0.3;
+        return leftEncoder.getPosition() >= setPosition - 0.75
+                && leftEncoder.getPosition() <= setPosition + 0.45;
     }
 
     private void configureMotors() {

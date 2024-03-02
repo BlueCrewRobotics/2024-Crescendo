@@ -1,12 +1,6 @@
 {
   "version": 1.0,
-  "startingPose": {
-    "position": {
-      "x": 2,
-      "y": 2
-    },
-    "rotation": 0
-  },
+  "startingPose": null,
   "command": {
     "type": "sequential",
     "data": {
@@ -14,7 +8,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "SN1-SN3"
+            "pathName": "Sp-StLn-SN1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SN1-StLn-Sp"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-StLn-SN2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SN2-StLn-Sp"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-StLn-SN3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SN3-StLn-Sp"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sp-StLn-CL"
           }
         }
       ]

@@ -11,11 +11,13 @@
   ],
   "autoFolders": [
     "AmpLn",
-    "StartingNoteToSpeaker",
+    "CenterLine-Other",
+    "New New Folder",
     "Note Actions",
     "Path Actions",
     "SrcLn",
-    "StLn"
+    "StLn",
+    "StartingNoteToSpeaker"
   ],
   "defaultMaxVel": 4.0,
   "defaultMaxAccel": 2.8,

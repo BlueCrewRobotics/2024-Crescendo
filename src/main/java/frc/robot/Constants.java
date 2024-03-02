@@ -249,7 +249,7 @@ public interface Constants {
         double shooterKV = 0.348;
         double shooterKA = 0.15;
 
-        double SHOOTER_SPEED_ERROR_TOLERANCE = 1; // The allowed percentage error of the speed (not in decimal form)
+        double SHOOTER_SPEED_ERROR_TOLERANCE = 1; // The allowed velocity error in RPS
     }
 
     interface NotePlayerConstants {
@@ -308,7 +308,7 @@ public interface Constants {
             double iZ = 1.5;
 
             double maxOutput = 0.1;
-            double minOutput = -0.175;
+            double minOutput = -0.15;
         }
         interface ArmDownwardsLowGravityPID {
             double p = 0.04;

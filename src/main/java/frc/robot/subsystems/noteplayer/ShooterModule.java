@@ -115,8 +115,6 @@ public class ShooterModule implements Constants.ShooterConstants {
      */
     public boolean targetVelocityReached() {
         return  Math.abs(topShooterMotor.getClosedLoopError().getValue())    <  SHOOTER_SPEED_ERROR_TOLERANCE &&
-                Math.abs(topShooterMotor.getClosedLoopError().getValue())    > -SHOOTER_SPEED_ERROR_TOLERANCE &&
-                Math.abs(bottomShooterMotor.getClosedLoopError().getValue()) <  SHOOTER_SPEED_ERROR_TOLERANCE &&
-                Math.abs(bottomShooterMotor.getClosedLoopError().getValue()) > -SHOOTER_SPEED_ERROR_TOLERANCE;
+                Math.abs(bottomShooterMotor.getClosedLoopError().getValue()) <  SHOOTER_SPEED_ERROR_TOLERANCE;
     }
 }
