@@ -240,8 +240,8 @@ public interface Constants {
     }
 
     interface ShooterConstants {
-        int SHOOTER_TOP_MOTOR_ID = 10;
-        int SHOOTER_BOTTOM_MOTOR_ID = 11;
+        int SHOOTER_TOP_MOTOR_ID = 11;
+        int SHOOTER_BOTTOM_MOTOR_ID = 10;
 
         double SHOOTER_MAX_ROTATIONS_PER_SECOND = 6350.0 / 60.0;
         double SHOOTER_METERS_PER_ROTATION = Units.inchesToMeters(12.564); // currently is exactly gear ratio is 1:1 with 4" wheel
@@ -249,7 +249,7 @@ public interface Constants {
         double shooterKV = 0.348;
         double shooterKA = 0.15;
 
-        double SHOOTER_SPEED_ERROR_TOLERANCE = 4; // The allowed percentage error of the speed (not in decimal form)
+        double SHOOTER_SPEED_ERROR_TOLERANCE = 1; // The allowed percentage error of the speed (not in decimal form)
     }
 
     interface NotePlayerConstants {
@@ -262,11 +262,13 @@ public interface Constants {
         float ARM_MAX_LIMIT = 10.2f;
         float ARM_MIN_LIMIT = -12f;
 
-        double ARM_BALANCE_DEGREES = -36.8;
-        double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
-        double ARM_PICKUP_ANGLE = 68;
+        double ARM_BALANCE_DEGREES = -39.6;
+        double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES + 90;
+        double ARM_PICKUP_ANGLE = 64;
         double ARM_SHOOTING_ANGLE = 48;
         double ARM_AMP_ANGLE = -48;
+        double ARM_UNDER_STAGE_ANGLE_THRESHOLD = 50;
+        double ARM_MOTOR_ROTATIONS_PER_SHOOTER_DEGREE = -0.176225568;
 
         /** The allowed error of the position in degrees*/
         double ARM_POSITION_ERROR_TOLERANCE = 2;
@@ -282,9 +284,9 @@ public interface Constants {
         double TRAJECTORY_DEFAULT_INITIAL_ANGLE = 21.7;
 
         interface ArmUpwardsHighGravityPID {
-            double p = 0.2;
+            double p = 0.36;
             double i = 0.000035;
-            double d = 0.1;
+            double d = 0.05;
             double iZ = 3.0;
 
             double maxOutput = 0.48;
@@ -300,13 +302,13 @@ public interface Constants {
             double minOutput = -0.2;
         }
         interface ArmDownwardsHighGravityPID {
-            double p = 0.05;
-            double i = 0.0;
-            double d = 0.0;
-            double iZ = 0.0;
+            double p = 0.12;
+            double i = 0.0001;
+            double d = 0.02;
+            double iZ = 1.5;
 
             double maxOutput = 0.1;
-            double minOutput = -0.1;
+            double minOutput = -0.175;
         }
         interface ArmDownwardsLowGravityPID {
             double p = 0.04;
@@ -315,7 +317,7 @@ public interface Constants {
             double iZ = 0.0;
 
             double maxOutput = 0.1;
-            double minOutput = -0.1;
+            double minOutput = -0.135;
         }
     }
 

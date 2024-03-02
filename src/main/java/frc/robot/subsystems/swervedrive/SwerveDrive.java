@@ -3,11 +3,15 @@ package frc.robot.subsystems.swervedrive;
 import com.kauailabs.navx.frc.AHRS;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.RobotState;
@@ -28,6 +32,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.PoseEstimator;
 
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -85,6 +91,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
                 this
         );
 
+        PPHolonomicDriveController.setRotationTargetOverride(this::getRotationTargetOverride);
+
         PathPlannerLogging.setLogActivePathCallback((poses) -> field.getObject("path").setPoses(poses));
 
         // Logging callback for the active path, this is sent as a list of poses
@@ -93,7 +101,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             field.getObject("path").setPoses(poses);
         });
 
-        SmartDashboard.putData("Field", field);
+//        SmartDashboard.putData("Field", field);
 
         if (FieldState.getInstance().onRedAlliance()) {
             invertJoystickInputs = 1;
@@ -254,6 +262,18 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         this.faceSpeaker = faceSpeaker;
     }
 
+    public boolean isFacingSpeaker() {
+        return faceSpeaker && rotationPIDController.atSetpoint();
+    }
+
+    public Optional<Rotation2d> getRotationTargetOverride() {
+        if (faceSpeaker) {
+            return Optional.of(getAngleToPose(speakerCoords.toTranslation2d()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
     /**
      * @return The Robot yaw as reported by the NavX
      */
@@ -291,7 +311,15 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         translationVal *= (1 - (slowVal * 0.75));
         strafeVal *= (1 - slowVal * 0.75);
         double rotationVal;
-        if (faceSpeaker) holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+        if (faceSpeaker) {
+//            Rotation2d offsetAngleToSpeaker = getAngleToPose(speakerCoords.toTranslation2d());
+//            if (FieldState.getInstance().onRedAlliance()) {
+//                offsetAngleToSpeaker = Rotation2d.fromDegrees(180).minus(offsetAngleToSpeaker);
+//            }
+//            offsetAngleToSpeaker = offsetAngleToSpeaker.plus(Rotation2d.fromDegrees(60));
+
+            holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+        }
         if (manualRotationVal != 0) {
             rotationVal = manualRotationVal;
             holdHeading = getHeading();
@@ -300,8 +328,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             rotationVal = rotationPercentageFromTargetAngle(holdHeading);
         }
 
-        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
-                + Math.pow(strafeVal * maxSpeed, 2)));
+//        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
+//                + Math.pow(strafeVal * maxSpeed, 2)));
 
         drive(new Translation2d(translationVal, strafeVal).times(maxSpeed),
                 rotationVal * maxAngularVelocity,
@@ -316,7 +344,6 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      * @return The angular velocity as a percentage
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
-        System.out.println(targetAngle.getDegrees());
         return MathUtil.clamp(rotationPIDController.calculate(getHeading().getDegrees(),
                 targetAngle.getDegrees() % 360) * 0.1, -0.1, 0.1);
     }
@@ -377,11 +404,30 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     public void driveSwerveDriveAndRotateToAngle(double translation, double strafe, double targetDegrees) {
         drive(new Translation2d(translation, strafe).times(maxSpeed),
-                rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees))*maxAngularVelocity,
+                -rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees))*maxAngularVelocity,
                 false,
                 false);
     }
 
+    public Command alignWithAmp() {
+        AtomicReference<PathPlannerPath> pathToAmp = new AtomicReference<>(PathPlannerPath.fromPathFile("AlignAmpX"));
+
+        return new InstantCommand(() -> {
+            if (FieldState.getInstance().onRedAlliance()) {
+                if (PoseEstimator.getInstance().getPose().getX() > Units.inchesToMeters(578.77-24)) {
+                    pathToAmp.set(PathPlannerPath.fromPathFile("AlignAmpY"));
+                } else {
+                    pathToAmp.set(PathPlannerPath.fromPathFile("AlignAmpX"));
+                }
+            } else {
+                if (PoseEstimator.getInstance().getPose().getX() < Units.inchesToMeters(72.5+24)) {
+                    pathToAmp.set(PathPlannerPath.fromPathFile("AlignAmpY"));
+                } else {
+                    pathToAmp.set(PathPlannerPath.fromPathFile("AlignAmpX"));
+                }
+            }
+        }).andThen(AutoBuilder.followPath(pathToAmp.get())).withName("AlignWithAmp");
+    }
 
     /**
      * Enables facing the speaker when called, and disables when interrupted
@@ -399,9 +445,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         posePublisher.set(poseEstimator.getPose());
 
-        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
-        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
-        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
+//        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
+//        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
 
         if (RobotState.isDisabled()) {
             setHoldHeading(getHeading());

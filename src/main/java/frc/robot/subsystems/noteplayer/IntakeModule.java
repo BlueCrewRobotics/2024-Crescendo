@@ -4,17 +4,10 @@
 
 package frc.robot.subsystems.noteplayer;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class IntakeModule implements Constants.NotePlayerConstants {
@@ -29,7 +22,7 @@ public class IntakeModule implements Constants.NotePlayerConstants {
 
         intakeMotor.getConfigurator().apply(ctreConfigs.intakeConfig);
 
-        intakeMotor.setSafetyEnabled(true);
+        intakeMotor.setSafetyEnabled(false);
 
         beamBreak = new DigitalInput(8);
     }
@@ -38,7 +31,7 @@ public class IntakeModule implements Constants.NotePlayerConstants {
         intakeMotor.setControl(new DutyCycleOut(speed));
     }
 
-    public void stopSpinning() {
+    public void stop() {
         intakeMotor.setControl(new DutyCycleOut(0));
     }
 
@@ -50,6 +43,7 @@ public class IntakeModule implements Constants.NotePlayerConstants {
      * @return whether or not a note can be seen in the intake
      */
     public boolean noteInIntake() {
-        return !beamBreak.get();
+        boolean notePresent = !beamBreak.get();
+        return notePresent;
     }
 }

@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 import org.littletonrobotics.urcl.URCL;
 
 import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
@@ -33,6 +34,10 @@ public class Robot extends TimedRobot {
 
     private PowerDistribution pdh = new PowerDistribution(10, PowerDistribution.ModuleType.kRev);
 
+    private boolean shouldUpdateAutoCommand = false;
+
+    private long startTime;
+
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -43,7 +48,11 @@ public class Robot extends TimedRobot {
         // autonomous chooser on the dashboard.
         m_robotContainer = new RobotContainer();
 
-        DataLogManager.start();
+        startTime = System.nanoTime();
+
+//        DataLogManager.start();
+
+        shouldUpdateAutoCommand = false;
         //URCL.start();
         //SignalLogger.start();
     }
@@ -62,10 +71,6 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
-
-        Shuffleboard.getTab("Teleoperated")
-                .add("Power Distribution", pdh)
-                .withWidget(BuiltInWidgets.kPowerDistribution);
     }
 
     /**
@@ -86,6 +91,14 @@ public class Robot extends TimedRobot {
         } else {
             FieldState.getInstance().setSpeakerCoords(BLUE_SPEAKER);
         }
+
+        if (!shouldUpdateAutoCommand && System.nanoTime() > (startTime + 2E9)) {
+            shouldUpdateAutoCommand = true;
+        }
+
+        if (shouldUpdateAutoCommand && m_robotContainer.autoOptionsHaveChanged()) {
+            m_robotContainer.regenerateAutoCommand();
+        }
     }
 
     /**
@@ -93,6 +106,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
+        RobotState.getInstance().setIsAutonomous(true);
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
@@ -114,6 +128,7 @@ public class Robot extends TimedRobot {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
+        RobotState.getInstance().setIsAutonomous(false);
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
         }

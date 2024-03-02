@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 2.6,
-      "y": 6.792093415824429
+      "x": 2,
+      "y": 2
     },
-    "rotation": 0.0
+    "rotation": 0
   },
   "command": {
     "type": "sequential",
@@ -14,18 +14,12 @@
         {
           "type": "path",
           "data": {
-            "pathName": null
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "EndNoteAction"
+            "pathName": "SN1-SN3"
           }
         }
       ]
     }
   },
-  "folder": "Note Actions",
+  "folder": null,
   "choreoAuto": false
 }

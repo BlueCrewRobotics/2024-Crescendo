@@ -26,9 +26,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
     private final SparkPIDController rightController;
     private final SparkRelativeEncoder rightEncoder;
 
-    private final double motorRotationsPerArmDegree = 0.174927053995;
-    private final double gravityFF = 0.065;
-    private final double positionTolerance = 0.1;
+    private final double gravityFF = 0.07;
 
     private Double setPosition;
 
@@ -65,11 +63,11 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
     public double shooterDegreesToMotorRotations(double degrees) {
         //System.out.println("Setting Arm Position: " + (-degrees*motorRotationsPerArmDegree));
-        return -degrees * motorRotationsPerArmDegree;
+        return degrees * ARM_MOTOR_ROTATIONS_PER_SHOOTER_DEGREE;
     }
 
     public void resetMotorEncoderToAbsolute() {
-        double newPosition = getArmDegrees() * motorRotationsPerArmDegree;
+        double newPosition = getShooterDegrees() * ARM_MOTOR_ROTATIONS_PER_SHOOTER_DEGREE;
 
         leftEncoder.setPosition(newPosition);
     }
@@ -82,10 +80,6 @@ public class ArmModule implements Constants.NotePlayerConstants {
         setPosition = rotations;
     }
 
-    public double getArmDegrees() {
-        return -armCANcoder.getAbsolutePosition().getValue() * 360;
-    }
-
     public double getShooterDegrees() {
         return armCANcoder.getAbsolutePosition().getValue() * 360;
     }
@@ -95,7 +89,6 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void setPseudoLimits(double position) {
-        System.out.println("Setting Arm Position: " + position);
         double currentPosition = leftEncoder.getPosition();
         if (currentPosition > position) {
             pseudoTopLimit = currentPosition;
@@ -111,9 +104,8 @@ public class ArmModule implements Constants.NotePlayerConstants {
      * @return True if the position of the arm is within {@value ARM_POSITION_ERROR_TOLERANCE} degrees of the setpoint
      */
     public boolean isAtSetPosition() {
-        //System.out.println("Arm Lower Bound Tolerance: " + (setPosition-(ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)) + ", Upper Bound: " + (setPosition+(ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)));
-        return getArmDegrees() * motorRotationsPerArmDegree >= setPosition - (ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree)
-                && getArmDegrees() * motorRotationsPerArmDegree <= setPosition + (ARM_POSITION_ERROR_TOLERANCE * motorRotationsPerArmDegree);
+        return leftEncoder.getPosition() >= setPosition - 0.5
+                && leftEncoder.getPosition() <= setPosition + 0.3;
     }
 
     private void configureMotors() {
@@ -179,13 +171,13 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
             leftController.setReference(setPosition,
                     CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
-            SmartDashboard.putNumber("Arm Motor Position", leftEncoder.getPosition());
-            SmartDashboard.putNumber("Arm Set Position", setPosition);
-            SmartDashboard.putNumber("Arm Profile Slot", pidSlot);
-            SmartDashboard.putNumber("Arm Motor Output", leftMotor.getAppliedOutput());
-            SmartDashboard.putNumber("Arm Motor Current", leftMotor.getOutputCurrent());
-            SmartDashboard.putNumber("Arm Feedforward", feedForward);
-            SmartDashboard.putNumber("Shooter Degrees", getShooterDegrees());
+//            SmartDashboard.putNumber("Arm Motor Position", leftEncoder.getPosition());
+//            SmartDashboard.putNumber("Arm Set Position", setPosition);
+//            SmartDashboard.putNumber("Arm Profile Slot", pidSlot);
+//            SmartDashboard.putNumber("Arm Motor Output", leftMotor.getAppliedOutput());
+//            SmartDashboard.putNumber("Arm Motor Current", leftMotor.getOutputCurrent());
+//            SmartDashboard.putNumber("Arm Feedforward", feedForward);
+//            SmartDashboard.putNumber("Shooter Degrees", getShooterDegrees());
         }
 
         // Calculate feed forward based on angle to counteract gravity
@@ -198,7 +190,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
 //        }
         if (RobotState.isDisabled()) {
             resetMotorEncoderToAbsolute();
-            setPosition = getArmDegrees() * motorRotationsPerArmDegree;
+            setPosition = getShooterDegrees() * ARM_MOTOR_ROTATIONS_PER_SHOOTER_DEGREE;
         }
         //System.out.println("Shooter Angle: " + getShooterDegrees());
 //        if (isAtSetPosition()) {
