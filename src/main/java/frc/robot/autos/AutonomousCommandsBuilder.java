@@ -34,7 +34,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
      */
     public AutonomousCommandsBuilder(int numOfNotesToScore, int numOfAmpScores, String autoLane,
                                      int numOfNotesFromStart, String searchDirection, boolean grabFromCenterFirst,
-                                     NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive) {
+                                     NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive, double delay) {
 
 //        DataLogManager.log("*********************************************************************** Starting Building Auto! ***************************************************************************************");
 //        long startTime = System.nanoTime();
@@ -69,7 +69,9 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                         }),
 //                    new AutoLog("Finished Shooting Into Speaker!"),
                         // Make sure we're not trying to face the speaker while we aren't scoring
-                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(false))
+                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(false)),
+                        notePlayerSubsystem.prepForPickup(),
+                        Commands.waitSeconds(delay)
                 );
 //            DataLogManager.log("Shoot Speaker");
                 lastScoredIn = "Sp";

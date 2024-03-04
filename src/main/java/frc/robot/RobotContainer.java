@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -76,6 +77,10 @@ public class RobotContainer implements Constants.AutoConstants {
 
     private ShuffleboardTab autonomousTab = Shuffleboard.getTab("Autonomous");
 
+    private GenericEntry autoMoveDelay = autonomousTab
+            .add("AutoDelay", 9)
+            .getEntry();
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
 
@@ -110,7 +115,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
         autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
-                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive);
+                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
     }
 
     /**
@@ -165,6 +170,8 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.rightStick().onTrue(notePlayerSubsystem.rotateArmToDegrees(50));
 
+        auxDriver.leftStick().whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.5)));
+
         // Robot Status Triggers
 
         new Trigger(() -> notePlayerSubsystem.getArm().getShooterDegrees() < ARM_UNDER_STAGE_ANGLE_THRESHOLD)
@@ -188,7 +195,7 @@ public class RobotContainer implements Constants.AutoConstants {
         return autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected(),
-                notePlayerSubsystem, swerveDrive).alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))
+                notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8))/*.alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))*/
 
                 : autoCommand;
 
@@ -272,6 +279,6 @@ public class RobotContainer implements Constants.AutoConstants {
     public void regenerateAutoCommand() {
         autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
-                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive);
+                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
     }
 }
