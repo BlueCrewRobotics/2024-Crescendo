@@ -12,11 +12,11 @@ import frc.robot.subsystems.noteplayer.NotePlayerSubsystem;
 public class AutoScoreInSpeaker extends SequentialCommandGroup {
 
     public AutoScoreInSpeaker(NotePlayerSubsystem notePlayerSubsystem) {
-        double distanceToSpeaker = PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
         addCommands(
                 new InstantCommand(() -> RobotState.getInstance().setShooterMode(Constants.GameStateConstants.ShooterMode.SPEAKER)),
 //                new AutoLog("Starting Scoring!"),
                 Commands.run(() -> {
+                    double distanceToSpeaker = PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
                     notePlayerSubsystem.getShooter().spinMetersPerSecond(notePlayerSubsystem.getSpeedInterpolator().get(distanceToSpeaker));
                     notePlayerSubsystem.getArm().rotateToDegrees(notePlayerSubsystem.getAngleInterpolator().get(distanceToSpeaker));
                         })

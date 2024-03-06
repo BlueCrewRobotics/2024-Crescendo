@@ -179,16 +179,16 @@ public interface Constants {
         Double NOTES_INDEXER_CAMERA_ANGLE = 74.15d;  // angle from floor
 
         Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.5d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-38d), 0/*Math.PI+3.125*/));
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(9.0d)), new Rotation3d(0d, Math.toRadians(-33d), 0/*Math.PI+3.125*/));
         Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-38d), Math.PI/*3.125*/));
+                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-33d), Math.toRadians(-178)/*3.125*/));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =
                 AprilTagFields.kDefaultField.loadAprilTagLayoutField();
 
         // The standard deviations of our vision estimated poses, which affect correction rate
-        // (Fake values. Experiment and determine estimation noise on an actual robot.)
+        // TODO (Fake values. Experiment and determine estimation noise on an actual robot.)
         Matrix<N3, N1> singleTagStdDevs = VecBuilder.fill(4d, 4d, 8d);
         Matrix<N3, N1> multiTagStdDevs = VecBuilder.fill(0.5d, 0.5d, 1d);
     }

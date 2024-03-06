@@ -459,7 +459,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         posePublisher.set(poseEstimator.getPose());
 
-//        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
 //        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
 

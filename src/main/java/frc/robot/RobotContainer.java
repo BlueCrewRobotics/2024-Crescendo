@@ -1,6 +1,8 @@
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
@@ -49,6 +51,7 @@ public class RobotContainer implements Constants.AutoConstants {
     /* Subsystems */
     private final SwerveDrive swerveDrive = new SwerveDrive();
     private final NotePlayerSubsystem notePlayerSubsystem = new NotePlayerSubsystem();
+    private final BlinkinSubsystem blinkin = BlinkinSubsystem.getInstance();
 
     private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
 
@@ -78,7 +81,15 @@ public class RobotContainer implements Constants.AutoConstants {
     private ShuffleboardTab autonomousTab = Shuffleboard.getTab("Autonomous");
 
     private GenericEntry autoMoveDelay = autonomousTab
-            .add("AutoDelay", 9)
+            .add("AutoDelay", 0)
+            .getEntry();
+
+    private GenericEntry debugPathMode = autonomousTab
+            .add("DebugPathMode", false)
+            .getEntry();
+
+    private GenericEntry pathToDebug = autonomousTab
+            .add("PathToDebug", "Sp-StLn-SN2")
             .getEntry();
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -102,9 +113,6 @@ public class RobotContainer implements Constants.AutoConstants {
         visionThread.start();
 */
         setupAutoChoosers();
-
-        // Fire up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
 
         autoLastNumOfNotes = numOfNotesToScoreChooser.getSelected();
         autoLastNumOfAmps = numOfAmpScoresChooser.getSelected();
@@ -134,6 +142,8 @@ public class RobotContainer implements Constants.AutoConstants {
                         driver::getRightX,
                         () -> false//driver.leftBumper().getAsBoolean()
                 ));
+
+        blinkin.setDefaultCommand(blinkin.defaultCommand());
 
 //        /* Driver Buttons */
 //        driver.povCenter().onFalse(Commands.waitSeconds(0.1).andThen(swerveDrive.setHoldHeading(-driver.getHID().getPOV()).until(cancelAutoRotation)));
@@ -192,7 +202,8 @@ public class RobotContainer implements Constants.AutoConstants {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+        return debugPathMode.getBoolean(false) ? AutoBuilder.followPath(PathPlannerPath.fromPathFile(pathToDebug.getString("Sp-StLn-SN2"))) :
+                autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected(),
                 notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8))/*.alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))*/

@@ -49,7 +49,7 @@ import java.util.Optional;
 
 public final class VisionModule implements Constants.PhotonVision, Constants.Swerve {
 
-//    private final PhotonCamera aprilTagsFrontRight;
+    private final PhotonCamera aprilTagsFrontRight;
     private final PhotonCamera aprilTagsRearLeft;
     private PhotonPoseEstimator photonEstimatorFrontRight;
     private PhotonPoseEstimator photonEstimatorRearLeft;
@@ -65,7 +65,7 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
     private VisionModule() {
         PhotonCamera.setVersionCheckEnabled(false);
 
-//        aprilTagsFrontRight = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
+        aprilTagsFrontRight = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
         aprilTagsRearLeft = new PhotonCamera(APRIL_TAGS_REAR_LEFT_CAMERA_NAME);
 
 
@@ -75,9 +75,9 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
         photonEstimatorRearLeft.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
         photonEstimatorFrontRight = photonEstimatorRearLeft;
-//                new PhotonPoseEstimator(
-//                        tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
-//        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+                new PhotonPoseEstimator(
+                        tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
+        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
         notesIndexer = new PhotonCamera(NOTES_INDEXER_CAMERA_NAME);
     }
@@ -90,14 +90,13 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
     }
 
     public PhotonCamera getAprilTagsFrontRightCamera() {
-//        return aprilTagsFrontRight;
-        return getAprilTagsRearLeftCamera();
+        return aprilTagsFrontRight;
     }
 
     public void setPhotonEstimatorFrontRight(Transform3d transform3d) {
-//        this.photonEstimatorFrontRight = new PhotonPoseEstimator(
-//                tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, transform3d);
-//        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+        this.photonEstimatorFrontRight = new PhotonPoseEstimator(
+                tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, transform3d);
+        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     }
 
     public void setPhotonEstimatorRearLeft(Transform3d transform3d) {
@@ -111,7 +110,7 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
     }
 
     public PhotonPoseEstimator getPhotonEstimatorFrontRight() {
-        return photonEstimatorRearLeft;
+        return photonEstimatorFrontRight;
     }
 
     public PhotonPoseEstimator getPhotonEstimatorRearLeft() {
