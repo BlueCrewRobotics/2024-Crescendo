@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
@@ -11,12 +9,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 /**
  *
@@ -26,8 +24,7 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
     private final TalonFX motor1 = new TalonFX(ELEVATOR_MOTOR_1_ID);
     private final TalonFX motor2 = new TalonFX(ELEVATOR_MOTOR_2_ID);
 
-    private  VelocityVoltage climberVelocity = new VelocityVoltage(0);
-    //private final SimpleMotorFeedforward climberFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
+    private VelocityVoltage climberVelocity = new VelocityVoltage(0);
 
     private SimpleMotorFeedforward climberFeedForward = new SimpleMotorFeedforward(elevatorKS, elevatorKV, elevatorKA);
 
@@ -39,18 +36,13 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     private TalonFXConfiguration climberConfig = new TalonFXConfiguration();
 
+    private final Servo elevatorStopper;
+
+    private boolean climbingChain;
+
     private ClimberSubsystem() {
         motor1.clearStickyFaults();
         motor2.clearStickyFaults();
-
-        /*
-          .withMotorOutput(new MotorOutputConfigs()
-                  .withInverted(InvertedValue.Clockwise_Positive))
-          .withCurrentLimits(new CurrentLimitsConfigs()
-                  .withSupplyCurrentLimit(15)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentThreshold(10));
-*/
 
         climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -78,6 +70,10 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         motor1.getConfigurator().apply(climberConfig);
         motor2.getConfigurator().apply(climberConfig);
         motor2.setControl(new Follower(ELEVATOR_MOTOR_1_ID, false));
+
+        elevatorStopper = new Servo(8);
+
+        climbingChain = false;
     }
 
     public static ClimberSubsystem getInstance() {
@@ -103,14 +99,11 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
     }
 
     public void prepForClimb() {
-
-        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS));
-//        motor1.setPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS);
+        climberPositionVoltage.Position = ELEVATOR_MOTOR_UPPER_LIMIT_POS;
     }
 
     public void doClimb() {
-        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS));
-//        motor1.setPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS);
+        climberPositionVoltage.Position = ELEVATOR_MOTOR_LOWER_LIMIT_POS;
     }
 
     private void runElevator(double speed) {
@@ -129,12 +122,12 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
 
     public Command prepForClimbCommand() {
-        return this.run(
+        return this.runOnce(
                 this::prepForClimb);
     }
 
     public Command doClimbClimbCommand() {
-        return this.run(
+        return this.runOnce(
                 this::doClimb);
     }
 
@@ -158,4 +151,39 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     }
 
+    public Command servoOut() {
+        return new InstantCommand(
+                () -> elevatorStopper.set(0)
+        );
+    }
+
+    public Command servoIn() {
+        return new InstantCommand(
+                () -> elevatorStopper.set(1)
+        );
+    }
+
+    @Override
+    public void periodic() {
+        // Update the set position while disabled
+        if (RobotState.isDisabled()) {
+            climberPositionVoltage.Position = motor1.getPosition().getValue();
+        }
+
+        // Decide if we are climbing on the chain
+        if (!climbingChain && climberPositionVoltage.Position == ELEVATOR_MOTOR_LOWER_LIMIT_POS &&
+                motor1.getSupplyCurrent().getValue() < -10 && motor1.getPosition().getValue() < 15) {
+            climbingChain = true;
+        } else if (climberPositionVoltage.Position != ELEVATOR_MOTOR_LOWER_LIMIT_POS) {
+            climbingChain = false;
+        }
+
+        if (climbingChain && Math.abs(motor1.getClosedLoopError().getValue()) > 1) {
+            climberPositionVoltage.FeedForward = -1.5; //TODO: Tune this feedforward value (in volts)
+        } else {
+            climberPositionVoltage.FeedForward = 0;
+        }
+
+        motor1.setControl(climberPositionVoltage);
+    }
 }

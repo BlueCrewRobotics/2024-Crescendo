@@ -104,8 +104,8 @@ public class FindAndGotoNote extends Command {
                 // Set that a note is available to pickup
                 RobotState.getInstance().setNoteIsAvailable(true);
 
-                // TODO: Remove 1 degree offset once note is being centered / shooter is centered
-                neededRotation = target.getYaw()-1;
+                // TODO: Remove 3 degree offset once note is being centered / shooter is centered
+                neededRotation = target.getYaw()+3;
                 double angleOffset = Math.abs(neededRotation);
 
                 if (target.getPitch() < -20 && angleOffset > 10) {

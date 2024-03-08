@@ -23,7 +23,7 @@ public class PrepForShooting extends Command {
         this.swerveDrive = swerveDrive;
         this.notePlayerSubsystem = notePlayerSubsystem;
 
-        adjustedSpeakerCoords = FieldState.getInstance().getSpeakerCoords();
+        adjustedSpeakerCoords = FieldState.getInstance().getActualSpeakerCoords();
 
         shooterSpeedInterpolator = notePlayerSubsystem.getSpeedInterpolator();
         shooterAngleInterpolator = notePlayerSubsystem.getAngleInterpolator();
@@ -57,13 +57,18 @@ public class PrepForShooting extends Command {
         notePlayerSubsystem.getArm().rotateToDegrees(shooterAngleInterpolator.get(distanceToTarget));
         notePlayerSubsystem.getShooter().spinMetersPerSecond(shooterSpeedInterpolator.get(distanceToTarget));
 
-        swerveDrive.setSpeakerCoords(adjustedSpeakerCoords);
+        FieldState.getInstance().setSpeakerCoords(adjustedSpeakerCoords);
+    }
+
+    @Override
+    public boolean isFinished() {
+        return !notePlayerSubsystem.getIndexer().noteInIndexer();
     }
 
     @Override
     public void end(boolean interrupted) {
         swerveDrive.setFaceSpeaker(false);
-        swerveDrive.setSpeakerCoords(FieldState.getInstance().getSpeakerCoords());
+        FieldState.getInstance().setSpeakerCoords(FieldState.getInstance().getActualSpeakerCoords());
         notePlayerSubsystem.getShooter().stop();
     }
 }

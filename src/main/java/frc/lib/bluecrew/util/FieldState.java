@@ -18,6 +18,7 @@ public class FieldState implements Constants.GameStateConstants {
     private boolean onRedAlliance;
 
     private Translation3d speakerCoords = BLUE_SPEAKER;
+    private Translation3d actualSpeakerCoords = BLUE_SPEAKER;
 
     private FieldState() {
         centerNotesExist = new boolean[]{
@@ -84,5 +85,13 @@ public class FieldState implements Constants.GameStateConstants {
 
     public void setSpeakerCoords(Translation3d speakerCoords) {
         this.speakerCoords = speakerCoords;
+    }
+
+    public Translation3d getActualSpeakerCoords() {
+        return actualSpeakerCoords;
+    }
+
+    public void setActualSpeakerCoords(Translation3d actualSpeakerCoords) {
+        this.actualSpeakerCoords = actualSpeakerCoords;
     }
 }

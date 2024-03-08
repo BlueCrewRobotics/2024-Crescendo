@@ -58,8 +58,6 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     private Rotation2d holdHeading;
     private boolean faceSpeaker = false;
 
-    private Translation3d speakerCoords = FieldState.getInstance().getSpeakerCoords();
-
     private int controlsInvert;
 
     public SwerveDrive() {
@@ -258,10 +256,6 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         return holdHeading;
     }
 
-    public void setSpeakerCoords(Translation3d speakerCoords) {
-        this.speakerCoords = speakerCoords;
-    }
-
     public void setFaceSpeaker(boolean faceSpeaker) {
         this.faceSpeaker = faceSpeaker;
     }
@@ -272,7 +266,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     public Optional<Rotation2d> getRotationTargetOverride() {
         if (faceSpeaker) {
-            return Optional.of(getAngleToPose(speakerCoords.toTranslation2d()));
+            return Optional.of(getAngleToPose(FieldState.getInstance().getSpeakerCoords().toTranslation2d()));
         } else {
             return Optional.empty();
         }
@@ -316,7 +310,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         strafeVal *= (1 - slowVal * 0.75);
         double rotationVal;
         if (faceSpeaker) {
-            Rotation2d offsetAngleToSpeaker = getAngleToPose(speakerCoords.toTranslation2d());
+            Rotation2d offsetAngleToSpeaker = getAngleToPose(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
             if (FieldState.getInstance().onRedAlliance()) {
                 if (offsetAngleToSpeaker.getRadians() < 0) offsetAngleToSpeaker = Rotation2d.fromDegrees(180).plus(offsetAngleToSpeaker);
 
@@ -326,20 +320,19 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
             // TODO: find the actual angle
             offsetAngleToSpeaker = offsetAngleToSpeaker.div((50d/2d)).plus(Rotation2d.fromDegrees(4.5));
 
-            holdHeading = getAngleToPose(speakerCoords.toTranslation2d()).plus(offsetAngleToSpeaker);
+            SmartDashboard.putNumber("Offset Angle", offsetAngleToSpeaker.getDegrees());
+
+            holdHeading = getAngleToPose(FieldState.getInstance().getSpeakerCoords().toTranslation2d());//.plus(offsetAngleToSpeaker);
         }
         if (manualRotationVal != 0) {
             rotationVal = manualRotationVal;
             holdHeading = getHeading();
         }
-        else if (translationVal > 0.12 || strafeVal > 0.12) {
+        else if (Math.abs(translationVal) > 0.02 || Math.abs(strafeVal) > 0.02) {
             rotationVal = rotationPercentageFromTargetAngle(holdHeading);
         } else {
             rotationVal = manualRotationVal;
         }
-
-//        SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
-//                + Math.pow(strafeVal * maxSpeed, 2)));
 
         drive(new Translation2d(translationVal, strafeVal).times(maxSpeed),
                 rotationVal * maxAngularVelocity,
@@ -460,12 +453,11 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         posePublisher.set(poseEstimator.getPose());
 
         SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
-//        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
-//        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
+        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
+        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
 
         if (RobotState.isDisabled()) {
             setHoldHeading(getHeading());
-            speakerCoords = FieldState.getInstance().getSpeakerCoords();
 
             invertJoystickInputs = FieldState.getInstance().onRedAlliance() ? 1 : -1;
             SmartDashboard.putNumber("Rotation", getHeading().getDegrees());

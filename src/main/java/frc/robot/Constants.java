@@ -235,7 +235,8 @@ public interface Constants {
             PICKUP,
             SPEAKER,
             AMP,
-            TRAP
+            TRAP,
+            EJECT
         }
     }
 

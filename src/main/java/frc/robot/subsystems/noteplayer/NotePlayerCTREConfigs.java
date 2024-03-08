@@ -21,8 +21,8 @@ public class NotePlayerCTREConfigs implements Constants.NotePlayerConstants, Con
         // Current Limits
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 15;
-        shooterConfig.CurrentLimits.SupplyCurrentThreshold = 20;
-        shooterConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
+        shooterConfig.CurrentLimits.SupplyCurrentThreshold = 30;
+        shooterConfig.CurrentLimits.SupplyTimeThreshold = 0.5;
 
         // Neutral mode
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;

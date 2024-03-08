@@ -27,14 +27,14 @@ public class RumbleController extends Command {
         this.rumbleType = rumbleType;
 
         this.rumbleTime = rumbleTime;
-        this.rumbleStrength = 0.5;
+        this.rumbleStrength = 1;
     }
 
     public RumbleController(GenericHID controller, double rumbleTime) {
         this.controller = controller;
         this.rumbleTime = rumbleTime;
 
-        this.rumbleStrength = 0.5;
+        this.rumbleStrength = 1;
         this.rumbleType = GenericHID.RumbleType.kBothRumble;
     }
 

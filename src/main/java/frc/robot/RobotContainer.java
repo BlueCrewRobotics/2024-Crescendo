@@ -17,8 +17,6 @@ import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.lib.bluecrew.util.BlinkinValues;
-import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.autos.AutonomousCommandsBuilder;
 import frc.robot.subsystems.*;
@@ -165,22 +163,33 @@ public class RobotContainer implements Constants.AutoConstants {
 
         driver.leftBumper().onTrue(notePlayerSubsystem.scoreNote());
 
-        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
-        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
         auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
 
-        auxDriver.x().whileTrue(notePlayerSubsystem.eject());
+        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.reverseEject());
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.forwardEject());
+
+        auxDriver.start().whileTrue(notePlayerSubsystem.stowShot());
+
+        auxDriver.back().onTrue(climberSubsystem.servoOut());
+        auxDriver.back().onFalse(climberSubsystem.servoIn());
 
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
+        auxDriver.povLeft().onTrue(new PrepForShooting(swerveDrive, notePlayerSubsystem));
+        auxDriver.povRight().whileTrue(notePlayerSubsystem.shootFromSubwooferCommand());
 
         auxDriver.rightTrigger().whileTrue(notePlayerSubsystem.intakeNote());
 
+        auxDriver.leftTrigger().whileTrue(new InstantCommand(() -> swerveDrive.setFaceSpeaker(true))
+                .andThen(notePlayerSubsystem.spinUpShooterForSpeaker())
+                .finallyDo(() -> swerveDrive.setFaceSpeaker(false)));
+
         auxDriver.rightStick().onTrue(notePlayerSubsystem.rotateArmToDegrees(50));
 
-        auxDriver.leftStick().whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.5)));
+        auxDriver.leftStick().whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.5))
+                .finallyDo(() -> notePlayerSubsystem.getIndexer().stop()));
 
         // Robot Status Triggers
 
@@ -190,10 +199,16 @@ public class RobotContainer implements Constants.AutoConstants {
                         .andThen(new RumbleController(driver.getHID(), 0.25)));
 
         new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer)
-                .onTrue(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kLeftRumble, 0.1)
-                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kRightRumble, 0.1))
+                .onTrue(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kLeftRumble, 0.2)
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kRightRumble, 0.2))
                         .andThen(Commands.waitSeconds(0.1))
-                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kBothRumble, 0.1)));
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kBothRumble, 0.3)));
+
+        new Trigger(notePlayerSubsystem.getIntake()::noteInIntake).onTrue(
+                new RumbleController(driver.getHID(), 0.25));
+
+        new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer).onFalse(
+                new RumbleController(auxDriver.getHID(), 0.25));
     }
 
     /**
@@ -291,5 +306,9 @@ public class RobotContainer implements Constants.AutoConstants {
         autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
                 autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
+    }
+
+    public NotePlayerSubsystem getNotePlayerSubsystem() {
+        return notePlayerSubsystem;
     }
 }

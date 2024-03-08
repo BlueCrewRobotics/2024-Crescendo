@@ -12,17 +12,17 @@ import frc.robot.Constants;
 public class IndexerModule implements Constants.NotePlayerConstants {
 
     private final CANSparkMax indexerMotor = new CANSparkMax(INDEXER_MOTOR_ID, CANSparkLowLevel.MotorType.kBrushless);
-//    private final SparkLimitSwitch limitSwitch = indexerMotor.getForwardLimitSwitch(SparkLimitSwitch.Type.kNormallyOpen);
+    private final SparkLimitSwitch limitSwitch = indexerMotor.getForwardLimitSwitch(SparkLimitSwitch.Type.kNormallyOpen);
 
     private final DigitalInput beamBreak = new DigitalInput(9);
 
     private boolean limitSwitchState;
 
     public IndexerModule() {
-        indexerMotor.setSmartCurrentLimit(20);
-        indexerMotor.setIdleMode(CANSparkBase.IdleMode.kCoast);
+        indexerMotor.setSmartCurrentLimit(30);
+        indexerMotor.setIdleMode(CANSparkBase.IdleMode.kBrake);
         indexerMotor.enableVoltageCompensation(12);
-//        limitSwitch.enableLimitSwitch(false);
+        limitSwitch.enableLimitSwitch(false);
         limitSwitchState = false;
     }
 
@@ -48,12 +48,16 @@ public class IndexerModule implements Constants.NotePlayerConstants {
 
     public void setEnableHardLimit(boolean enableHardLimit) {
         if (limitSwitchState != enableHardLimit) {
-//            limitSwitch.enableLimitSwitch(enableHardLimit);
+            limitSwitch.enableLimitSwitch(enableHardLimit);
             limitSwitchState = enableHardLimit;
         }
     }
 
     public boolean isLimitSwitchEnabled() {
-        return limitSwitchState;
+        return limitSwitch.isLimitSwitchEnabled();
+    }
+
+    public boolean limitSwitchState() {
+        return limitSwitch.isPressed();
     }
 }

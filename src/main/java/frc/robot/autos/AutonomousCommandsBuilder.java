@@ -64,12 +64,16 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                         // TODO: add logic for shooting while moving to the next note to pick up
                         // Score in the speaker and then stop the shooter and indexer
                         new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
-                            notePlayerSubsystem.getShooter().stop();
+//                            notePlayerSubsystem.getShooter().stop();
                             notePlayerSubsystem.getIndexer().stop();
+                            notePlayerSubsystem.shootFromSubwoofer();
                         }),
 //                    new AutoLog("Finished Shooting Into Speaker!"),
                         // Make sure we're not trying to face the speaker while we aren't scoring
-                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(false)),
+                        new InstantCommand(() -> {
+                            swerveDrive.setFaceSpeaker(false);
+                            notePlayerSubsystem.shootFromSubwoofer();
+                        }),
                         notePlayerSubsystem.prepForPickup(),
                         Commands.waitSeconds(delay)
                 );
@@ -128,7 +132,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                             AutoBuilder.buildAuto("CL-" + autoLane + "-Sp"),
                                             new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
                                                 notePlayerSubsystem.getIndexer().stop();
-                                                notePlayerSubsystem.getShooter().stop();
+//                                                notePlayerSubsystem.getShooter().stop();
                                             })
                                     );
                                 } else {
@@ -188,11 +192,15 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                                 .until(notePlayerSubsystem.getIndexer()::noteInIndexer)
                                                 .unless(notePlayerSubsystem.getIndexer()::noteInIndexer),
                                         new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
-                                            notePlayerSubsystem.getShooter().stop();
+//                                            notePlayerSubsystem.getShooter().stop();
                                             notePlayerSubsystem.getIndexer().stop();
+                                            notePlayerSubsystem.shootFromSubwoofer();
                                         }),
                                         notePlayerSubsystem.prepForPickup(),
-                                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(false))
+                                        new InstantCommand(() -> {
+                                            swerveDrive.setFaceSpeaker(false);
+                                            notePlayerSubsystem.shootFromSubwoofer();
+                                        })
                                 );
                             }
                             // Keep track of how many times we have tried to get a note from the center
@@ -201,7 +209,10 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                     }
                     if (Objects.equals(autoLane, stageLane)) {
                         addCommands(
-                                Commands.runOnce(() -> notePlayerSubsystem.rotateArmToDegrees(Constants.NotePlayerConstants.ARM_PICKUP_ANGLE)),
+                                Commands.runOnce(() -> {
+                                    notePlayerSubsystem.rotateArmToDegrees(Constants.NotePlayerConstants.ARM_PICKUP_ANGLE);
+                                    notePlayerSubsystem.getShooter().stop();
+                                }),
                                 Commands.waitSeconds(0.025),
                                 Commands.waitUntil(notePlayerSubsystem.getArm()::isAtSetPosition)
                         );

@@ -5,6 +5,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
@@ -13,9 +15,9 @@ import frc.robot.Constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.Robot;
 import frc.robot.subsystems.PoseEstimator;
 
-import java.awt.geom.Line2D;
 import java.util.Map;
 import java.util.function.DoubleSupplier;
 
@@ -34,16 +36,16 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private double shootingAngle = 90;
     private double shootingSpeed = 1;
 
-//    private ShuffleboardTab teleopTab = Shuffleboard.getTab("Teleoperated");
-//    private GenericEntry shooterSpeed =
-//            teleopTab.add("Shooter Speed", 0)
-//                    .getEntry();
-//
-//    private GenericEntry shooterAngle =
-//            teleopTab.add("Shooter Angle", 0)
-//                    .withWidget(BuiltInWidgets.kNumberSlider)
-//                    .withProperties(Map.of("min", 0, "max", 48))
-//                    .getEntry();
+    private ShuffleboardTab teleopTab = Shuffleboard.getTab("Teleoperated");
+    private GenericEntry shooterSpeed =
+            teleopTab.add("Shooter Speed", 0)
+                    .getEntry();
+
+    private GenericEntry shooterAngle =
+            teleopTab.add("Shooter Angle", 0)
+                    .withWidget(BuiltInWidgets.kNumberSlider)
+                    .withProperties(Map.of("min", 0, "max", 48))
+                    .getEntry();
 
     private GenericEntry distanceToSpeaker = Shuffleboard.getTab("Teleoperated")
             .add("Distance To Speaker", 2d)
@@ -55,13 +57,15 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private final InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
 
     public NotePlayerSubsystem() {
-        speedInterpolator.put(1.5d, 14.75d);
-        speedInterpolator.put(3d, 18.2d);
-        speedInterpolator.put(4d, 20.5d);
+        speedInterpolator.put(1.4d, 13d);
+        speedInterpolator.put(2d, 14.5d);
+        speedInterpolator.put(2.5d, 16d);
+        speedInterpolator.put(3d, 17.5d);
 
-        angleInterpolator.put(1.5d, 48d);
-        angleInterpolator.put(3d, 26.25d);
-        angleInterpolator.put(4d, 18.5d);
+        angleInterpolator.put(1.4d, 44d);
+        angleInterpolator.put(2d, 35d);
+        angleInterpolator.put(2.5d, 30d);
+        angleInterpolator.put(3d, 26.5d);
     }
 
     public IntakeModule getIntake() {
@@ -84,6 +88,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public void periodic() {
         arm.periodic();
         setRobotStates();
+        if (edu.wpi.first.wpilibj.RobotState.isAutonomous()) {
+            shootFromSubwoofer();
+        }
+
+//        SmartDashboard.putBoolean("LimitSwitchEnabled", indexer.isLimitSwitchEnabled());
+//        SmartDashboard.putBoolean("LimitSwitchPressed", indexer.limitSwitchState());
 
 //        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
@@ -121,7 +131,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                         isWithinRange(PoseEstimator.getInstance().getPose().getTranslation(),
                                 FieldState.getInstance().onRedAlliance() ? RED_SPEAKER.toTranslation2d() : BLUE_SPEAKER.toTranslation2d()));
                 RobotState.getInstance().setShooterStatus(
-                        (arm.isAtSetPosition() && shooter.targetVelocityReached() && PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()) < 2.7) ? ShooterStatus.READY : ShooterStatus.UNREADY);
+                        (arm.isAtSetPosition() && shooter.targetVelocityReached() && PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()) < 3) ? ShooterStatus.READY : ShooterStatus.UNREADY);
             }
             case AMP -> {
                 RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
@@ -159,25 +169,28 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command intakeNote() {
-        return /*new AutoLog("*****\n******\n*******\n****** INTAKING NOTE ******\n*******\n******\n*****").andThen(*/(new RunCommand(() -> intake.spin(0.4))
+        return new InstantCommand(() -> indexer.setEnableHardLimit(true)).andThen(new RunCommand(() -> intake.spin(0.5))
                 .until(intake::noteInIntake).andThen((
-                        new RunCommand(() -> intake.spin(0.15)).withTimeout(0.4)
-                                .andThen(new RunCommand(() -> intake.spin(0.1))))
-                                .alongWith(pullNoteIntoIndexer())))
+                        new RunCommand(() -> intake.spin(0.3))/*.withTimeout(0.4)
+                                .andThen(new RunCommand(() -> intake.spin(0.1)))*/)
+                        .alongWith(pullNoteIntoIndexer())))
                 .until(indexer::noteInIndexer)//.andThen(new RunCommand(() -> indexer.spin(0.5)).withTimeout(0.2))
                 .finallyDo(() -> {
                     intake.stop();
                     indexer.stop();
-
+                    indexer.setEnableHardLimit(false);
                 })
-        /*)*/.withName("IntakeNote");
+                /*)*/.withName("IntakeNote");
     }
 
-    public Command eject() {
-        return new RunCommand(
+    public Command reverseEject() {
+        return new InstantCommand(() -> {
+            RobotState.getInstance().setShooterMode(ShooterMode.EJECT);
+            indexer.setEnableHardLimit(false);
+        }).andThen(new RunCommand(
                 () -> {
                     indexer.spin(-0.75);
-                    intake.spin(-0.4);
+                    intake.spin(-0.5);
                     shooter.spinPercentage(-0.03);
                 }
         ).finallyDo(
@@ -186,13 +199,58 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                     intake.stop();
                     shooter.stop();
                 }
-        );
+        ));
+    }
+
+    public Command forwardEject() {
+        return new InstantCommand(() -> {
+            RobotState.getInstance().setShooterMode(ShooterMode.EJECT);
+            indexer.setEnableHardLimit(false);
+        }).andThen(new RunCommand(
+                () -> {
+                    indexer.spin(1);
+                    intake.spin(0.3);
+                    shooter.spinMetersPerSecond(4.5);
+                }
+        ).finallyDo(
+                () -> {
+                    indexer.stop();
+                    intake.stop();
+                    shooter.stop();
+                }
+        ));
+    }
+
+    public Command stowShot() {
+        return new InstantCommand(() -> {
+            arm.rotateToDegrees(15);
+            RobotState.getInstance().setShooterMode(ShooterMode.EJECT);
+        })
+                .andThen(new RunCommand(() -> shooter.spinPercentage(0.7)))
+                .until(() -> !indexer.noteInIndexer())
+                .unless(() -> !indexer.noteInIndexer())
+                .finallyDo(() -> shooter.stop());
+    }
+
+    public Command passFromSource() {
+        return new InstantCommand(() -> RobotState.getInstance().setShooterMode(ShooterMode.EJECT))
+                .andThen(new InstantCommand(() -> arm.rotateToDegrees(40)));
+    }
+
+    public void shootFromSubwoofer() {
+        shooter.spinMetersPerSecond(31, 0.5);//22, 4);
+    }
+
+    public Command shootFromSubwooferCommand() {
+        return new InstantCommand(() -> RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER))
+                .andThen(new RunCommand(this::shootFromSubwoofer))
+                .finallyDo(() -> shooter.stop());
     }
 
     public Command pullNoteIntoIndexer() {
         return new RunCommand(
                 () -> indexer.spin(1)
-        ).withTimeout(0.4).andThen(new RunCommand(() -> indexer.spin(0.65))).until(indexer::noteInIndexer);
+        )/*.withTimeout(0.4).andThen(new RunCommand(() -> indexer.spin(0.55)))*/.until(indexer::noteInIndexer);
     }
 
     public Command feedNoteToShooter() {
@@ -216,20 +274,30 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 .alongWith(rotateArmToDegrees(ARM_PICKUP_ANGLE)));
     }
 
+    public Command spinUpShooterForSpeaker() {
+        return new RunCommand(
+                () -> shooter.spinMetersPerSecond(speedInterpolator.get(
+                        Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))))
+        ).finallyDo(() -> shooter.stop());
+    }
+
     public Command aimAndSpinUpForSpeaker() {
         return (new RunCommand(
                 () -> {
                     RobotState.getInstance().setShooterMode(ShooterMode.SPEAKER);
                     indexer.setEnableHardLimit(false);
-//                    shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
-//                    arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
-                    shooter.spinMetersPerSecond(speedInterpolator.get(distanceToSpeaker.getDouble(1.5)));
-                    arm.rotateToDegrees(angleInterpolator.get(distanceToSpeaker.getDouble(1.5)));
+                    shooter.spinMetersPerSecond(speedInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+                    arm.rotateToDegrees(angleInterpolator.get(Math.abs(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d()))));
+//                    shooter.spinMetersPerSecond(speedInterpolator.get(distanceToSpeaker.getDouble(1.4)));
+//                    arm.rotateToDegrees(angleInterpolator.get(distanceToSpeaker.getDouble(1.4)));
+
+//                    shooter.spinMetersPerSecond(shooterSpeed.getDouble(0));
+//                    arm.rotateToDegrees(shooterAngle.getDouble(0));
                 }
         )).finallyDo(() -> {
-                    shooter.stop();
-                }
-        ).onlyIf(indexer::noteInIndexer).onlyWhile(indexer::noteInIndexer)
+                            shooter.stop();
+                        }
+                ).onlyIf(indexer::noteInIndexer).onlyWhile(indexer::noteInIndexer)
                 .withName("AimAndSpinUpForSpeaker");
     }
 
