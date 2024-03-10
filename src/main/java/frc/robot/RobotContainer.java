@@ -105,6 +105,8 @@ public class RobotContainer implements Constants.AutoConstants {
 
         NamedCommands.registerCommand("IntakeNote", notePlayerSubsystem.intakeNote());
 
+        NamedCommands.registerCommand("RaiseArm", notePlayerSubsystem.rotateArmToDegrees(44));
+
 /*
         Thread visionThread = new Thread(new VisionPipelineRunnable(VisionModule.getInstance()), "visionThread");
         visionThread.setDaemon(true);
@@ -148,7 +150,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
         driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
-        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        driver.x().whileTrue(notePlayerSubsystem.passFromSource());
 
         driver.a().onTrue(swerveDrive.invertControls());
 
@@ -310,5 +312,9 @@ public class RobotContainer implements Constants.AutoConstants {
 
     public NotePlayerSubsystem getNotePlayerSubsystem() {
         return notePlayerSubsystem;
+    }
+
+    public SwerveDrive getSwerveDrive() {
+        return swerveDrive;
     }
 }

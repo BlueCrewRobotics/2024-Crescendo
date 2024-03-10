@@ -57,6 +57,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private Rotation2d holdHeading;
     private boolean faceSpeaker = false;
+    private boolean shouldUseVision = true;
 
     private int controlsInvert;
 
@@ -112,6 +113,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         controlsInvert = 1;
 
         holdHeading = getHeading();
+
+        shouldUseVision = true;
     }
 
     /**
@@ -371,6 +374,14 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
                 swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
 
+    public void setShouldUseVision(boolean shouldUseVision) {
+        this.shouldUseVision = shouldUseVision;
+    }
+
+    public boolean isShouldUseVision() {
+        return shouldUseVision;
+    }
+
     // **** Commands ****
 
     /**
@@ -448,7 +459,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         poseEstimator.updateSwerveEstimator(getGyroYaw(), getModulePositions());
 
         // Correct pose estimate with vision measurements
-        poseEstimator.updateWithVision();
+        if (shouldUseVision) {
+            poseEstimator.updateWithVision();
+        }
 
         posePublisher.set(poseEstimator.getPose());
 

@@ -56,6 +56,8 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private final InterpolatingDoubleTreeMap speedInterpolator = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
 
+    private boolean moveArmInAuto = false;
+
     public NotePlayerSubsystem() {
         speedInterpolator.put(1.4d, 13d);
         speedInterpolator.put(2d, 14.5d);
@@ -66,6 +68,8 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         angleInterpolator.put(2d, 35d);
         angleInterpolator.put(2.5d, 30d);
         angleInterpolator.put(3d, 26.5d);
+
+        moveArmInAuto = false;
     }
 
     public IntakeModule getIntake() {
@@ -89,18 +93,30 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         arm.periodic();
         setRobotStates();
         if (edu.wpi.first.wpilibj.RobotState.isAutonomous()) {
-            shootFromSubwoofer();
+            if (moveArmInAuto) {
+                shooter.spinMetersPerSecond(13);
+            } else {
+                shootFromSubwoofer();
+            }
         }
 
 //        SmartDashboard.putBoolean("LimitSwitchEnabled", indexer.isLimitSwitchEnabled());
 //        SmartDashboard.putBoolean("LimitSwitchPressed", indexer.limitSwitchState());
 
-//        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
 //        SmartDashboard.putBoolean("Shooter At Set Speed", shooter.targetVelocityReached());
-//        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putNumber("Top Shooter Speed", shooter.getShooterTopVelocityMPS());
 //        SmartDashboard.putNumber("Bottom Shooter Speed", shooter.getShooterBottomVelocityMPS());
+
+        /**
+         * PODIUM ANGLE 27.3
+         * PODIUM SPEED 17.22
+         *
+         * SUBWOOFER ANGLE 44
+         * SUBWOOFER SPEED 13
+         */
     }
 
     public InterpolatingDoubleTreeMap getAngleInterpolator() {
@@ -140,6 +156,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
                 RobotState.getInstance().setShooterStatus(arm.isAtSetPosition() ? ShooterStatus.READY : ShooterStatus.UNREADY);
             }
+            case EJECT -> {
+                RobotState.getInstance().setShooterStatus(
+                        (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
+            }
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
@@ -157,6 +177,14 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
                 Units.feetToMeters(Math.random() * 21 + 5),
                 new Rotation2d()
         );
+    }
+
+    public boolean isMoveArmInAuto() {
+        return moveArmInAuto;
+    }
+
+    public void setMoveArmInAuto(boolean moveArmInAuto) {
+        this.moveArmInAuto = moveArmInAuto;
     }
 
     // Commands:
@@ -233,8 +261,20 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command passFromSource() {
-        return new InstantCommand(() -> RobotState.getInstance().setShooterMode(ShooterMode.EJECT))
-                .andThen(new InstantCommand(() -> arm.rotateToDegrees(40)));
+        return new InstantCommand(() -> {
+            RobotState.getInstance().setShooterMode(ShooterMode.EJECT);
+            indexer.setEnableHardLimit(false);
+        })
+                .andThen(new InstantCommand(() -> arm.rotateToDegrees(35))
+                        .alongWith(new RunCommand(() -> shooter.spinMetersPerSecond(11)))
+                        .until(() -> RobotState.getInstance().getShooterStatus() == ShooterStatus.READY)
+                        .andThen(new RunCommand(() -> shooter.spinMetersPerSecond(20))
+                                .alongWith(new RunCommand(() -> indexer.spin(1))))
+                        .until(() -> !indexer.noteInIndexer()))
+                .finallyDo(() -> {
+                    shooter.stop();
+                    indexer.stop();
+                });
     }
 
     public void shootFromSubwoofer() {

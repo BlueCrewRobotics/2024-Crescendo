@@ -75,6 +75,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                             notePlayerSubsystem.shootFromSubwoofer();
                         }),
                         notePlayerSubsystem.prepForPickup(),
+                        new InstantCommand(() -> swerveDrive.setShouldUseVision(true)),
                         Commands.waitSeconds(delay)
                 );
 //            DataLogManager.log("Shoot Speaker");
@@ -137,20 +138,20 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                     );
                                 } else {
                                     addCommands(
-                                            notePlayerSubsystem.intakeNote().alongWith(
-                                                            AutoBuilder.pathfindThenFollowPath(pathToSpeaker, pathConstraints)).andThen(
-                                                            Commands.waitUntil(notePlayerSubsystem.getIndexer()::noteInIndexer))
-                                                    .onlyIf(notePlayerSubsystem.getIntake()::noteInIntake)
+                                            new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(true)),
+                                            AutoBuilder.buildAuto("CL-" + autoLane + "-Sp")
                                     );
                                 }
 
                                 addCommands(
-                                        new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
-                                            notePlayerSubsystem.getShooter().stop();
-                                            notePlayerSubsystem.getIndexer().stop();
-                                        }),
+                                        new InstantCommand(() -> RobotState.getInstance().setShooterMode(Constants.GameStateConstants.ShooterMode.SPEAKER)),
+                                        new RunCommand(() -> notePlayerSubsystem.getShooter().spinMetersPerSecond(13))
+                                                .alongWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == READY)
+                                                        .andThen(notePlayerSubsystem.scoreNote())),
                                         notePlayerSubsystem.prepForPickup(),
-                                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(false))
+                                        new InstantCommand(() -> {
+                                            swerveDrive.setFaceSpeaker(false);
+                                        })
                                 );
                             }
                         } else {
@@ -186,6 +187,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                 double distanceToSpeakerAtEndOfPath = pathToSpeaker.getAllPathPoints().get(pathToSpeaker.getAllPathPoints().size() - 1)
                                         .position.getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
                                 addCommands(
+                                        new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(false)),
                                         AutoBuilder.buildAuto(pathName),
                                         //                                            new AutoLog("Finished intaking and following path"),
                                         new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.65))

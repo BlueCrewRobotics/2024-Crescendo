@@ -137,7 +137,7 @@ public class Robot extends TimedRobot {
         // schedule the autonomous command (example)
         if (m_autonomousCommand != null) {
             m_autonomousCommand.schedule();
-            keepShooterRunning.schedule();
+//            keepShooterRunning.schedule();
         }
     }
 
@@ -157,8 +157,9 @@ public class Robot extends TimedRobot {
         RobotState.getInstance().setIsAutonomous(false);
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
-            keepShooterRunning.cancel();
+//            keepShooterRunning.cancel();
             m_robotContainer.getNotePlayerSubsystem().getShooter().stop();
+            m_robotContainer.getSwerveDrive().setShouldUseVision(true);
         }
     }
 
