@@ -34,6 +34,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DataLogEntry;
+import edu.wpi.first.util.datalog.DataLogRecord;
+import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.Constants;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -64,18 +68,18 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
         aprilTagsFrontRight = new PhotonCamera(APRIL_TAGS_FRONT_RIGHT_CAMERA_NAME);
         aprilTagsRearLeft = new PhotonCamera(APRIL_TAGS_REAR_LEFT_CAMERA_NAME);
 
-        photonEstimatorFrontRight =
-                new PhotonPoseEstimator(
-                        tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
-        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
         photonEstimatorRearLeft =
                 new PhotonPoseEstimator(
                         tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsRearLeft, ROBOT_TO_TAG_REAR_LEFT_CAM_POS);
         photonEstimatorRearLeft.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
-        notesIndexer = new PhotonCamera(NOTES_INDEXER_CAMERA_NAME);
+        photonEstimatorFrontRight = photonEstimatorRearLeft;
+                new PhotonPoseEstimator(
+                        tagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, aprilTagsFrontRight, ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS);
+        photonEstimatorFrontRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
+        notesIndexer = new PhotonCamera(NOTES_INDEXER_CAMERA_NAME);
     }
 
     public static synchronized VisionModule getInstance() {

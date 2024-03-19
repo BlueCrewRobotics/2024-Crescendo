@@ -85,6 +85,17 @@ public class ShooterModule implements Constants.ShooterConstants {
         bottomShooterMotor.setControl(topShooterVelocity);
     }
 
+    public void spinMetersPerSecond(double topSpeed, double bottomSpeed) {
+        topShooterVelocity.Velocity = topSpeed/SHOOTER_METERS_PER_ROTATION;
+        topShooterVelocity.FeedForward = shooterFeedForward.calculate(topSpeed);
+
+        bottomShooterVelocity.Velocity = bottomSpeed/SHOOTER_METERS_PER_ROTATION;
+        bottomShooterVelocity.FeedForward = shooterFeedForward.calculate(bottomSpeed);
+
+        topShooterMotor.setControl(topShooterVelocity);
+        bottomShooterMotor.setControl(bottomShooterVelocity);
+    }
+
     public double getShooterTopVelocity() {
         return topShooterMotor.getVelocity().getValue().doubleValue();
     }

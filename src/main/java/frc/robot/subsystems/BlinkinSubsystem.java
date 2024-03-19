@@ -1,10 +1,13 @@
 package frc.robot.subsystems;
 
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.bluecrew.util.BlinkinValues;
 import frc.robot.Constants;
 
@@ -44,48 +47,60 @@ public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, 
     }
 
     @Override
-    public void periodic() {
-        switch (rs.getShooterMode()) {
-            case SPEAKER -> {
-                switch (rs.getRobotCycleStatus()) {
-                    case NO_NOTE_CANT_SEE_SPEAKER ->
-                        blinkinOutput.set(RED);
-                    case NO_NOTE_SEES_SPEAKER ->
-                        blinkinOutput.set(RED_ORANGE);
-                    case HAS_NOTE_CANT_SEE_SPEAKER ->
-                        blinkinOutput.set(YELLOW);
-                    case HAS_NOTE_SEES_SPEAKER -> {
-                        switch (rs.getShooterStatus()) {
-                            case READY ->
-                                blinkinOutput.set(DARK_GREEN);
-                            case UNREADY ->
-                                blinkinOutput.set(BLUE_GREEN);
-                        }
-                    }
-                }
-            }
-            case PICKUP -> {
-                if (!rs.hasNote()) {
-                    if (rs.isNoteIsAvailable()) {
-                        blinkinOutput.set(HEARTBEAT_BLUE);
-                    } else {
-                        blinkinOutput.set(HEARTBEAT_RED);
-                    }
-                } else blinkinOutput.set(LAWN_GREEN);
-            }
-            case AMP -> {
-                if (rs.hasNote()) {
-                    switch (rs.getShooterStatus()) {
-                        case READY -> blinkinOutput.set(DARK_GREEN);
-                        case UNREADY -> blinkinOutput.set(BLUE_GREEN);
-                    }
-                } else blinkinOutput.set(RED_ORANGE);
-            }
-        }
-    }
+    public void periodic() {}
 
     public void setColorMode(double mode) {
         blinkinOutput.set(mode);
+    }
+
+    public Command defaultCommand() {
+        return this.run(() -> {
+            switch (rs.getShooterMode()) {
+                case SPEAKER -> {
+                    switch (rs.getRobotCycleStatus()) {
+                        case NO_NOTE_CANT_SEE_SPEAKER ->
+                                blinkinOutput.set(RED);
+                        case NO_NOTE_SEES_SPEAKER ->
+                                blinkinOutput.set(RED_ORANGE);
+                        case HAS_NOTE_CANT_SEE_SPEAKER ->
+                                blinkinOutput.set(YELLOW);
+                        case HAS_NOTE_SEES_SPEAKER -> {
+                            switch (rs.getShooterStatus()) {
+                                case READY ->
+                                        blinkinOutput.set(DARK_GREEN);
+                                case UNREADY ->
+                                        blinkinOutput.set(BLUE_GREEN);
+                            }
+                        }
+                    }
+                }
+                case PICKUP -> {
+                    if (!rs.hasNote()) {
+                        if (rs.isNoteIsAvailable()) {
+                            blinkinOutput.set(HEARTBEAT_BLUE);
+                        } else {
+                            blinkinOutput.set(HEARTBEAT_RED);
+                        }
+                    } else blinkinOutput.set(LAWN_GREEN);
+                }
+                case AMP -> {
+                    if (rs.hasNote()) {
+                        switch (rs.getShooterStatus()) {
+                            case READY -> blinkinOutput.set(DARK_GREEN);
+                            case UNREADY -> blinkinOutput.set(BLUE_GREEN);
+                        }
+                    } else blinkinOutput.set(RED_ORANGE);
+                }
+            }
+        });
+    }
+
+    public Command setMode(double mode) {
+        return this.run(() -> blinkinOutput.set(mode));
+    }
+
+    public void configureErrorCodes() {
+//        new Trigger()
     }
 }
 

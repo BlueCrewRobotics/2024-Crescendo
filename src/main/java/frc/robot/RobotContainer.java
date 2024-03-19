@@ -1,6 +1,9 @@
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -14,8 +17,6 @@ import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.lib.bluecrew.util.BlinkinValues;
-import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.autos.AutonomousCommandsBuilder;
 import frc.robot.subsystems.*;
@@ -48,14 +49,13 @@ public class RobotContainer implements Constants.AutoConstants {
     /* Subsystems */
     private final SwerveDrive swerveDrive = new SwerveDrive();
     private final NotePlayerSubsystem notePlayerSubsystem = new NotePlayerSubsystem();
+    private final BlinkinSubsystem blinkin = BlinkinSubsystem.getInstance();
 
     private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
 
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
     private SendableChooser<Integer> numOfNotesToScoreChooser;
-    // number of notes to score in amp during auto
-    private SendableChooser<Integer> numOfAmpScoresChooser;
     // number of notes to pick up from starting line area
     private SendableChooser<Integer> numOfNotesFromStartChooser;
     // should travel to-from center line go under stage, near amp, or near source
@@ -76,6 +76,18 @@ public class RobotContainer implements Constants.AutoConstants {
 
     private ShuffleboardTab autonomousTab = Shuffleboard.getTab("Autonomous");
 
+    private GenericEntry autoMoveDelay = autonomousTab
+            .add("AutoDelay", 0)
+            .getEntry();
+
+    private GenericEntry debugPathMode = autonomousTab
+            .add("DebugPathMode", false)
+            .getEntry();
+
+    private GenericEntry pathToDebug = autonomousTab
+            .add("PathToDebug", "Sp-StLn-SN2")
+            .getEntry();
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
 
@@ -90,6 +102,9 @@ public class RobotContainer implements Constants.AutoConstants {
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
         NamedCommands.registerCommand("IntakeNote", notePlayerSubsystem.intakeNote());
+        NamedCommands.registerCommand("PrepArm", notePlayerSubsystem.autoPrepArmForShooting());
+
+        NamedCommands.registerCommand("RaiseArm", notePlayerSubsystem.rotateArmToDegrees(44));
 
 /*
         Thread visionThread = new Thread(new VisionPipelineRunnable(VisionModule.getInstance()), "visionThread");
@@ -98,19 +113,15 @@ public class RobotContainer implements Constants.AutoConstants {
 */
         setupAutoChoosers();
 
-        // Fire up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
-
         autoLastNumOfNotes = numOfNotesToScoreChooser.getSelected();
-        autoLastNumOfAmps = numOfAmpScoresChooser.getSelected();
         autoLastNumOfStartNotes = numOfNotesFromStartChooser.getSelected();
         autoLastAutoLane = autoLaneChooser.getSelected();
         autoLastSearchDirection = directionToSearchInChooser.getSelected();
         autoLastGrabFromCenterFirst = grabFromCenterFirstChooser.getSelected();
 
-        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
+        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
-                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive);
+                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
     }
 
     /**
@@ -130,12 +141,14 @@ public class RobotContainer implements Constants.AutoConstants {
                         () -> false//driver.leftBumper().getAsBoolean()
                 ));
 
+        blinkin.setDefaultCommand(blinkin.defaultCommand());
+
 //        /* Driver Buttons */
 //        driver.povCenter().onFalse(Commands.waitSeconds(0.1).andThen(swerveDrive.setHoldHeading(-driver.getHID().getPOV()).until(cancelAutoRotation)));
 
         driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
-        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
+        driver.x().whileTrue(notePlayerSubsystem.passFromSource());
 
         driver.a().onTrue(swerveDrive.invertControls());
 
@@ -150,20 +163,33 @@ public class RobotContainer implements Constants.AutoConstants {
 
         driver.leftBumper().onTrue(notePlayerSubsystem.scoreNote());
 
-        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
-        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
         auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
 
-        auxDriver.x().whileTrue(notePlayerSubsystem.eject());
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.reverseEject());
+        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.forwardEject());
+
+        auxDriver.start().whileTrue(notePlayerSubsystem.stowShot());
+
+        auxDriver.back().onFalse(climberSubsystem.servoOut());
+        auxDriver.back().onTrue(climberSubsystem.servoIn());
 
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
+//        auxDriver.povLeft().onTrue(new PrepForShooting(swerveDrive, notePlayerSubsystem));
+        auxDriver.povRight().whileTrue(notePlayerSubsystem.shootFromSubwooferCommand());
 
         auxDriver.rightTrigger().whileTrue(notePlayerSubsystem.intakeNote());
 
+        auxDriver.leftTrigger().whileTrue(new InstantCommand(() -> swerveDrive.setFaceSpeaker(true))
+                .andThen(notePlayerSubsystem.spinUpShooterForSpeaker())
+                .finallyDo(() -> swerveDrive.setFaceSpeaker(false)));
+
         auxDriver.rightStick().onTrue(notePlayerSubsystem.rotateArmToDegrees(50));
+
+        auxDriver.leftStick().whileTrue(new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.5))
+                .finallyDo(() -> notePlayerSubsystem.getIndexer().stop()));
 
         // Robot Status Triggers
 
@@ -173,10 +199,19 @@ public class RobotContainer implements Constants.AutoConstants {
                         .andThen(new RumbleController(driver.getHID(), 0.25)));
 
         new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer)
-                .onTrue(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kLeftRumble, 0.1)
-                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kRightRumble, 0.1))
+                .onTrue(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kLeftRumble, 0.2)
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kRightRumble, 0.2))
                         .andThen(Commands.waitSeconds(0.1))
-                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kBothRumble, 0.1)));
+                        .andThen(new RumbleController(auxDriver.getHID(), GenericHID.RumbleType.kBothRumble, 0.3)));
+
+        new Trigger(notePlayerSubsystem.getIntake()::noteInIntake).onTrue(
+                new RumbleController(driver.getHID(), 0.25));
+
+        new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer).onFalse(
+                new RumbleController(auxDriver.getHID(), 0.25));
+
+        new Trigger(() -> (climberSubsystem.getClimberPos() < 2.3 && climberSubsystem.getSetPos() == Constants.ElevatorConstants.ELEVATOR_MOTOR_LOWER_LIMIT_POS  && climberSubsystem.isOnChain()))
+                .whileTrue(climberSubsystem.servoIn());
     }
 
     /**
@@ -185,10 +220,11 @@ public class RobotContainer implements Constants.AutoConstants {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+        return debugPathMode.getBoolean(false) ? AutoBuilder.followPath(PathPlannerPath.fromPathFile(pathToDebug.getString("Sp-StLn-SN2"))) :
+                autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected(),
-                notePlayerSubsystem, swerveDrive).alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))
+                notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8))/*.alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))*/
 
                 : autoCommand;
 
@@ -205,12 +241,6 @@ public class RobotContainer implements Constants.AutoConstants {
         for (int i = 1; i <= 5; i++) {
             numOfNotesToScoreChooser.addOption("" + i, i);
         }
-
-        // Choose how many notes to score in Amp
-        numOfAmpScoresChooser = new SendableChooser<>();
-        numOfAmpScoresChooser.setDefaultOption("0", 0);
-        numOfAmpScoresChooser.addOption("1", 1);
-        numOfAmpScoresChooser.addOption("2", 2);
 
         // Choose which lane the robot should travel in
         autoLaneChooser = new SendableChooser<>();
@@ -238,7 +268,6 @@ public class RobotContainer implements Constants.AutoConstants {
         grabFromCenterFirstChooser.addOption("GrabFromCenterFirst", true);
 
         autonomousTab.add("Number Of Auto Actions", numOfNotesToScoreChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
-        autonomousTab.add("Number Of Amp Scores", numOfAmpScoresChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Autonomous Lane", autoLaneChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Number Of Notes From Start", numOfNotesFromStartChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Direction To Search In", directionToSearchInChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
@@ -247,17 +276,15 @@ public class RobotContainer implements Constants.AutoConstants {
 
     public boolean autoOptionsHaveChanged() {
         int currentNumOfNotesToScore = numOfNotesToScoreChooser.getSelected();
-        int currentNumOfAmps = numOfAmpScoresChooser.getSelected();
         int currentNumOfNotesFromStart = numOfNotesFromStartChooser.getSelected();
         String currentAutoLane = autoLaneChooser.getSelected();
         String currentSearchDirection = directionToSearchInChooser.getSelected();
         boolean currentGrabFromStartFirst = grabFromCenterFirstChooser.getSelected();
-        if ((currentNumOfNotesToScore != autoLastNumOfNotes) || (currentNumOfAmps != autoLastNumOfAmps) ||
+        if ((currentNumOfNotesToScore != autoLastNumOfNotes) ||
                 (currentNumOfNotesFromStart != autoLastNumOfStartNotes) || (!Objects.equals(currentAutoLane, autoLastAutoLane)) ||
                 (!Objects.equals(currentSearchDirection, autoLastSearchDirection)) || (currentGrabFromStartFirst != autoLastGrabFromCenterFirst)) {
 
             autoLastNumOfNotes = currentNumOfNotesToScore;
-            autoLastNumOfAmps = currentNumOfAmps;
             autoLastNumOfStartNotes = currentNumOfNotesFromStart;
             autoLastAutoLane = currentAutoLane;
             autoLastSearchDirection = currentSearchDirection;
@@ -270,8 +297,16 @@ public class RobotContainer implements Constants.AutoConstants {
     }
 
     public void regenerateAutoCommand() {
-        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
+        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
-                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive);
+                autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
+    }
+
+    public NotePlayerSubsystem getNotePlayerSubsystem() {
+        return notePlayerSubsystem;
+    }
+
+    public SwerveDrive getSwerveDrive() {
+        return swerveDrive;
     }
 }

@@ -78,7 +78,7 @@ public class FindCenterPiece extends SequentialCommandGroup {
                 addCommands(
                         // Follow the path from the note we are currently at to the next one
                         Commands.print("Following: CN" + centerNotesToGet.get(i - 1) + "-CN" + nextNote),
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN-" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("CN" + centerNotesToGet.get(i-1) + "-CN" + nextNote)),
                         // Try to grab the note in front of us
                         new FindAndGotoNote(swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
                                 .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).withTimeout(0.06)

@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
@@ -10,13 +8,18 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 
 /**
  *
@@ -26,33 +29,29 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
     private final TalonFX motor1 = new TalonFX(ELEVATOR_MOTOR_1_ID);
     private final TalonFX motor2 = new TalonFX(ELEVATOR_MOTOR_2_ID);
 
-    private  VelocityVoltage climberVelocity = new VelocityVoltage(0);
-    //private final SimpleMotorFeedforward climberFeedForward = new SimpleMotorFeedforward(Constants.shooterKS, Constants.shooterKV, Constants.shooterKA);
+    private VelocityVoltage climberVelocity = new VelocityVoltage(0);
 
     private SimpleMotorFeedforward climberFeedForward = new SimpleMotorFeedforward(elevatorKS, elevatorKV, elevatorKA);
 
     private PositionVoltage climberPositionVoltage = new PositionVoltage(0);
 
-    private final DutyCycleOut shooterDutyCycle = new DutyCycleOut(0);
+    private final DutyCycleOut climberDutyCycle = new DutyCycleOut(0);
 
     private static final ClimberSubsystem climberInstance = new ClimberSubsystem();
 
     private TalonFXConfiguration climberConfig = new TalonFXConfiguration();
 
+    private final Servo elevatorStopper;
+
+    private boolean climbingChain;
+
+    private final AHRS navX;
+
     private ClimberSubsystem() {
         motor1.clearStickyFaults();
         motor2.clearStickyFaults();
 
-        /*
-          .withMotorOutput(new MotorOutputConfigs()
-                  .withInverted(InvertedValue.Clockwise_Positive))
-          .withCurrentLimits(new CurrentLimitsConfigs()
-                  .withSupplyCurrentLimit(15)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentThreshold(10));
-*/
-
-        climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         climberConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
@@ -78,6 +77,12 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         motor1.getConfigurator().apply(climberConfig);
         motor2.getConfigurator().apply(climberConfig);
         motor2.setControl(new Follower(ELEVATOR_MOTOR_1_ID, false));
+
+        navX = NavX.getNavX();
+
+        elevatorStopper = new Servo(8);
+
+        climbingChain = false;
     }
 
     public static ClimberSubsystem getInstance() {
@@ -88,8 +93,12 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         return motor1.getVelocity().getValue().doubleValue();
     }
 
-    public long getClimberEncoderPos() {
-        return (long) (motor1.getPosition().getValue() * 2048.0d);
+    public double getClimberPos() {
+        return motor1.getPosition().getValue();
+    }
+
+    public double getSetPos() {
+        return climberPositionVoltage.Position;
     }
 
     public void runElevatorUp(double speed) {
@@ -103,14 +112,12 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
     }
 
     public void prepForClimb() {
-
-        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS));
-//        motor1.setPosition(ELEVATOR_MOTOR_UPPER_LIMIT_POS);
+        climberPositionVoltage.Position = ELEVATOR_MOTOR_UPPER_LIMIT_POS;
+//        climbingChain = false;
     }
 
     public void doClimb() {
-        motor1.setControl(climberPositionVoltage.withPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS));
-//        motor1.setPosition(ELEVATOR_MOTOR_LOWER_LIMIT_POS);
+        climberPositionVoltage.Position = ELEVATOR_MOTOR_LOWER_LIMIT_POS;
     }
 
     private void runElevator(double speed) {
@@ -127,14 +134,17 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         motor1.stopMotor();
     }
 
+    public boolean isOnChain() {
+        return climbingChain;
+    }
 
     public Command prepForClimbCommand() {
-        return this.run(
-                this::prepForClimb);
+        return (this.servoOut().andThen(Commands.waitSeconds(1))).onlyIf(() -> elevatorStopper.get() < 1)
+                .andThen(new InstantCommand(this::prepForClimb, this));
     }
 
     public Command doClimbClimbCommand() {
-        return this.run(
+        return this.runOnce(
                 this::doClimb);
     }
 
@@ -158,4 +168,68 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     }
 
+    public Command servoOut() {
+        return new InstantCommand(
+                () -> elevatorStopper.set(1),
+                this
+        );
+    }
+
+    public Command servoIn() {
+        return new InstantCommand(
+                () -> elevatorStopper.set(200d / 270d)
+        );
+    }
+
+    @Override
+    public void periodic() {
+        // Update the set position while disabled
+        if (RobotState.isDisabled()) {
+            climberPositionVoltage.Position = motor1.getPosition().getValue();
+        }
+
+        // Decide if we are climbing on the chain
+        if (!climbingChain && climberPositionVoltage.Position == ELEVATOR_MOTOR_LOWER_LIMIT_POS &&
+                motor1.getSupplyCurrent().getValue() > 1.7 && motor1.getPosition().getValue() < 4 && motor1.getPosition().getValue() > 2 && motor1.getVelocity().getValue() < 0.1) {
+            climbingChain = true;
+        }
+        else if (climberPositionVoltage.Position != ELEVATOR_MOTOR_LOWER_LIMIT_POS && motor1.getPosition().getValue() > 12) {
+            climbingChain = false;
+        }
+
+        if (climbingChain) {
+            if (climberPositionVoltage.Position == ELEVATOR_MOTOR_LOWER_LIMIT_POS) {
+                climberPositionVoltage.FeedForward = -1.5 * MathUtil.clamp((Math.abs(motor1.getClosedLoopError().getValue())) * 100, 0, 10) / 10; //TODO: Tune this feedforward value (in volts)
+            } else {
+                climberPositionVoltage.FeedForward = 0;//-12 * motor1.getClosedLoopError().getValue()/29;
+            }
+        } else {
+            climberPositionVoltage.FeedForward = 0;
+        }
+
+        SmartDashboard.putBoolean("Climber On Chain", climbingChain);
+        SmartDashboard.putNumber("Climber Feedforward", climberPositionVoltage.FeedForward);
+        SmartDashboard.putNumber("Climber Current", motor1.getSupplyCurrent().getValue());
+        SmartDashboard.putNumber("Climber Set Position", climberPositionVoltage.Position);
+        SmartDashboard.putNumber("Climber Position", motor1.getPosition().getValue());
+        SmartDashboard.putNumber("Climber Output", motor1.getClosedLoopOutput().getValue());
+        SmartDashboard.putNumber("Climber Speed", motor1.getVelocity().getValue());
+        SmartDashboard.putNumber("Climber Closed Loop Error", motor1.getClosedLoopError().getValue());
+
+        SmartDashboard.putNumber("Servo angle", elevatorStopper.get());
+
+        SmartDashboard.putNumber("Altitude", navX.getAltitude());
+        SmartDashboard.putBoolean("Altitude Valid", navX.isAltitudeValid());
+        SmartDashboard.putNumber("Z accel", navX.getWorldLinearAccelZ());
+        SmartDashboard.putNumber("Z displacement", navX.getDisplacementZ());
+
+        if (climbingChain && climberPositionVoltage.Position == ELEVATOR_MOTOR_UPPER_LIMIT_POS && motor1.getPosition().getValue() < 12) {
+            climberVelocity.Velocity = 22;
+            climberVelocity.FeedForward = -0.25;//climberFeedForward.calculate(climberVelocity.Velocity);
+            motor1.setControl(climberVelocity);
+            System.out.println("Using Duty Cycle!!");
+        } else {
+            motor1.setControl(climberPositionVoltage);
+        }
+    }
 }

@@ -4,7 +4,9 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.bluecrew.util.FieldState;
 import frc.lib.bluecrew.util.RobotState;
 import frc.robot.subsystems.PoseEstimator;
@@ -61,15 +63,15 @@ public class FindAndGotoNote extends Command {
 
 //            System.out.println("Note found!  ---------------");
             PhotonTrackedTarget target = getBestTarget(pipelineResult);
-            DataLogManager.log("Note Found! -------");
+//            DataLogManager.log("Note Found! -------");
 
             if (target == null) {
-                DataLogManager.log("Note Not Actually found");
+//                DataLogManager.log("Note Not Actually found");
             }
 
-            DataLogManager.log("Pitch: " + target.getPitch());
-            DataLogManager.log("Yaw: " + target.getYaw());
-            DataLogManager.log("Heading: " + heading);
+//            DataLogManager.log("Pitch: " + target.getPitch());
+//            DataLogManager.log("Yaw: " + target.getYaw());
+//            DataLogManager.log("Heading: " + heading);
 
             /*
                 Observed pitches and yaws from the indexer camera with a note place at the following distances
@@ -102,45 +104,45 @@ public class FindAndGotoNote extends Command {
                 // Set that a note is available to pickup
                 RobotState.getInstance().setNoteIsAvailable(true);
 
-                // TODO: Remove 1 degree offset once note is being centered / shooter is centered
-                neededRotation = target.getYaw()-1;
+                // TODO: Remove 3 degree offset once note is being centered / shooter is centered
+                neededRotation = target.getYaw()+3;
                 double angleOffset = Math.abs(neededRotation);
 
                 if (target.getPitch() < -20 && angleOffset > 10) {
                     // back up if note is well off center and we are close to it
                     neededSpeed = -0.15;
-                    DataLogManager.log("back up if note is well off center and we are close to it");
+//                    DataLogManager.log("back up if note is well off center and we are close to it");
                 } else if (target.getPitch() < -15 && angleOffset > 10) {
                     // slow down forward movement if note is well off center and we are close to it
                     neededSpeed = 0.05;
-                    DataLogManager.log("slow down forward movement if note is well off center and we are close to it");
+//                    DataLogManager.log("slow down forward movement if note is well off center and we are close to it");
                 } else if (target.getPitch() < -27) {
 //                System.out.println("Note is at intake.");
                     neededSpeed = 0.02;
-                    DataLogManager.log("Note Is at Intake");
+//                    DataLogManager.log("Note Is at Intake");
                 } else if (target.getPitch() < 0) {
 //                System.out.println("Note is within a foot");
-                    DataLogManager.log("Note Is Within A foot");
+//                    DataLogManager.log("Note Is Within A foot");
                     neededSpeed = 0.24;
                     if (angleOffset < 5) {
-                        DataLogManager.log("Note Is Close To Center");
+//                        DataLogManager.log("Note Is Close To Center");
                         neededSpeed += 0.1;
                     }
                 } else if (target.getPitch() < 15) {
 //                System.out.println("Note is within 3 feet");
-                    DataLogManager.log("Note Is Within 3 feet");
+//                    DataLogManager.log("Note Is Within 3 feet");
                     neededSpeed = 0.35;
                     if (angleOffset < 15) {
                         neededSpeed += 0.1;
-                        DataLogManager.log("Note Is Close To Center");
+//                        DataLogManager.log("Note Is Close To Center");
                     }
                 } else if (target.getPitch() > 15) {
 //                System.out.println("Note is beyond 3 feet");
-                    DataLogManager.log("Note Is Beyond 3 Feet");
+//                    DataLogManager.log("Note Is Beyond 3 Feet");
                     neededSpeed = 0.49;
                     if (angleOffset < 15) {
                         neededSpeed += 0.1;
-                        DataLogManager.log("Note is close to center");
+//                        DataLogManager.log("Note is close to center");
                     }
                 }
 
@@ -157,13 +159,12 @@ public class FindAndGotoNote extends Command {
             }
 
             else {
-                DataLogManager.log("Autonomous Not Getting Note");
+//                DataLogManager.log("Autonomous Not Getting Note");
             }
 
-//            DataLogManager.log("Needed Speed: " + neededSpeed + ", Needed Rotation: " + neededRotation);
         }
         else {
-            System.out.println("No Note in view...");
+//            DataLogManager.log("No Note in view. Time Stamp: " + pipelineResult.getTimestampSeconds());
             neededSpeed = 0.0;
             neededRotation = 0.0;
             // blink the blinkin
@@ -175,9 +176,9 @@ public class FindAndGotoNote extends Command {
             }
         }
 
-        DataLogManager.log("Desired speed: " + neededSpeed);
-        DataLogManager.log("Desired rotation (degrees): " + neededRotation);
-        DataLogManager.log("--------------------------------------");
+//        DataLogManager.log("Desired speed: " + neededSpeed);
+//        DataLogManager.log("Desired rotation (degrees): " + neededRotation);
+//        DataLogManager.log("--------------------------------------");
 
         final double speed = neededSpeed;
         final double rotation = neededRotation;
@@ -202,14 +203,19 @@ public class FindAndGotoNote extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        DataLogManager.log("Finished Finding Note");
-        DataLogManager.log("Interrupted: " + interrupted);
-        DataLogManager.log("Is Note Available: " + RobotState.getInstance().isNoteIsAvailable());
-        DataLogManager.log("Is Autonomous: " + RobotState.getInstance().isAutonomous());
-        DataLogManager.log("Shouldn't get Note In Autonomous: " + ((FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() < 8.29) ||
-                //      or We're on Blue Alliance and we're past the center line
-                (!FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() > 8.29)));
-        RobotState.getInstance().setNoteIsAvailable(false);
+//        DataLogManager.log("Finished Finding Note");
+//        DataLogManager.log("Interrupted: " + interrupted);
+//        DataLogManager.log("Is Note Available: " + RobotState.getInstance().isNoteIsAvailable());
+//        DataLogManager.log("Is Autonomous: " + RobotState.getInstance().isAutonomous());
+//        DataLogManager.log("Shouldn't get Note In Autonomous: " + ((FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() < 8.29) ||
+//                      or We're on Blue Alliance and we're past the center line
+//                (!FieldState.getInstance().onRedAlliance() && PoseEstimator.getInstance().getPose().getX() > 8.29)));
+
+        if (finished) {
+            Commands.waitSeconds(0.025).andThen(() -> RobotState.getInstance().setNoteIsAvailable(false)).schedule();
+        } else {
+            RobotState.getInstance().setNoteIsAvailable(false);
+        }
 //        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         swerveDrive.resetRotationPIDController();
         swerveDrive.setHoldHeading(swerveDrive.getHeading());
