@@ -144,24 +144,27 @@ public class RobotContainer implements Constants.AutoConstants {
         blinkin.setDefaultCommand(blinkin.defaultCommand());
 
 //        /* Driver Buttons */
-//        driver.povCenter().onFalse(Commands.waitSeconds(0.1).andThen(swerveDrive.setHoldHeading(-driver.getHID().getPOV()).until(cancelAutoRotation)));
 
         driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
         driver.x().whileTrue(notePlayerSubsystem.passFromSource());
 
+//        driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels, swerveDrive));
+
         driver.a().onTrue(swerveDrive.invertControls());
+
+//        driver.b().whileTrue(swerveDrive.findKS());
 
         driver.start().whileTrue(swerveDrive.alignWithAmp());
 
         driver.rightBumper().whileTrue(new FindAndGotoNote(swerveDrive)
                 .until(notePlayerSubsystem.getIntake()::noteInIntake)
-        );//.alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote())));
+        );
         intakeNote.whileTrue(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote()));
-//        driver.rightBumper().onTrue(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).withTimeout(1)
-//                .andThen(notePlayerSubsystem.intakeNote().onlyIf(RobotState.getInstance()::isNoteIsAvailable)));
 
         driver.leftBumper().onTrue(notePlayerSubsystem.scoreNote());
+
+//        driver.povCenter().onFalse(swerveDrive.tuneSteering(driver.getHID()::getPOV));
 
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
@@ -177,14 +180,9 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
-//        auxDriver.povLeft().onTrue(new PrepForShooting(swerveDrive, notePlayerSubsystem));
         auxDriver.povRight().whileTrue(notePlayerSubsystem.shootFromSubwooferCommand());
 
         auxDriver.rightTrigger().whileTrue(notePlayerSubsystem.intakeNote());
-
-        auxDriver.leftTrigger().whileTrue(new InstantCommand(() -> swerveDrive.setFaceSpeaker(true))
-                .andThen(notePlayerSubsystem.spinUpShooterForSpeaker())
-                .finallyDo(() -> swerveDrive.setFaceSpeaker(false)));
 
         auxDriver.rightStick().onTrue(notePlayerSubsystem.rotateArmToDegrees(50));
 
