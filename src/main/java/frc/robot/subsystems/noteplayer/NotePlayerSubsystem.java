@@ -251,6 +251,25 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         ));
     }
 
+    public Command demothrow() {
+        return new InstantCommand(() -> {
+            RobotState.getInstance().setShooterMode(ShooterMode.EJECT);
+            indexer.setEnableHardLimit(false);
+        }).andThen(new RunCommand(
+                () -> {
+                    indexer.spin(1);
+                    intake.spin(0.3);
+                    shooter.spinMetersPerSecond(9.5);
+                }
+        ).until(() -> !indexer.noteInIndexer()).finallyDo(
+                () -> {
+                    indexer.stop();
+                    intake.stop();
+                    shooter.stop();
+                }
+        ));
+    }
+
     public Command stowShot() {
         return new InstantCommand(() -> {
             arm.rotateToDegrees(15);
