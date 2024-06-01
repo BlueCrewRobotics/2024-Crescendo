@@ -145,7 +145,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
 //        /* Driver Buttons */
 
-        driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
+//        driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
         driver.x().whileTrue(notePlayerSubsystem.passFromSource());
 
