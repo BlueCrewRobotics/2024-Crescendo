@@ -69,10 +69,10 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 //        angleInterpolator.put(2.5d, 30d);
 //        angleInterpolator.put(3d, 26.5d);
 
-        angleInterpolator.put(1.4d, 49d);
-        angleInterpolator.put(2d, 40d);
-        angleInterpolator.put(2.5d, 34.5d);
-        angleInterpolator.put(3d, 31d);
+        angleInterpolator.put(1.4d, 47d);
+        angleInterpolator.put(2d, 34d);
+        angleInterpolator.put(2.5d, 28.5d);
+        angleInterpolator.put(3d, 25d);
 
         moveArmInAuto = false;
     }

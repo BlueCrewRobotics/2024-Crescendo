@@ -153,7 +153,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
         driver.a().onTrue(swerveDrive.invertControls());
 
-//        driver.b().whileTrue(swerveDrive.findKS());
+        driver.b().whileTrue(new RunCommand(swerveDrive::xLockWheels, swerveDrive));
 
         driver.start().whileTrue(swerveDrive.alignWithAmp());
 
