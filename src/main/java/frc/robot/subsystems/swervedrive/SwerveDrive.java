@@ -9,13 +9,10 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.lib.bluecrew.util.FieldState;
@@ -299,6 +296,25 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         }
     }
 
+    public void setModuleAngles(double angle) {
+        System.out.println("Set Angle: " + angle);
+        SwerveModuleState[] desiredStates = {
+                new SwerveModuleState(0.0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0.0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0.0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0.0, Rotation2d.fromDegrees(angle))
+        };
+        for (SwerveModule mod : swerveMods) {
+            mod.setAngle(desiredStates[mod.moduleNumber]);
+        }
+    }
+
+    public void setModuleVoltage(double voltage) {
+        for (SwerveModule mod : swerveMods) {
+            mod.setDriveVoltage(voltage);
+        }
+    }
+
     /**
      * Used for driving the robot during teleop
      *
@@ -337,6 +353,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         } else {
             rotationVal = manualRotationVal;
         }
+
+        rotationVal = manualRotationVal;
 
         drive(new Translation2d(translationVal, strafeVal).times(maxSpeed),
                 rotationVal * maxAngularVelocity,
@@ -453,6 +471,28 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     public Command invertControls() {
         return new InstantCommand(() -> controlsInvert *= -1);
+    }
+
+    public Command findKS() {
+        AtomicReference<Double> voltage = new AtomicReference<>(0.0);
+        return this.run(() -> {
+            setModuleAngles(180);
+            setModuleVoltage(voltage.get());
+            if (voltage.get() < 1.5) {
+                voltage.updateAndGet(v -> v + 0.0001);
+            }
+            System.out.println("Voltaging! " + voltage.get());
+        }).finallyDo(() -> {
+            setModuleVoltage(0);
+            voltage.set(0d);
+        });
+    }
+
+    public Command tuneSteering(DoubleSupplier angle) {
+        return this.runOnce(() -> {
+            setModuleAngles(angle.getAsDouble());
+            System.out.println("Set Angle: " + angle.getAsDouble());
+        });
     }
 
     @Override

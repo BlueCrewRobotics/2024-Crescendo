@@ -97,9 +97,9 @@ public interface Constants {
         double driveKD = 0.0;
 
         /* Drive Motor Characterization Values From SYSID */
-        double driveKS = 0.08403;
+        double driveKS = 0.13;
         double driveKV = 2.2341;
-        double driveKA = 0.27385;
+        double driveKA = 0.0;
 
         /* Swerve Profiling Values */
         /**

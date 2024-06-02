@@ -59,15 +59,20 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private boolean moveArmInAuto = false;
 
     public NotePlayerSubsystem() {
-        speedInterpolator.put(1.4d, 13d);
-        speedInterpolator.put(2d, 14.5d);
-        speedInterpolator.put(2.5d, 16d);
-        speedInterpolator.put(3d, 17.5d);
+        speedInterpolator.put(1.4d, 14.5d);
+        speedInterpolator.put(2d, 16d);
+        speedInterpolator.put(2.5d, 18d);
+        speedInterpolator.put(3d, 20d);
 
-        angleInterpolator.put(1.4d, 44d);
-        angleInterpolator.put(2d, 35d);
-        angleInterpolator.put(2.5d, 30d);
-        angleInterpolator.put(3d, 26.5d);
+//        angleInterpolator.put(1.4d, 44d);
+//        angleInterpolator.put(2d, 35d);
+//        angleInterpolator.put(2.5d, 30d);
+//        angleInterpolator.put(3d, 26.5d);
+
+        angleInterpolator.put(1.4d, 47d);
+        angleInterpolator.put(2d, 34d);
+        angleInterpolator.put(2.5d, 28.5d);
+        angleInterpolator.put(3d, 25d);
 
         moveArmInAuto = false;
     }
@@ -111,6 +116,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 //        SmartDashboard.putNumber("Bottom Shooter Speed", shooter.getShooterBottomVelocityMPS());
 
         SmartDashboard.putBoolean("Indexer Has Note", indexer.noteInIndexer());
+        SmartDashboard.putBoolean("Intake Has Note", intake.noteInIntake());
 
         /**
          * PODIUM ANGLE 27.3

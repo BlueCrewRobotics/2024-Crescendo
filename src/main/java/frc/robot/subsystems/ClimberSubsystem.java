@@ -177,7 +177,8 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
 
     public Command servoIn() {
         return new InstantCommand(
-                () -> elevatorStopper.set(200d / 270d)
+                () -> elevatorStopper.set(200d / 370d), // 200d / 270d
+                this
         );
     }
 
