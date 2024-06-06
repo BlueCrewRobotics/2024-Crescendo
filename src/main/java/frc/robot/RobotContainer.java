@@ -164,7 +164,11 @@ public class RobotContainer implements Constants.AutoConstants {
 
         driver.leftBumper().onTrue(notePlayerSubsystem.scoreNote());
 
+
+        driver.rightStick().toggleOnTrue(new demopassCommandGroup(swerveDrive, notePlayerSubsystem).repeatedly());
+
 //        driver.povCenter().onFalse(swerveDrive.tuneSteering(driver.getHID()::getPOV));
+
 
         auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
