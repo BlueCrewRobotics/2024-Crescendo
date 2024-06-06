@@ -131,4 +131,20 @@ public class SwerveModule implements Constants.Swerve {
             Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())
         );
     }
+
+    public void setDriveVoltage(double voltage) {
+        mDriveMotor.setVoltage(voltage);
+    }
+
+    public double getAngleError() {
+        return mAngleMotor.getClosedLoopError().getValue();
+    }
+
+    public double getDriveVoltage() {
+        return mDriveMotor.getMotorVoltage().getValue();
+    }
+
+    public double getDriveSpeedError() {
+        return mDriveMotor.getClosedLoopError().getValue();
+    }
 }
